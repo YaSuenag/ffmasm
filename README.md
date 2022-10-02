@@ -6,6 +6,9 @@ ffmasm
 ffmasm is an assembler for hand-assembling from Java.  
 It uses Foreign Function & Memory API, so the application can call assembled code via [MethodHandle](https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/invoke/MethodHandle.html).
 
+* Javadoc: https://yasuenag.github.io/ffmasm/
+* Supported instructions: https://yasuenag.github.io/ffmasm/com.yasuenag.ffmasm/com/yasuenag/ffmasm/amd64/AMD64AsmBuilder.html
+
 # Requirements
 
 Java 19
@@ -45,7 +48,7 @@ $ mvn -Dgroups=linux,amd64 test
 
 # How to use
 
-See [cpumodel](examples/cpumodel) examples.
+See [Javadoc](https://yasuenag.github.io/ffmasm/) and [cpumodel](examples/cpumodel) examples.
 
 ## 1. Create `CodeSegment`
 
