@@ -1,0 +1,18 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install OpenJDK 19
+        run: curl -sL https://download.java.net/java/GA/jdk19/877d6127e982470ba2a7faa31cc93d04/36/GPL/openjdk-19_linux-x64_bin.tar.gz | tar xz -C /opt/
+      - name: Install Maven
+        run: sudo apt install maven
+      - name: Build with Maven
+        run: mvn --batch-mode -Dgroups=linux,amd64 package
+        env:
+          JAVA_HOME: /opt/jdk-19
