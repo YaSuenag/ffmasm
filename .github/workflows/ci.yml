@@ -8,11 +8,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Install OpenJDK 19
-        run: curl -sL https://download.java.net/java/GA/jdk19/877d6127e982470ba2a7faa31cc93d04/36/GPL/openjdk-19_linux-x64_bin.tar.gz | tar xz -C /opt/
-      - name: Install Maven
-        run: curl -sL https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz | tar xz -C /opt/
+      - name: Initialize
+        id: init-env
+        uses: ./.github/actions/init-env
       - name: Build with Maven
-        run: /opt/apache-maven-3.8.6/bin/mvn --batch-mode -Dgroups=linux,amd64 package
+        run: ${{ steps.init-env.outputs.maven-home }}/bin/mvn --batch-mode -Dgroups=linux,amd64 package
         env:
-          JAVA_HOME: /opt/jdk-19
+          JAVA_HOME: ${{ steps.init-env.outputs.java-home }}
