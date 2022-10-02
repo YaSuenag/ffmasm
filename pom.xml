@@ -78,4 +78,12 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/YaSuenag/ffmasm</url>
+        </repository>
+    </distributionManagement>
 </project>

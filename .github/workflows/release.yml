@@ -1,0 +1,21 @@
+name: Publish package
+on:
+  release:
+    types: [created]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install OpenJDK 19
+        run: curl -sL https://download.java.net/java/GA/jdk19/877d6127e982470ba2a7faa31cc93d04/36/GPL/openjdk-19_linux-x64_bin.tar.gz | tar xz -C /opt/
+      - name: Install Maven
+        run: curl -sL https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz | tar xz -C /opt/
+      - name: Publish package
+        run: /opt/apache-maven-3.8.6/bin/mvn --batch-mode -Dgroups=linux,amd64 deploy
+        env:
+          JAVA_HOME: /opt/jdk-19
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
