@@ -281,16 +281,16 @@ public class AMD64AsmBuilder{
    */
   public AMD64AsmBuilder jl(String label){
     Consumer<Integer> emitOp = (o) -> {
-      if((o > -129) && (o < 128)){
+      int offset = o.intValue() - 2;
+      if((offset > -129) && (offset < 128)){
         // rel8
-        byteBuf.put((byte)0x7c);
-        byteBuf.put(o.byteValue());
+        byteBuf.put((byte)0xeb);
+        byteBuf.put((byte)offset);
       }
       else{
         // rel32
-        byteBuf.put((byte)0x0f);
-        byteBuf.put((byte)0x8c);
-        byteBuf.putInt(o.intValue());
+        byteBuf.put((byte)0xe9);
+        byteBuf.putInt(offset);
       }
     };
 
@@ -303,6 +303,55 @@ public class AMD64AsmBuilder{
 
       // Fill with NOP in 6 bytes (max 2 opcodes + rel32) temporally.
       for(int i = 0; i < 6; i++){
+        nop();
+      }
+    }
+    else{
+      int offset = labelPosition.intValue() - position;
+      emitOp.accept(offset);
+    }
+
+    return this;
+  }
+
+  /**
+   * Jump.
+   *   Opcode: EB cb (rel8)
+   *           E9 cd (rel32)
+   *   Instruction: JMP
+   *   Op/En: D
+   *
+   * @param label the label to jump.
+   * @return This instance
+   */
+  public AMD64AsmBuilder jmp(String label){
+    Consumer<Integer> emitOp = (o) -> {
+      /*
+       * Offset should be following JMP instruction.
+       * See pseudo code in Intel SDM for details.
+       */
+      int offset = o.intValue() - 2;
+      if((offset > -129) && (offset < 128)){
+        // rel8
+        byteBuf.put((byte)0xeb);
+        byteBuf.put((byte)offset);
+      }
+      else{
+        // rel32
+        byteBuf.put((byte)0xe9);
+        byteBuf.putInt(offset);
+      }
+    };
+
+    int position = byteBuf.position();
+    Integer labelPosition = labelMap.get(label);
+    if(labelPosition == null){
+      /* forward jump - pending until label is set */
+      Set<PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
+      jumps.add(new PendingJump(emitOp, position));
+
+      // Fill with NOP in 5 bytes (max 1 opcodes + rel32) temporally.
+      for(int i = 0; i < 5; i++){
         nop();
       }
     }
