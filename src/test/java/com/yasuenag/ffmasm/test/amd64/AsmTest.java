@@ -119,4 +119,56 @@ public class AsmTest{
     }
   }
 
+  /**
+   * Tests CMP, JL, and label
+   */
+  @Test
+  public void testCMPandJL(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT, // 1st argument (success)
+                   ValueLayout.JAVA_INT  // 2nd argument (failure)
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+        /*   push %rbp         */ .push(Register.RBP)
+        /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
+        /*   jl success        */ .jl("success")
+        /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+        /*   leave             */ .leave()
+        /*   ret               */ .ret()
+        /* success:            */ .label("success")
+        /*   mov %rdi, %rax    */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   leave             */ .leave()
+        /*   ret               */ .ret()
+                                  .build();
+
+      int actual = (int)method.invoke(0, 10);
+      Assertions.assertEquals(0, actual, "Seems not to jump at JL.");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Test throwing IllegalStateException if undefined label is remaining
+   * when build() is called.
+   */
+  @Test
+  public void testUndefinedLabel(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.ofVoid();
+      Assertions.assertThrows(IllegalStateException.class, () -> {
+          AMD64AsmBuilder.create(seg, desc)
+                         .jl("SilverBullet")
+                         .build();
+      });
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }

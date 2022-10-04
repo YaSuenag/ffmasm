@@ -24,7 +24,12 @@ import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.function.Consumer;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.OptionalInt;
+import java.util.Set;
 
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
@@ -45,11 +50,20 @@ public class AMD64AsmBuilder{
 
   private final FunctionDescriptor desc;
 
+  // Key: label, Value: position
+  private final Map<String, Integer> labelMap;
+
+  // Key: label, Value: jump data
+  private static record PendingJump(Consumer<Integer> emitOp, int position){}
+  private final Map<String, Set<PendingJump>> pendingLabelMap;
+
   private AMD64AsmBuilder(CodeSegment seg, FunctionDescriptor desc){
     this.seg = seg;
     this.mem = seg.getTailOfMemorySegment();
     this.byteBuf = mem.asByteBuffer().order(ByteOrder.nativeOrder());
     this.desc = desc;
+    this.labelMap = new HashMap<>();
+    this.pendingLabelMap = new HashMap<>();
   }
 
   /**
@@ -93,6 +107,23 @@ public class AMD64AsmBuilder{
     }
   }
 
+  private byte calcModRMMode(OptionalInt disp){
+    byte mode = (byte)0b11; // reg-reg by default
+    if(disp.isPresent()){
+      int dispAsInt = disp.getAsInt();
+      if(dispAsInt == 0){
+        mode = (byte)0b00;
+      }
+      else if(dispAsInt <= 0xff){
+        mode = (byte)0b01; // disp8
+      }
+      else{
+        mode = (byte)0b10; // disp32
+      }
+    }
+    return mode;
+  }
+
   /**
    * Move r to r/m.
    * If "r" is 64 bit register, Add REX.W to instruction, otherwise it will not happen.
@@ -108,23 +139,7 @@ public class AMD64AsmBuilder{
    * @return This instance
    */
   public AMD64AsmBuilder movRM(Register r, Register m, OptionalInt disp){
-    int mode;
-    if(disp.isPresent()){
-      int dispAsInt = disp.getAsInt();
-      if(dispAsInt == 0){
-        mode = 0b00;
-      }
-      else if(dispAsInt <= 0xff){
-        mode = 0b01; // disp8
-      }
-      else{
-        mode = 0b10; // disp32
-      }
-    }
-    else{
-      mode = 0b11; // reg-reg by default
-    }
-
+    byte mode = calcModRMMode(disp);
     emitREXOp(r, m);
     byteBuf.put((byte)0x89); // MOV
     byteBuf.put((byte)(                 mode << 6  |
@@ -184,6 +199,67 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Compare imm32 with r/m.
+   * imm32 is treated as sign-extended if REX.W operation.
+   *   Opcode: REX.W + 81 /7 id (64 bit)
+   *                   81 /7 id (32 bit)
+   *   Instruction: CMP r/m, imm32
+   *   Op/En: MI
+   *
+   * @param m "r/m" register
+   * @param imm Immediate value to compare.
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public AMD64AsmBuilder cmp(Register m, int imm, OptionalInt disp){
+    byte mode = calcModRMMode(disp);
+    emitREXOp(Register.RAX /* dummy*/, m);
+    byteBuf.put((byte)0x81); // CMP
+    byteBuf.put((byte)(             mode << 6 |
+                                       7 << 3 | // digit (/7)
+                       (m.encoding() & 0x7)));
+
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    byteBuf.putInt(imm); // imm32
+
+    return this;
+  }
+
+  /**
+   * Set label at current position.
+   *
+   * @param name label name
+   * @return This instance
+   * @throws IllegalArgumentException thrown when the label already exists.
+   */
+  public AMD64AsmBuilder label(String name){
+    if(labelMap.containsKey(name)){
+      throw new IllegalArgumentException("Label \"" + name + "\" already exists.");
+    }
+
+    int labelPosition = byteBuf.position();
+    labelMap.put(name, labelPosition);
+
+    if(pendingLabelMap.containsKey(name)){
+      Set<PendingJump> jumps = pendingLabelMap.remove(name);
+      for(var jumpData : jumps){
+        byteBuf.position(jumpData.position());
+        int offset = labelPosition - jumpData.position();
+        jumpData.emitOp().accept(offset);
+      }
+    }
+
+    byteBuf.position(labelPosition);
+    return this;
+  }
+
+  /**
    * One byte no-operation instruction
    *
    * @return This instance
@@ -194,11 +270,60 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Jump short if less (SF ≠ OF).
+   *   Opcode:    7C cb (rel8)
+   *           0F 8C cd (rel32)
+   *   Instruction: JL
+   *   Op/En: D
+   *
+   * @param label the label to jump.
+   * @return This instance
+   */
+  public AMD64AsmBuilder jl(String label){
+    Consumer<Integer> emitOp = (o) -> {
+      if((o > -129) && (o < 128)){
+        // rel8
+        byteBuf.put((byte)0x7c);
+        byteBuf.put(o.byteValue());
+      }
+      else{
+        // rel32
+        byteBuf.put((byte)0x0f);
+        byteBuf.put((byte)0x8c);
+        byteBuf.putInt(o.intValue());
+      }
+    };
+
+    int position = byteBuf.position();
+    Integer labelPosition = labelMap.get(label);
+    if(labelPosition == null){
+      /* forward jump - pending until label is set */
+      Set<PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
+      jumps.add(new PendingJump(emitOp, position));
+
+      // Fill with NOP in 6 bytes (max 2 opcodes + rel32) temporally.
+      for(int i = 0; i < 6; i++){
+        nop();
+      }
+    }
+    else{
+      int offset = labelPosition.intValue() - position;
+      emitOp.accept(offset);
+    }
+
+    return this;
+  }
+
+  /**
    * Build as a MethodHandle
    *
    * @return MethodHandle for this assembly
+   * @throws IllegalStateException when label(s) are not defined even if they are used
    */
   public MethodHandle build(){
+    if(!pendingLabelMap.isEmpty()){
+      throw new IllegalStateException("Label is not defined: " + pendingLabelMap.keySet().toString());
+    }
     seg.incTail(byteBuf.position());
     return Linker.nativeLinker().downcallHandle(mem, desc);
   }
