@@ -289,6 +289,7 @@ public class AMD64AsmBuilder{
       }
       else{
         // rel32
+        offset -= 3; // opcode (1 bytes) - imm32 (4 bytes)
         byteBuf.put((byte)0xe9);
         byteBuf.putInt(offset);
       }
@@ -338,6 +339,7 @@ public class AMD64AsmBuilder{
       }
       else{
         // rel32
+        offset -= 3; // opcode (1 bytes) - imm32 (4 bytes)
         byteBuf.put((byte)0xe9);
         byteBuf.putInt(offset);
       }
