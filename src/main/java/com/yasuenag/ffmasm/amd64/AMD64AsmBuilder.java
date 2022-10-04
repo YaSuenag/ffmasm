@@ -184,6 +184,16 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * One byte no-operation instruction
+   *
+   * @return This instance
+   */
+  public AMD64AsmBuilder nop(){
+    byteBuf.put((byte)0x90);
+    return this;
+  }
+
+  /**
    * Build as a MethodHandle
    *
    * @return MethodHandle for this assembly

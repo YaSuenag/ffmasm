@@ -90,4 +90,33 @@ public class AsmTest{
     }
   }
 
+  /**
+   * Test NOP
+   */
+  @Test
+  public void testNOP(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT // 1st argument
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+          /* push %rbp         */ .push(Register.RBP)
+          /* mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* nop               */ .nop()
+          /* mov %rdi, %rax    */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+          /* nop               */ .nop()
+          /* leave             */ .leave()
+          /* ret               */ .ret()
+                                  .build();
+
+      final int expected = 100;
+      int actual = (int)method.invoke(expected);
+      Assertions.assertEquals(expected, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }
