@@ -284,13 +284,14 @@ public class AMD64AsmBuilder{
       int offset = o.intValue() - 2;
       if((offset > -129) && (offset < 128)){
         // rel8
-        byteBuf.put((byte)0xeb);
+        byteBuf.put((byte)0x7c);
         byteBuf.put((byte)offset);
       }
       else{
         // rel32
-        offset -= 3; // opcode (1 bytes) - imm32 (4 bytes)
-        byteBuf.put((byte)0xe9);
+        offset -= 4; // opcode (2 bytes) - imm32 (4 bytes)
+        byteBuf.put((byte)0x0f);
+        byteBuf.put((byte)0x8c);
         byteBuf.putInt(offset);
       }
     };
