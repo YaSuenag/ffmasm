@@ -238,7 +238,7 @@ public class AsmTest{
          /*   push %rbp         */ .push(Register.RBP)
          /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
          /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
-         /*   jl success        */ .jl("success");
+         /*   jmp success       */ .jmp("success");
       for(int i = 0; i < 200; i++){
          /* nop */ builder.nop();
       }
