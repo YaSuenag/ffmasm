@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.ValueLayout;
+import java.nio.ByteOrder;
 import java.util.OptionalInt;
 
 import com.yasuenag.ffmasm.CodeSegment;
@@ -376,6 +377,33 @@ public class AsmTest{
                                 .build();
 
       method.invoke();
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Test address alignment
+   */
+  @Test
+  public void testAlignment(){
+    try(var seg = new CodeSegment()){
+      var byteBuf = seg.getTailOfMemorySegment()
+                       .asByteBuffer()
+                       .order(ByteOrder.nativeOrder());
+      var desc = FunctionDescriptor.ofVoid();
+      var builder = AMD64AsmBuilder.create(seg, desc)
+                                   .nop()
+                                   .alignTo16BytesWithNOP()
+                                   .build();
+
+      Assertions.assertEquals(16, seg.getTail(), "Memory size is not aligned.");
+      byte[] array = new byte[16];
+      byteBuf.get(array, 0, 16);
+      for(byte b : array){
+        Assertions.assertEquals((byte)0x90, b, "Not NOP");
+      }
     }
     catch(Throwable t){
       Assertions.fail(t);

@@ -436,6 +436,23 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Align the position to 16 bytes with NOP.
+   *
+   * @return This instance
+   */
+  public AMD64AsmBuilder alignTo16BytesWithNOP(){
+    int position = byteBuf.position();
+    if((position & 0xf) > 0){ // not aligned
+      int newPosition = (position + 0x10) & 0xfffffff0;
+      int diff = newPosition - position;
+      for(int i = 0; i < diff; i++){
+        nop();
+      }
+    }
+    return this;
+  }
+
+  /**
    * Build as a MethodHandle
    *
    * @return MethodHandle for this assembly
