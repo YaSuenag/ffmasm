@@ -153,6 +153,39 @@ public class AsmTest{
   }
 
   /**
+   * Test JAE
+   */
+  @Test
+  public void testJAE(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT, // 1st argument (success)
+                   ValueLayout.JAVA_INT  // 2nd argument (failure)
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+        /*   push %rbp         */ .push(Register.RBP)
+        /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
+        /*   jae success       */ .jae("success")
+        /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+        /*   leave             */ .leave()
+        /*   ret               */ .ret()
+        /* success:            */ .label("success")
+        /*   mov %rdi, %rax    */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   leave             */ .leave()
+        /*   ret               */ .ret()
+                                  .build();
+
+      int actual = (int)method.invoke(10, 0);
+      Assertions.assertEquals(10, actual, "Seems not to jump at JAE.");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Tests forward & backward jump.
    */
   @Test
@@ -217,6 +250,42 @@ public class AsmTest{
       var method = builder.build();
       int actual = (int)method.invoke(0, 10);
       Assertions.assertEquals(0, actual, "Seems not to jump at JL with imm32.");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Test JAE with imm32
+   */
+  @Test
+  public void testJAEwithImm32(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT, // 1st argument (success)
+                   ValueLayout.JAVA_INT  // 2nd argument (failure)
+                 );
+      var builder = AMD64AsmBuilder.create(seg, desc)
+         /*   push %rbp         */ .push(Register.RBP)
+         /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+         /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
+         /*   jae success       */ .jae("success");
+      for(int i = 0; i < 200; i++){
+         /* nop */ builder.nop();
+      }
+        /*   leave             */ builder.leave()
+        /*   ret               */        .ret()
+        /* success:            */        .label("success")
+        /*   mov %rdi, %rax    */        .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   leave             */        .leave()
+        /*   ret               */        .ret();
+
+      var method = builder.build();
+      int actual = (int)method.invoke(10, 0);
+      Assertions.assertEquals(10, actual, "Seems not to jump at JAE with imm32.");
     }
     catch(Throwable t){
       Assertions.fail(t);
