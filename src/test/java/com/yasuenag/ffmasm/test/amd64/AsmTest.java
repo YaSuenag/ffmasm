@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.ValueLayout;
 import java.util.OptionalInt;
@@ -33,6 +34,15 @@ import com.yasuenag.ffmasm.amd64.Register;
 
 @Tag("amd64")
 public class AsmTest{
+
+  /**
+   * Show PID, address of CodeSegment, then waits stdin input.
+   */
+  private static void showDebugMessage(CodeSegment seg) throws IOException{
+    System.out.println("PID: " + ProcessHandle.current().pid());
+    System.out.println("Addr: 0x" + Long.toHexString(seg.getAddr().toRawLongValue()));
+    System.in.read();
+  }
 
   /**
    * Tests prologue (push, movRM), movRM, epilogue (leave, ret)
