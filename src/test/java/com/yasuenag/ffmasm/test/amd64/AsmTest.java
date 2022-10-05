@@ -346,4 +346,30 @@ public class AsmTest{
     }
   }
 
+  /**
+   * Test RDRAND
+   */
+  @Test
+  public void testRDRAND(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT // return value
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+         /*   push %rbp      */ .push(Register.RBP)
+         /*   mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+         /* retry:           */ .label("retry")
+         /*   rdrand %rax    */ .rdrand(Register.RAX)
+         /*   jae retry      */ .jae("retry")
+         /*   leave          */ .leave()
+         /*   ret            */ .ret()
+                                .build();
+
+      method.invoke();
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }
