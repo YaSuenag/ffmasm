@@ -197,6 +197,41 @@ public class AsmTest{
   }
 
   /**
+   * Tests 8 bit CMP
+   */
+  @Test
+  public void test8bitCMP(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_BYTE, // 1st argument (success)
+                   ValueLayout.JAVA_BYTE  // 2nd argument (failure)
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+        /*   push %rbp         */ .push(Register.RBP)
+        /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov %rdi, %rbx    */ .movRM(Register.RDI, Register.RCX, OptionalInt.empty())
+        /*   mov %rsi, %rcx    */ .movRM(Register.RSI, Register.RDX, OptionalInt.empty())
+        /*   cmp   $1, %cl     */ .cmp(Register.CL, 1, OptionalInt.empty())
+        /*   jl success        */ .jl("success")
+        /*   mov %dl, %al      */ .movRM(Register.DL, Register.AL, OptionalInt.empty()) // failure
+        /*   leave             */ .leave()
+        /*   ret               */ .ret()
+        /* success:            */ .label("success")
+        /*   mov %cl, %al      */ .movRM(Register.CL, Register.AL, OptionalInt.empty()) // success
+        /*   leave             */ .leave()
+        /*   ret               */ .ret()
+                                  .build();
+
+      int actual = (int)method.invoke((byte)0, (byte)10);
+      Assertions.assertEquals(0, actual, "8 bit CMP test failed.");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Test JAE
    */
   @Test

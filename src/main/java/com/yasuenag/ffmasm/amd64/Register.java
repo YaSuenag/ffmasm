@@ -26,6 +26,15 @@ package com.yasuenag.ffmasm.amd64;
  */
 public enum Register{
 
+  AL(0, 8),
+  CL(1, 8),
+  DL(2, 8),
+  BL(3, 8),
+  AH(4, 8),
+  CH(5, 8),
+  DH(6, 8),
+  BH(7, 8),
+
   AX(0, 16),
   CX(1, 16),
   DX(2, 16),

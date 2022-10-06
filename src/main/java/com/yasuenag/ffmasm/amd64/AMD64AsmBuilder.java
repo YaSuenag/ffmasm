@@ -143,6 +143,7 @@ public class AMD64AsmBuilder{
    *   Opcode: REX.W + 89 /r (64 bit)
    *                   89 /r (32 bit)
    *              66 + 89 /r (16 bit)
+   *                   88 /r ( 8 bit)
    *   Instruction: MOV r/m,r
    *   Op/En: RM
    *
@@ -154,7 +155,8 @@ public class AMD64AsmBuilder{
   public AMD64AsmBuilder movRM(Register r, Register m, OptionalInt disp){
     byte mode = calcModRMMode(disp);
     emitREXOp(r, m);
-    byteBuf.put((byte)0x89); // MOV
+    byte opcode = (r.width() == 8) ? (byte)0x88 : (byte)0x89;
+    byteBuf.put(opcode); // MOV
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
                         (m.encoding() & 0x7)));
@@ -212,12 +214,15 @@ public class AMD64AsmBuilder{
   }
 
   /**
-   * Compare imm32 with r/m.
+   * Compare imm with r/m.
    * imm32 is treated as sign-extended if REX.W operation.
    *   Opcode: REX.W + 81 /7 id (64 bit)
    *                   81 /7 id (32 bit)
-   *             66H + 81 /7 id (16 bit)
-   *   Instruction: CMP r/m, imm32
+   *             66H + 81 /7 iw (16 bit)
+   *                   80 /7 ib ( 8 bit)
+   *   Instruction: CMP r/m, imm32 (64 bit, 32bit)
+   *                CMP r/m, imm16 (16 bit)
+   *                CMP r/m, imm8  ( 8 bit)
    *   Op/En: MI
    *
    * @param m "r/m" register
@@ -228,12 +233,14 @@ public class AMD64AsmBuilder{
   public AMD64AsmBuilder cmp(Register m, int imm, OptionalInt disp){
     byte mode = calcModRMMode(disp);
     Register dummy = switch(m.width()){
+      case  8 -> Register.AL;
       case 16 -> Register.AX;
       case 32 -> Register.EAX;
       default -> Register.RAX;
     };
     emitREXOp(dummy, m);
-    byteBuf.put((byte)0x81); // CMP
+    byte opcode = (m.width() == 8) ? (byte)0x80 : (byte)0x81;
+    byteBuf.put(opcode); // CMP
     byteBuf.put((byte)(             mode << 6 |
                                        7 << 3 | // digit (/7)
                        (m.encoding() & 0x7)));
@@ -245,8 +252,10 @@ public class AMD64AsmBuilder{
       byteBuf.putInt(disp.getAsInt());
     }
 
-    if(m.width() == 16){
-      System.out.println(Short.toString((short)imm));
+    if(m.width() == 8){
+      byteBuf.put((byte)imm); // imm8
+    }
+    else if(m.width() == 16){
       byteBuf.putShort((short)imm); // imm16
     }
     else{
