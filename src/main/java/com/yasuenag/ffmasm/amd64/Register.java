@@ -26,6 +26,15 @@ package com.yasuenag.ffmasm.amd64;
  */
 public enum Register{
 
+  AX(0, 16),
+  CX(1, 16),
+  DX(2, 16),
+  BX(3, 16),
+  SP(4, 16),
+  BP(5, 16),
+  SI(6, 16),
+  DI(7, 16),
+
   EAX(0, 32),
   ECX(1, 32),
   EDX(2, 32),

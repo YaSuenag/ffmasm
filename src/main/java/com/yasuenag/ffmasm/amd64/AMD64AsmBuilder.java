@@ -83,27 +83,38 @@ public class AMD64AsmBuilder{
   }
 
   /**
-   * Push r64.
-   *   Opcode: 50+rd
-   *   Instruction: PUSH r64
+   * Push.
+   *   Opcode: 50+rd (64 bit)
+   *           50+rw (16 bit)
+   *   Instruction: PUSH
    *   Op/En: O
    *
    * @param reg Register to push to the stack.
    * @return This instance
    */
   public AMD64AsmBuilder push(Register reg){
+    if(reg.width() == 16){
+      // Ops for 16 bits operands (66H)
+      byteBuf.put((byte)0x66);
+    }
     byteBuf.put((byte)(0x50 | reg.encoding()));
     return this;
   }
 
   private void emitREXOp(Register r, Register m){
-    byte rexw = (r.width() == 64) ? (byte)0b1000 : (byte)0;
-    byte rexr = (byte)(((r.encoding() >> 3) << 2) & 0b0100);
-    byte rexb = (byte)((m.encoding() >> 3) & 0b0001);
-    byte rex = (byte)(rexw | rexr | rexb);
-    if(rex != 0){
-      rex |= (byte)0b01000000;
-      byteBuf.put(rex);
+    if(r.width() == 16){
+      // Ops for 16 bits operands (66H)
+      byteBuf.put((byte)0x66);
+    }
+    else{
+      byte rexw = (r.width() == 64) ? (byte)0b1000 : (byte)0;
+      byte rexr = (byte)(((r.encoding() >> 3) << 2) & 0b0100);
+      byte rexb = (byte)((m.encoding() >> 3) & 0b0001);
+      byte rex = (byte)(rexw | rexr | rexb);
+      if(rex != 0){
+        rex |= (byte)0b01000000;
+        byteBuf.put(rex);
+      }
     }
   }
 
@@ -127,9 +138,11 @@ public class AMD64AsmBuilder{
   /**
    * Move r to r/m.
    * If "r" is 64 bit register, Add REX.W to instruction, otherwise it will not happen.
+   * If "r" is 16 bit register, Add 66H to instruction, otherwise it will not happen.
    * If "disp" is not empty, r/m operand treats as memory.
    *   Opcode: REX.W + 89 /r (64 bit)
    *                   89 /r (32 bit)
+   *              66 + 89 /r (16 bit)
    *   Instruction: MOV r/m,r
    *   Op/En: RM
    *
@@ -203,6 +216,7 @@ public class AMD64AsmBuilder{
    * imm32 is treated as sign-extended if REX.W operation.
    *   Opcode: REX.W + 81 /7 id (64 bit)
    *                   81 /7 id (32 bit)
+   *             66H + 81 /7 id (16 bit)
    *   Instruction: CMP r/m, imm32
    *   Op/En: MI
    *
@@ -213,7 +227,12 @@ public class AMD64AsmBuilder{
    */
   public AMD64AsmBuilder cmp(Register m, int imm, OptionalInt disp){
     byte mode = calcModRMMode(disp);
-    emitREXOp(Register.RAX /* dummy*/, m);
+    Register dummy = switch(m.width()){
+      case 16 -> Register.AX;
+      case 32 -> Register.EAX;
+      default -> Register.RAX;
+    };
+    emitREXOp(dummy, m);
     byteBuf.put((byte)0x81); // CMP
     byteBuf.put((byte)(             mode << 6 |
                                        7 << 3 | // digit (/7)
@@ -226,7 +245,13 @@ public class AMD64AsmBuilder{
       byteBuf.putInt(disp.getAsInt());
     }
 
-    byteBuf.putInt(imm); // imm32
+    if(m.width() == 16){
+      System.out.println(Short.toString((short)imm));
+      byteBuf.putShort((short)imm); // imm16
+    }
+    else{
+      byteBuf.putInt(imm); // imm32
+    }
 
     return this;
   }

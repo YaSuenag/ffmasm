@@ -164,6 +164,39 @@ public class AsmTest{
   }
 
   /**
+   * Tests 16 bit CMP
+   */
+  @Test
+  public void test16bitCMP(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_SHORT, // 1st argument (success)
+                   ValueLayout.JAVA_SHORT  // 2nd argument (failure)
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+        /*   push %rbp         */ .push(Register.RBP)
+        /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   cmp   $1, %di     */ .cmp(Register.DI, 1, OptionalInt.empty())
+        /*   jl success        */ .jl("success")
+        /*   mov %si, %ax      */ .movRM(Register.SI, Register.AX, OptionalInt.empty()) // failure
+        /*   leave             */ .leave()
+        /*   ret               */ .ret()
+        /* success:            */ .label("success")
+        /*   mov %di, %ax      */ .movRM(Register.DI, Register.AX, OptionalInt.empty()) // success
+        /*   leave             */ .leave()
+        /*   ret               */ .ret()
+                                  .build();
+
+      int actual = (int)method.invoke((short)0, (short)10);
+      Assertions.assertEquals(0, actual, "16 bit CMP test failed.");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Test JAE
    */
   @Test
