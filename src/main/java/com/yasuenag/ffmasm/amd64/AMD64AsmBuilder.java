@@ -407,29 +407,18 @@ public class AMD64AsmBuilder{
     return this;
   }
 
-  /**
-   * Jump if equal (ZF = 1).
-   *   Opcode:    74 cb (rel8)
-   *           0F 84 cd (rel32)
-   *   Instruction: JE
-   *   Op/En: D
-   *
-   * @param label the label to jump.
-   * @return This instance
-   */
-  public AMD64AsmBuilder je(String label){
+  private void jcc(byte opcode8, byte[] opcode, String label){
     Consumer<Integer> emitOp = (o) -> {
       int offset = o.intValue() - 2;
       if((offset > -129) && (offset < 128)){
         // rel8
-        byteBuf.put((byte)0x74);
+        byteBuf.put(opcode8);
         byteBuf.put((byte)offset);
       }
       else{
         // rel32
         offset -= 4; // opcode (2 bytes) - imm32 (4 bytes)
-        byteBuf.put((byte)0x0f);
-        byteBuf.put((byte)0x84);
+        byteBuf.put(opcode);
         byteBuf.putInt(offset);
       }
     };
@@ -450,7 +439,20 @@ public class AMD64AsmBuilder{
       int offset = labelPosition.intValue() - position;
       emitOp.accept(offset);
     }
+  }
 
+  /**
+   * Jump if equal (ZF = 1).
+   *   Opcode:    74 cb (rel8)
+   *           0F 84 cd (rel32)
+   *   Instruction: JE
+   *   Op/En: D
+   *
+   * @param label the label to jump.
+   * @return This instance
+   */
+  public AMD64AsmBuilder je(String label){
+    jcc((byte)0x74, new byte[]{(byte)0x0f, (byte)0x84}, label);
     return this;
   }
 
@@ -465,39 +467,7 @@ public class AMD64AsmBuilder{
    * @return This instance
    */
   public AMD64AsmBuilder jl(String label){
-    Consumer<Integer> emitOp = (o) -> {
-      int offset = o.intValue() - 2;
-      if((offset > -129) && (offset < 128)){
-        // rel8
-        byteBuf.put((byte)0x7c);
-        byteBuf.put((byte)offset);
-      }
-      else{
-        // rel32
-        offset -= 4; // opcode (2 bytes) - imm32 (4 bytes)
-        byteBuf.put((byte)0x0f);
-        byteBuf.put((byte)0x8c);
-        byteBuf.putInt(offset);
-      }
-    };
-
-    int position = byteBuf.position();
-    Integer labelPosition = labelMap.get(label);
-    if(labelPosition == null){
-      /* forward jump - pending until label is set */
-      Set<PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
-      jumps.add(new PendingJump(emitOp, position));
-
-      // Fill with NOP in 6 bytes (max 2 opcodes + rel32) temporally.
-      for(int i = 0; i < 6; i++){
-        nop();
-      }
-    }
-    else{
-      int offset = labelPosition.intValue() - position;
-      emitOp.accept(offset);
-    }
-
+    jcc((byte)0x7c, new byte[]{(byte)0x0f, (byte)0x8c}, label);
     return this;
   }
 
@@ -512,39 +482,7 @@ public class AMD64AsmBuilder{
    * @return This instance
    */
   public AMD64AsmBuilder jae(String label){
-    Consumer<Integer> emitOp = (o) -> {
-      int offset = o.intValue() - 2;
-      if((offset > -129) && (offset < 128)){
-        // rel8
-        byteBuf.put((byte)0x73);
-        byteBuf.put((byte)offset);
-      }
-      else{
-        // rel32
-        offset -= 4; // opcode (2 bytes) - imm32 (4 bytes)
-        byteBuf.put((byte)0x0f);
-        byteBuf.put((byte)0x83);
-        byteBuf.putInt(offset);
-      }
-    };
-
-    int position = byteBuf.position();
-    Integer labelPosition = labelMap.get(label);
-    if(labelPosition == null){
-      /* forward jump - pending until label is set */
-      Set<PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
-      jumps.add(new PendingJump(emitOp, position));
-
-      // Fill with NOP in 6 bytes (max 2 opcodes + rel32) temporally.
-      for(int i = 0; i < 6; i++){
-        nop();
-      }
-    }
-    else{
-      int offset = labelPosition.intValue() - position;
-      emitOp.accept(offset);
-    }
-
+    jcc((byte)0x73, new byte[]{(byte)0x0f, (byte)0x83}, label);
     return this;
   }
 
@@ -559,39 +497,7 @@ public class AMD64AsmBuilder{
    * @return This instance
    */
   public AMD64AsmBuilder jne(String label){
-    Consumer<Integer> emitOp = (o) -> {
-      int offset = o.intValue() - 2;
-      if((offset > -129) && (offset < 128)){
-        // rel8
-        byteBuf.put((byte)0x75);
-        byteBuf.put((byte)offset);
-      }
-      else{
-        // rel32
-        offset -= 4; // opcode (2 bytes) - imm32 (4 bytes)
-        byteBuf.put((byte)0x0f);
-        byteBuf.put((byte)0x85);
-        byteBuf.putInt(offset);
-      }
-    };
-
-    int position = byteBuf.position();
-    Integer labelPosition = labelMap.get(label);
-    if(labelPosition == null){
-      /* forward jump - pending until label is set */
-      Set<PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
-      jumps.add(new PendingJump(emitOp, position));
-
-      // Fill with NOP in 6 bytes (max 2 opcodes + rel32) temporally.
-      for(int i = 0; i < 6; i++){
-        nop();
-      }
-    }
-    else{
-      int offset = labelPosition.intValue() - position;
-      emitOp.accept(offset);
-    }
-
+    jcc((byte)0x75, new byte[]{(byte)0x0f, (byte)0x85}, label);
     return this;
   }
 
