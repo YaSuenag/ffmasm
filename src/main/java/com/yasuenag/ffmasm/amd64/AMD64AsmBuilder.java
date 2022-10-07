@@ -266,6 +266,58 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Add imm to r/m.
+   * imm32 is treated as sign-extended if REX.W operation.
+   *   Opcode: REX.W + 81 /0 id (64 bit)
+   *                   81 /0 id (32 bit)
+   *             66H + 81 /0 iw (16 bit)
+   *                   80 /0 ib ( 8 bit)
+   *   Instruction: ADD r/m, imm32 (64 bit, 32bit)
+   *                ADD r/m, imm16 (16 bit)
+   *                ADD r/m, imm8  ( 8 bit)
+   *   Op/En: MI
+   *
+   * @param m "r/m" register
+   * @param imm Immediate value to add
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public AMD64AsmBuilder add(Register m, int imm, OptionalInt disp){
+    byte mode = calcModRMMode(disp);
+    Register dummy = switch(m.width()){
+      case  8 -> Register.AL;
+      case 16 -> Register.AX;
+      case 32 -> Register.EAX;
+      default -> Register.RAX;
+    };
+    emitREXOp(dummy, m);
+    byte opcode = (m.width() == 8) ? (byte)0x80 : (byte)0x81;
+    byteBuf.put(opcode); // ADD
+    byteBuf.put((byte)(             mode << 6 |
+                                            0 | // digit (/0)
+                       (m.encoding() & 0x7)));
+
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    if(m.width() == 8){
+      byteBuf.put((byte)imm); // imm8
+    }
+    else if(m.width() == 16){
+      byteBuf.putShort((short)imm); // imm16
+    }
+    else{
+      byteBuf.putInt(imm); // imm32
+    }
+
+    return this;
+  }
+
+  /**
    * Set label at current position.
    *
    * @param name label name

@@ -232,6 +232,36 @@ public class AsmTest{
   }
 
   /**
+   * Tests ADDs
+   */
+  @Test
+  public void testADDs(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT  // 1st argument
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+             /* push %rbp      */ .push(Register.RBP)
+             /* mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+             /* mov %rdi, %rax */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+             /* add $1, %al    */ .add(Register.AL, 1, OptionalInt.empty())
+             /* add $2, %ax    */ .add(Register.AX, 2, OptionalInt.empty())
+             /* add $3, %eax   */ .add(Register.EAX, 3, OptionalInt.empty())
+             /* add $4, %rax   */ .add(Register.RAX, 4, OptionalInt.empty())
+             /* leave          */ .leave()
+             /* ret            */ .ret()
+                                  .build();
+
+      int actual = (int)method.invoke(0);
+      Assertions.assertEquals(10, actual, "Add operations failed.");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Test JAE
    */
   @Test
