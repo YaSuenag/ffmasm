@@ -502,6 +502,53 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Jump if not equal (ZF = 0).
+   *   Opcode:    75 cb (rel8)
+   *           0F 85 cd (rel32)
+   *   Instruction: JNE
+   *   Op/En: D
+   *
+   * @param label the label to jump.
+   * @return This instance
+   */
+  public AMD64AsmBuilder jne(String label){
+    Consumer<Integer> emitOp = (o) -> {
+      int offset = o.intValue() - 2;
+      if((offset > -129) && (offset < 128)){
+        // rel8
+        byteBuf.put((byte)0x75);
+        byteBuf.put((byte)offset);
+      }
+      else{
+        // rel32
+        offset -= 4; // opcode (2 bytes) - imm32 (4 bytes)
+        byteBuf.put((byte)0x0f);
+        byteBuf.put((byte)0x85);
+        byteBuf.putInt(offset);
+      }
+    };
+
+    int position = byteBuf.position();
+    Integer labelPosition = labelMap.get(label);
+    if(labelPosition == null){
+      /* forward jump - pending until label is set */
+      Set<PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
+      jumps.add(new PendingJump(emitOp, position));
+
+      // Fill with NOP in 6 bytes (max 2 opcodes + rel32) temporally.
+      for(int i = 0; i < 6; i++){
+        nop();
+      }
+    }
+    else{
+      int offset = labelPosition.intValue() - position;
+      emitOp.accept(offset);
+    }
+
+    return this;
+  }
+
+  /**
    * Jump.
    *   Opcode: EB cb (rel8)
    *           E9 cd (rel32)
