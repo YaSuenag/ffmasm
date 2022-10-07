@@ -262,6 +262,36 @@ public class AsmTest{
   }
 
   /**
+   * Tests SUBs
+   */
+  @Test
+  public void testSUBs(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT  // 1st argument
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+             /* push %rbp      */ .push(Register.RBP)
+             /* mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+             /* mov %rdi, %rax */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+             /* sub $1, %al    */ .sub(Register.AL, 1, OptionalInt.empty())
+             /* sub $2, %ax    */ .sub(Register.AX, 2, OptionalInt.empty())
+             /* sub $3, %eax   */ .sub(Register.EAX, 3, OptionalInt.empty())
+             /* sub $4, %rax   */ .sub(Register.RAX, 4, OptionalInt.empty())
+             /* leave          */ .leave()
+             /* ret            */ .ret()
+                                  .build();
+
+      int actual = (int)method.invoke(20);
+      Assertions.assertEquals(10, actual, "Sub operations failed.");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Test JAE
    */
   @Test
