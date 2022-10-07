@@ -553,8 +553,9 @@ public class AMD64AsmBuilder{
 
   /**
    * Read a random number and store in the destination register.
-   *   Opcode: NFx 0F C7 /6 RDRAND r32
-   *           NFx REX.W + 0F C7 /6 RDRAND r64
+   *   Opcode:   NFx 66H + 0F C7 /6 r16
+   *                   NFx 0F C7 /6 r32
+   *           NFx REX.W + 0F C7 /6 r64
    *   Instruction: RDRAND
    *   Op/En: M
    *
@@ -563,7 +564,17 @@ public class AMD64AsmBuilder{
    */
   public AMD64AsmBuilder rdrand(Register m){
     byte mode = calcModRMMode(OptionalInt.empty());
-    emitREXOp(Register.RAX /* dummy*/, m);
+    if(m.width() == 16){
+      // Ops for 16 bits operands (66H)
+      byteBuf.put((byte)0x66);
+    }
+    Register dummy = switch(m.width()){
+      case  8 -> Register.AL;
+      case 16 -> Register.AX;
+      case 32 -> Register.EAX;
+      default -> Register.RAX;
+    };
+    emitREXOp(dummy, m);
     byteBuf.put((byte)0x0f); // RARAND (1)
     byteBuf.put((byte)0xc7); // RARAND (2)
     byteBuf.put((byte)(             mode << 6 |

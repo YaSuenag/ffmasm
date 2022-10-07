@@ -635,6 +635,8 @@ public class AsmTest{
       var method = AMD64AsmBuilder.create(seg, desc)
          /*   push %rbp      */ .push(Register.RBP)
          /*   mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+         /*   rdrand %ax     */ .rdrand(Register.AX)  // encode check
+         /*   rdrand %eax    */ .rdrand(Register.EAX) // encode check
          /* retry:           */ .label("retry")
          /*   rdrand %rax    */ .rdrand(Register.RAX)
          /*   jae retry      */ .jae("retry")
@@ -642,6 +644,7 @@ public class AsmTest{
          /*   ret            */ .ret()
                                 .build();
 
+      //showDebugMessage(seg);
       method.invoke();
     }
     catch(Throwable t){
