@@ -370,6 +370,46 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Multiply r/m by 2, imm8 times.
+   *   Opcode: REX.W + C1 /4 ib (64 bit)
+   *                   C1 /4 ib (32 bit)
+   *             66H + C1 /4 ib (16 bit)
+   *                   C0 /4 ib ( 8 bit)
+   *   Instruction: SHL r/m, imm8
+   *   Op/En: MI
+   *
+   * @param m "r/m" register
+   * @param imm Immediate value to subtract
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public AMD64AsmBuilder shl(Register m, byte imm, OptionalInt disp){
+    byte mode = calcModRMMode(disp);
+    Register dummy = switch(m.width()){
+      case  8 -> Register.AL;
+      case 16 -> Register.AX;
+      case 32 -> Register.EAX;
+      default -> Register.RAX;
+    };
+    emitREXOp(dummy, m);
+    byte opcode = (m.width() == 8) ? (byte)0xc0 : (byte)0xc1;
+    byteBuf.put(opcode); // SAL
+    byteBuf.put((byte)(             mode << 6 |
+                                       4 << 3 | // digit (/4)
+                       (m.encoding() & 0x7)));
+
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    byteBuf.put(imm); // imm8
+    return this;
+  }
+
+  /**
    * Set label at current position.
    *
    * @param name label name

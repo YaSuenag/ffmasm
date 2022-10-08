@@ -292,6 +292,36 @@ public class AsmTest{
   }
 
   /**
+   * Tests SHLs
+   */
+  @Test
+  public void testSHLs(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT  // 1st argument
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+             /* push %rbp      */ .push(Register.RBP)
+             /* mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+             /* mov %rdi, %rax */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+             /* shl $1, %al    */ .shl(Register.AL, (byte)1, OptionalInt.empty())
+             /* shl $2, %ax    */ .shl(Register.AX, (byte)2, OptionalInt.empty())
+             /* shl $3, %eax   */ .shl(Register.EAX, (byte)3, OptionalInt.empty())
+             /* shl $4, %rax   */ .shl(Register.RAX, (byte)4, OptionalInt.empty())
+             /* leave          */ .leave()
+             /* ret            */ .ret()
+                                  .build();
+
+      int actual = (int)method.invoke(1);
+      Assertions.assertEquals(1024, actual, "SHL operations failed.");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Test JAE
    */
   @Test
