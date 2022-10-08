@@ -625,6 +625,40 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Read a NIST SP800-90B & C compliant random value and
+   * store in the destination register.
+   *   Opcode:   NFx 66H + 0F C7 /7 r16
+   *                   NFx 0F C7 /7 r32
+   *           NFx REX.W + 0F C7 /7 r64
+   *   Instruction: RDSEED
+   *   Op/En: M
+   *
+   * @param m "r/m" register
+   * @return This instance
+   */
+  public AMD64AsmBuilder rdseed(Register m){
+    byte mode = calcModRMMode(OptionalInt.empty());
+    if(m.width() == 16){
+      // Ops for 16 bits operands (66H)
+      byteBuf.put((byte)0x66);
+    }
+    Register dummy = switch(m.width()){
+      case  8 -> Register.AL;
+      case 16 -> Register.AX;
+      case 32 -> Register.EAX;
+      default -> Register.RAX;
+    };
+    emitREXOp(dummy, m);
+    byteBuf.put((byte)0x0f); // RARAND (1)
+    byteBuf.put((byte)0xc7); // RARAND (2)
+    byteBuf.put((byte)(             mode << 6 |
+                                       7 << 3 | // digit (/7)
+                       (m.encoding() & 0x7)));
+
+    return this;
+  }
+
+  /**
    * Align the position to 16 bytes with NOP.
    *
    * @return This instance

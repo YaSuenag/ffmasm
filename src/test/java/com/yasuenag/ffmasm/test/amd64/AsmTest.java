@@ -683,6 +683,34 @@ public class AsmTest{
   }
 
   /**
+   * Test RDSEED
+   */
+  @Test
+  public void testRDSEED(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT // return value
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+         /*   push %rbp      */ .push(Register.RBP)
+         /*   mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+         /*   rdseed %ax     */ .rdseed(Register.AX)  // encode check
+         /*   rdseed %eax    */ .rdseed(Register.EAX) // encode check
+         /* retry:           */ .label("retry")
+         /*   rdseed %rax    */ .rdseed(Register.RAX)
+         /*   jae retry      */ .jae("retry")
+         /*   leave          */ .leave()
+         /*   ret            */ .ret()
+                                .build();
+
+      method.invoke();
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Test address alignment
    */
   @Test
