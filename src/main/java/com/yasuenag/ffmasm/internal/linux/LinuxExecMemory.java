@@ -21,7 +21,6 @@ package com.yasuenag.ffmasm.internal.linux;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
 import java.lang.foreign.MemoryAddress;
-import java.lang.foreign.MemorySession;
 import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
@@ -88,7 +87,7 @@ public class LinuxExecMemory implements ExecMemory{
       hndMmap = Linker.nativeLinker().downcallHandle(func, desc);
     }
 
-    try(var session = MemorySession.openConfined()){
+    try{
       MemoryAddress mem = (MemoryAddress)hndMmap.invoke(addr, length, prot, flags, fd, offset);
       if(mem.toRawLongValue() == -1L){ // MAP_FAILED
         throw new PlatformException("mmap() failed", Errno.get());
@@ -111,7 +110,7 @@ public class LinuxExecMemory implements ExecMemory{
       hndMunmap = Linker.nativeLinker().downcallHandle(func, desc);
     }
 
-    try(var session = MemorySession.openConfined()){
+    try{
       int retval = (int)hndMunmap.invoke(addr, length);
       if(retval == -1){
         throw new PlatformException("munmap() failed", Errno.get());
