@@ -248,7 +248,7 @@ public class AsmTest{
       var method = AMD64AsmBuilder.create(seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   mov %rdi, %rbx    */ .movRM(Register.RDI, Register.RCX, OptionalInt.empty())
+        /*   mov %rdi, %rcx    */ .movRM(Register.RDI, Register.RCX, OptionalInt.empty())
         /*   mov %rsi, %rcx    */ .movRM(Register.RSI, Register.RDX, OptionalInt.empty())
         /*   cmp   $1, %cl     */ .cmp(Register.CL, 1, OptionalInt.empty())
         /*   jl success        */ .jl("success")
