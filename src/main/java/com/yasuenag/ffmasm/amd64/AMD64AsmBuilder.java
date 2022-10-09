@@ -101,6 +101,39 @@ public class AMD64AsmBuilder{
     return this;
   }
 
+  /**
+   * Pop top of stack into r/m; increment stack pointer.
+   *   Opcode: 66H + 8F /0 (64 bit)
+   *           8F /0 (16 bit)
+   *   Instruction: POP r/m
+   *   Op/En: M
+   *
+   * @param reg Register to push to the stack.
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public AMD64AsmBuilder pop(Register reg, OptionalInt disp){
+    byte mode = calcModRMMode(disp);
+
+    if(reg.width() == 16){
+      // Ops for 16 bits operands (66H)
+      byteBuf.put((byte)0x66);
+    }
+    byteBuf.put((byte)0x8f); // POP
+    byteBuf.put((byte)(             mode << 6 |
+                                            0 | // digit (/0)
+                        (reg.encoding() & 0x7)));
+
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    return this;
+  }
+
   private void emitREXOp(Register r, Register m){
     if(r.width() == 16){
       // Ops for 16 bits operands (66H)

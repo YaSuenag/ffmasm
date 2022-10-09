@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.MemorySession;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteOrder;
 import java.util.OptionalInt;
@@ -66,6 +67,43 @@ public class AsmTest{
       final int expected = 100;
       int actual = (int)method.invoke(expected);
       Assertions.assertEquals(expected, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests PUSH and POP
+   */
+  @Test
+  public void testPUSHandPOP(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.ofVoid(
+                   ValueLayout.JAVA_LONG,  // 1st argument
+                   ValueLayout.JAVA_SHORT, // 2nd Argument
+                   ValueLayout.ADDRESS     // 3rd Argument
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+          /* push %rbp         */ .push(Register.RBP)
+          /* mov  %rsp, %rbp   */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* push %rdi         */ .push(Register.RDI)
+          /* push %si          */ .push(Register.SI)
+          /* pop  %ax          */ .pop(Register.AX, OptionalInt.empty())
+          /* mov  %ax, 8(%rdx) */ .movRM(Register.AX, Register.RDX, OptionalInt.of(8))
+          /* pop  (%rdx)       */ .pop(Register.RDX, OptionalInt.of(0))
+          /* leave             */ .leave()
+          /* ret               */ .ret()
+                                  .build();
+
+      //showDebugMessage(seg);
+      try(var session = MemorySession.openConfined()){
+        var mem = session.allocate(10, 8);
+        method.invoke(1, (short)2, mem);
+
+        Assertions.assertEquals(1L, mem.get(ValueLayout.JAVA_LONG, 0));
+        Assertions.assertEquals((short)2, mem.get(ValueLayout.JAVA_SHORT, 8));
+      }
     }
     catch(Throwable t){
       Assertions.fail(t);
