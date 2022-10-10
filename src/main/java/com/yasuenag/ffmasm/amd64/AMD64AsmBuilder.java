@@ -70,7 +70,10 @@ public class AMD64AsmBuilder{
    * Create builder instance.
    *
    * @param seg code segment to use in this builder.
+   * @param desc function descriptor
    * @return Builder instance
+   * @throws UnsupportedPlatformException thrown when AMD64AsmBuilder is
+   *          attempted to instantiate on unsupported platform.
    */
   public static AMD64AsmBuilder create(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
     int bits = Integer.valueOf(System.getProperty("sun.arch.data.model"));
@@ -658,7 +661,7 @@ public class AMD64AsmBuilder{
   }
 
   /**
-   * Read a NIST SP800-90B & C compliant random value and
+   * Read a NIST SP800-90B &amp; C compliant random value and
    * store in the destination register.
    *   Opcode:   NFx 66H + 0F C7 /7 r16
    *                   NFx 0F C7 /7 r32
