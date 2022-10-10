@@ -12,6 +12,6 @@ jobs:
         id: init-env
         uses: ./.github/actions/init-env
       - name: Build with Maven
-        run: ${{ steps.init-env.outputs.maven-home }}/bin/mvn --batch-mode -Dgroups=linux,amd64 package
+        run: ${{ steps.init-env.outputs.maven-home }}/bin/mvn --batch-mode -Dgroups='linux & amd64' package
         env:
           JAVA_HOME: ${{ steps.init-env.outputs.java-home }}

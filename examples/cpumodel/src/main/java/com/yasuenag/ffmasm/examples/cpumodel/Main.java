@@ -39,16 +39,31 @@ public class Main{
     try(var codeSegment = new CodeSegment()){
       System.out.println("Addr: 0x" + Long.toHexString(codeSegment.getAddr().toRawLongValue()));
 
+      Register arg1, arg2;
+      String osName = System.getProperty("os.name");
+      if(osName.equals("Linux")){
+        arg1 = Register.RDI;
+        arg2 = Register.RSI;
+      }
+      else if(osName.startsWith("Windows")){
+        arg1 = Register.RCX;
+        arg2 = Register.RDX;
+      }
+      else{
+        throw new RuntimeException("Unsupported OS: " + osName);
+      }
+
       var cpuid = AMD64AsmBuilder.create(codeSegment, desc)
         /* push %rbp          */ .push(Register.RBP)
         /* mov %rsp, %rbp     */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
         /* push %rbx          */ .push(Register.RBX)
-        /* mov %rdi, %rax     */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+        /* mov <arg1>, %rax   */ .movRM(arg1, Register.RAX, OptionalInt.empty())
+        /* mov <arg2>, %r11   */ .movRM(arg2, Register.R11, OptionalInt.empty())
         /* cpuid              */ .cpuid()
-        /* mov %eax,   (%rsi) */ .movRM(Register.EAX, Register.RSI, OptionalInt.of(0))
-        /* mov %ebx,  4(%rsi) */ .movRM(Register.EBX, Register.RSI, OptionalInt.of(4))
-        /* mov %ecx,  8(%rsi) */ .movRM(Register.ECX, Register.RSI, OptionalInt.of(8))
-        /* mov %edx, 12(%rsi) */ .movRM(Register.EDX, Register.RSI, OptionalInt.of(12))
+        /* mov %eax,   (%r11) */ .movRM(Register.EAX, Register.R11, OptionalInt.of(0))
+        /* mov %ebx,  4(%r11) */ .movRM(Register.EBX, Register.R11, OptionalInt.of(4))
+        /* mov %ecx,  8(%r11) */ .movRM(Register.ECX, Register.R11, OptionalInt.of(8))
+        /* mov %edx, 12(%r11) */ .movRM(Register.EDX, Register.R11, OptionalInt.of(12))
         /* pop %rbx           */ .pop(Register.RBX, OptionalInt.empty())
         /* leave              */ .leave()
         /* ret                */ .ret()

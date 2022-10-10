@@ -34,7 +34,6 @@ import com.yasuenag.ffmasm.amd64.AMD64AsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
 
 
-@Tag("amd64")
 public class AsmTest{
 
   /**
@@ -50,6 +49,8 @@ public class AsmTest{
    * Tests prologue (push, movRM), movRM, epilogue (leave, ret)
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testBasicInstructions(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -77,6 +78,8 @@ public class AsmTest{
    * Tests PUSH and POP
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testPUSHandPOP(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
@@ -114,6 +117,8 @@ public class AsmTest{
    * Tests CPUID and 32 bit movRM
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testCPUID(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -143,6 +148,8 @@ public class AsmTest{
    * Test NOP
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testNOP(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -172,6 +179,8 @@ public class AsmTest{
    * Tests CMP, JL, and label
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testCMPandJL(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -205,6 +214,8 @@ public class AsmTest{
    * Tests 16 bit CMP
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void test16bitCMP(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -238,6 +249,8 @@ public class AsmTest{
    * Tests 8 bit CMP
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void test8bitCMP(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -273,6 +286,8 @@ public class AsmTest{
    * Tests ADDs
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testADDs(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -303,6 +318,8 @@ public class AsmTest{
    * Tests SUBs
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testSUBs(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -333,6 +350,8 @@ public class AsmTest{
    * Tests SHLs
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testSHLs(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -363,6 +382,8 @@ public class AsmTest{
    * Test JAE
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testJAE(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -396,6 +417,8 @@ public class AsmTest{
    * Test JE
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testJE(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -429,6 +452,8 @@ public class AsmTest{
    * Test JNE
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testJNE(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -462,6 +487,8 @@ public class AsmTest{
    * Tests forward & backward jump.
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testFwdBackJMP(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -497,6 +524,8 @@ public class AsmTest{
    * Test JL with imm32
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testJLwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -533,6 +562,8 @@ public class AsmTest{
    * Test JAE with imm32
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testJAEwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -569,6 +600,8 @@ public class AsmTest{
    * Test JNE with imm32
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testJNEwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -605,6 +638,8 @@ public class AsmTest{
    * Test JE with imm32
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testJEwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -641,6 +676,8 @@ public class AsmTest{
    * Tests JMP with imm32
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
   public void testJMPwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -677,6 +714,9 @@ public class AsmTest{
    * when build() is called.
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
+  @Tag("windows")
   public void testUndefinedLabel(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid();
@@ -695,6 +735,9 @@ public class AsmTest{
    * Test RDRAND
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
+  @Tag("windows")
   public void testRDRAND(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -724,6 +767,9 @@ public class AsmTest{
    * Test RDSEED
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
+  @Tag("windows")
   public void testRDSEED(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -752,6 +798,9 @@ public class AsmTest{
    * Test address alignment
    */
   @Test
+  @Tag("amd64")
+  @Tag("linux")
+  @Tag("windows")
   public void testAlignment(){
     try(var seg = new CodeSegment()){
       var byteBuf = seg.getTailOfMemorySegment()

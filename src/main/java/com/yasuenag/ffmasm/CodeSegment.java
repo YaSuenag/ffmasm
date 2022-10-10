@@ -24,6 +24,7 @@ import java.lang.foreign.MemorySession;
 
 import com.yasuenag.ffmasm.internal.ExecMemory;
 import com.yasuenag.ffmasm.internal.linux.LinuxExecMemory;
+import com.yasuenag.ffmasm.internal.windows.WindowsExecMemory;
 
 
 /**
@@ -63,6 +64,9 @@ public class CodeSegment implements AutoCloseable{
     String osName = System.getProperty("os.name");
     if(osName.equals("Linux")){
       mem = new LinuxExecMemory();
+    }
+    else if(osName.startsWith("Windows")){
+      mem = new WindowsExecMemory();
     }
     else{
       throw new UnsupportedPlatformException(osName + " is unsupported.");

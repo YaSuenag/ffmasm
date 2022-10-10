@@ -16,7 +16,8 @@ Java 19
 
 # Supported platform
 
-Linux AMD64
+* Linux AMD64
+* Windows AMD64
 
 # How to build
 
@@ -30,6 +31,8 @@ ffmasm defines some groups for testing.
 
 * `linux`
     * Tests for Linux
+* `windows`
+    * Tests for Windows
 * `amd64`
     * Tests for AMD64
 
@@ -44,8 +47,10 @@ $ mvn -Dgroups=linux test
 ### Run both Linux and AMD64 tests
 
 ```bash
-$ mvn -Dgroups=linux,amd64 test
+$ mvn -Dgroups='linux & amd64' test
 ```
+
+See [JUnit 5 User Guide](https://junit.org/junit5/docs/current/user-guide/#running-tests-tag-expressions) for details.
 
 # How to use
 

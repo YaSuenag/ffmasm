@@ -18,7 +18,7 @@ jobs:
         with:
           servers: '[{ "id": "github", "username": "${env.GITHUB_USER}", "password": "${env.GITHUB_TOKEN}" }]'
       - name: Publish package
-        run: ${{ steps.init-env.outputs.maven-home }}/bin/mvn --batch-mode -Dgroups=linux,amd64 deploy
+        run: ${{ steps.init-env.outputs.maven-home }}/bin/mvn --batch-mode -Dgroups='linux & amd64' deploy
         env:
           JAVA_HOME: ${{ steps.init-env.outputs.java-home }}
           GITHUB_USER: ${{ github.repository_owner }}

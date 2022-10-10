@@ -42,7 +42,7 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
         <dependency>
             <groupId>com.yasuenag</groupId>
             <artifactId>ffmasm</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
         </dependency>
     </dependencies>
 
@@ -75,7 +75,7 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
                         <argument>--module-path</argument>
                         <modulepath/>
                         <argument>--enable-preview</argument>
-                        <argument>--enable-native-access=${moduleName},com.yasuenag.ffmasm</argument>
+                        <argument>--enable-native-access=com.yasuenag.ffmasm</argument>
                         <argument>--module</argument>
                         <argument>${moduleName}/${mainClass}</argument>
                     </arguments>

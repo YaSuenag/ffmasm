@@ -6,7 +6,7 @@ This is an example of ffmasm to obtain CPU model from `CPUID` instruction in AMD
 # Requirements
 
 * Java 19
-* Linux AMD64
+* AMD64 Linux or Windows
 * Maven
 
 # How to run
@@ -40,7 +40,7 @@ You can see PID and address of `CodeSegment` on the console when you run `mvn ex
 
 ```
 PID: 928
-Addr: 0x7f7cd7b5f000
+Addr: 0x7f4c42704000
 Intel(R) Core(TM) i3-8145U CPU @ 2.10GHz
 ```
 
@@ -51,23 +51,29 @@ $ gdb -p 928
 
   :
 
-(gdb) disas 0x7f7cd7b5f000, 0x7f7cd7b5f018
-Dump of assembler code from 0x7f7cd7b5f000 to 0x7f7cd7b5f018:
-   0x00007f7cd7b5f000:  push   %rbp
-   0x00007f7cd7b5f001:  mov    %rsp,%rbp
-   0x00007f7cd7b5f004:  push   %rbx
-   0x00007f7cd7b5f005:  mov    %rdi,%rax
-   0x00007f7cd7b5f008:  cpuid
-   0x00007f7cd7b5f00a:  mov    %eax,(%rsi)
-   0x00007f7cd7b5f00c:  mov    %ebx,0x4(%rsi)
-   0x00007f7cd7b5f00f:  mov    %ecx,0x8(%rsi)
-   0x00007f7cd7b5f012:  mov    %edx,0xc(%rsi)
-   0x00007f7cd7b5f015:  pop    %rbx
-   0x00007f7cd7b5f017:  leave
+(gdb) disas 0x7f4c42704000, 0x7f4c42704020
+Dump of assembler code from 0x7f4c42704000 to 0x7f4c42704020:
+   0x00007f4c42704000:  push   %rbp
+   0x00007f4c42704001:  mov    %rsp,%rbp
+   0x00007f4c42704004:  push   %rbx
+   0x00007f4c42704005:  mov    %rdi,%rax
+   0x00007f4c42704008:  mov    %rsi,%r11
+   0x00007f4c4270400b:  cpuid
+   0x00007f4c4270400d:  mov    %eax,(%r11)
+   0x00007f4c42704010:  mov    %ebx,0x4(%r11)
+   0x00007f4c42704014:  mov    %ecx,0x8(%r11)
+   0x00007f4c42704018:  mov    %edx,0xc(%r11)
+   0x00007f4c4270401c:  pop    %rbx
+   0x00007f4c4270401e:  leave
+   0x00007f4c4270401f:  ret
 End of assembler dump.
 ```
 
-# Expected assembly code in this example
+# Calling convention
+
+Calling convention is different between Linux AMD64 and Windows x64. Linux AMD64 conform to [System V Application Binary Interface](https://refspecs.linuxbase.org/elf/x86_64-abi-0.99.pdf), on the other hand Windows  conform to [here](https://learn.microsoft.com/en-us/cpp/build/x64-calling-convention). You have to conform to them when you assemble.
+
+# Expected assembly code in this example on Linux
 
 ```assembly
 # prologue
@@ -77,16 +83,18 @@ mov  %rsp, %rbp
 # Evacuate callee-saved register
 push %rbx
 
-# Set 1st argument to RAX
-mov %rdi, %rax
+# Copy arguments to temporary registers
+mov %rdi,%rax
+mov %rsi,%r11
 
+# Call CPUID
 cpuid
 
 # Store result to given memory
-mov %eax,   (%rsi)
-mov %ebx,  4(%rsi)
-mov %ecx,  8(%rsi)
-mov %edx, 12(%rsi)
+mov %eax,   (%r11)
+mov %ebx,  4(%r11)
+mov %ecx,  8(%r11)
+mov %edx, 12(%r11)
 
 # Restore callee-saved register
 pop %rbx
