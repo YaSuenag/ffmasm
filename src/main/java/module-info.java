@@ -16,6 +16,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/**
+ * Core module of ffmasm.
+ */
 module com.yasuenag.ffmasm {
   exports com.yasuenag.ffmasm;
   exports com.yasuenag.ffmasm.amd64;

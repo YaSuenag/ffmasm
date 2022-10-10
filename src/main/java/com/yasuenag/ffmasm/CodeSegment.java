@@ -51,6 +51,8 @@ public class CodeSegment implements AutoCloseable{
 
   /**
    * Allocate memory for this code segment with default size (4096 bytes).
+   * @throws PlatformException thrown when native function call failed.
+   * @throws UnsupportedPlatformException thrown when the platform is not supported.
    */
   public CodeSegment() throws PlatformException, UnsupportedPlatformException{
     this(DEFAULT_CODE_SEGMENT_SIZE);
@@ -59,6 +61,8 @@ public class CodeSegment implements AutoCloseable{
   /**
    * Allocate memory for this code segment.
    * @param size size of code segment.
+   * @throws PlatformException thrown when native function call failed.
+   * @throws UnsupportedPlatformException thrown when the platform is not supported.
    */
   public CodeSegment(long size) throws PlatformException, UnsupportedPlatformException{
     String osName = System.getProperty("os.name");
@@ -115,6 +119,7 @@ public class CodeSegment implements AutoCloseable{
 
   /**
    * Increment the tail with given size.
+   * @param size value to increment
    */
   public void incTail(long size){
     this.tail += size;

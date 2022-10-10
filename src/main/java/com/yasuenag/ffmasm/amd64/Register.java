@@ -87,10 +87,18 @@ public enum Register{
     this.width = width;
   }
 
+  /**
+   * Register encoding
+   * @return Register encoding
+   */
   public int encoding(){
     return encoding;
   }
 
+  /**
+   * Register width in bits
+   * @return Register width
+   */
   public int width(){
     return width;
   }

@@ -27,7 +27,8 @@ package com.yasuenag.ffmasm;
 public class UnsupportedPlatformException extends Exception{
 
   /**
-   * {@inheritDoc}
+   * Constructs a new exception with the message.
+   * @param message exception message
    */
   public UnsupportedPlatformException(String message){
     super(message);

@@ -29,7 +29,9 @@ public class PlatformException extends Exception{
   private final int errcode;
 
   /**
-   * {@inheritDoc}
+   * Constructs a new exception with the caused Throwable.
+   * The cause is not initialized.
+   * @param cause caused Throwable
    */
   public PlatformException(Throwable cause){
     super(cause);
@@ -39,6 +41,8 @@ public class PlatformException extends Exception{
   /**
    * Constructs a new exception with the specified detail message and error code from platform.
    * The cause is not initialized.
+   * @param message exception message
+   * @param errcode error code from platform
    */
   public PlatformException(String message, int errcode){
     super(message);
