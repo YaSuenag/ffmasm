@@ -114,6 +114,36 @@ public class AsmTest{
   }
 
   /**
+   * Tests OR
+   */
+  @Test
+  @Tag("amd64")
+  @Tag("linux")
+  public void testOR(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT, // 1st argument
+                   ValueLayout.JAVA_INT  // 2nd argument
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+             /* push %rbp      */ .push(Register.RBP)
+             /* mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+             /* mov %rdi, %rax */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+             /* or  %rsi, %rax */ .orMR(Register.RSI, Register.RAX, OptionalInt.empty())
+             /* leave          */ .leave()
+             /* ret            */ .ret()
+                                  .build();
+
+      int actual = (int)method.invoke(1, 2);
+      Assertions.assertEquals(3, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Tests CPUID and 32 bit movRM
    */
   @Test
