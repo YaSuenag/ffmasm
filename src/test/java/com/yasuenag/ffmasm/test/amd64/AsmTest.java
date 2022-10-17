@@ -46,7 +46,7 @@ public class AsmTest{
   }
 
   /**
-   * Tests prologue (push, movRM), movRM, epilogue (leave, ret)
+   * Tests prologue (push, movMR), movMR, epilogue (leave, ret)
    */
   @Test
   @Tag("amd64")
@@ -59,8 +59,8 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
           /* push %rbp         */ .push(Register.RBP)
-          /* mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-          /* mov %rdi, %rax    */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+          /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
           /* leave             */ .leave()
           /* ret               */ .ret()
                                   .build();
@@ -89,11 +89,11 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
           /* push %rbp         */ .push(Register.RBP)
-          /* mov  %rsp, %rbp   */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* mov  %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
           /* push %rdi         */ .push(Register.RDI)
           /* push %si          */ .push(Register.SI)
           /* pop  %ax          */ .pop(Register.AX, OptionalInt.empty())
-          /* mov  %ax, 8(%rdx) */ .movRM(Register.AX, Register.RDX, OptionalInt.of(8))
+          /* mov  %ax, 8(%rdx) */ .movMR(Register.AX, Register.RDX, OptionalInt.of(8))
           /* pop  (%rdx)       */ .pop(Register.RDX, OptionalInt.of(0))
           /* leave             */ .leave()
           /* ret               */ .ret()
@@ -128,8 +128,8 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
              /* push %rbp      */ .push(Register.RBP)
-             /* mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov %rdi, %rax */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+             /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+             /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
              /* or  %rsi, %rax */ .orMR(Register.RSI, Register.RAX, OptionalInt.empty())
              /* leave          */ .leave()
              /* ret            */ .ret()
@@ -144,7 +144,7 @@ public class AsmTest{
   }
 
   /**
-   * Tests CPUID and 32 bit movRM
+   * Tests CPUID and 32 bit movMR
    */
   @Test
   @Tag("amd64")
@@ -157,10 +157,10 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
           /* push %rbp         */ .push(Register.RBP)
-          /* mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-          /* mov %rdi, %rax    */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+          /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
           /* cpuid             */ .cpuid()
-          /* mov %edx, %eax    */ .movRM(Register.EDX, Register.EAX, OptionalInt.empty())
+          /* mov %edx, %eax    */ .movMR(Register.EDX, Register.EAX, OptionalInt.empty())
           /* leave             */ .leave()
           /* ret               */ .ret()
                                   .build();
@@ -188,9 +188,9 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
           /* push %rbp         */ .push(Register.RBP)
-          /* mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
           /* nop               */ .nop()
-          /* mov %rdi, %rax    */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+          /* mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
           /* nop               */ .nop()
           /* leave             */ .leave()
           /* ret               */ .ret()
@@ -220,14 +220,14 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
         /*   jl success        */ .jl("success")
-        /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+        /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
         /*   leave             */ .leave()
         /*   ret               */ .ret()
         /* success:            */ .label("success")
-        /*   mov %rdi, %rax    */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
         /*   leave             */ .leave()
         /*   ret               */ .ret()
                                   .build();
@@ -255,14 +255,14 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   cmp   $1, %di     */ .cmp(Register.DI, 1, OptionalInt.empty())
         /*   jl success        */ .jl("success")
-        /*   mov %si, %ax      */ .movRM(Register.SI, Register.AX, OptionalInt.empty()) // failure
+        /*   mov %si, %ax      */ .movMR(Register.SI, Register.AX, OptionalInt.empty()) // failure
         /*   leave             */ .leave()
         /*   ret               */ .ret()
         /* success:            */ .label("success")
-        /*   mov %di, %ax      */ .movRM(Register.DI, Register.AX, OptionalInt.empty()) // success
+        /*   mov %di, %ax      */ .movMR(Register.DI, Register.AX, OptionalInt.empty()) // success
         /*   leave             */ .leave()
         /*   ret               */ .ret()
                                   .build();
@@ -290,16 +290,16 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   mov %rdi, %rcx    */ .movRM(Register.RDI, Register.RCX, OptionalInt.empty())
-        /*   mov %rsi, %rcx    */ .movRM(Register.RSI, Register.RDX, OptionalInt.empty())
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov %rdi, %rcx    */ .movMR(Register.RDI, Register.RCX, OptionalInt.empty())
+        /*   mov %rsi, %rcx    */ .movMR(Register.RSI, Register.RDX, OptionalInt.empty())
         /*   cmp   $1, %cl     */ .cmp(Register.CL, 1, OptionalInt.empty())
         /*   jl success        */ .jl("success")
-        /*   mov %dl, %al      */ .movRM(Register.DL, Register.AL, OptionalInt.empty()) // failure
+        /*   mov %dl, %al      */ .movMR(Register.DL, Register.AL, OptionalInt.empty()) // failure
         /*   leave             */ .leave()
         /*   ret               */ .ret()
         /* success:            */ .label("success")
-        /*   mov %cl, %al      */ .movRM(Register.CL, Register.AL, OptionalInt.empty()) // success
+        /*   mov %cl, %al      */ .movMR(Register.CL, Register.AL, OptionalInt.empty()) // success
         /*   leave             */ .leave()
         /*   ret               */ .ret()
                                   .build();
@@ -326,8 +326,8 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
              /* push %rbp      */ .push(Register.RBP)
-             /* mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov %rdi, %rax */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+             /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+             /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
              /* add $1, %al    */ .add(Register.AL, 1, OptionalInt.empty())
              /* add $2, %ax    */ .add(Register.AX, 2, OptionalInt.empty())
              /* add $3, %eax   */ .add(Register.EAX, 3, OptionalInt.empty())
@@ -358,8 +358,8 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
              /* push %rbp      */ .push(Register.RBP)
-             /* mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov %rdi, %rax */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+             /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+             /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
              /* sub $1, %al    */ .sub(Register.AL, 1, OptionalInt.empty())
              /* sub $2, %ax    */ .sub(Register.AX, 2, OptionalInt.empty())
              /* sub $3, %eax   */ .sub(Register.EAX, 3, OptionalInt.empty())
@@ -390,8 +390,8 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
              /* push %rbp      */ .push(Register.RBP)
-             /* mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov %rdi, %rax */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+             /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+             /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
              /* shl $1, %al    */ .shl(Register.AL, (byte)1, OptionalInt.empty())
              /* shl $2, %ax    */ .shl(Register.AX, (byte)2, OptionalInt.empty())
              /* shl $3, %eax   */ .shl(Register.EAX, (byte)3, OptionalInt.empty())
@@ -423,14 +423,14 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
         /*   jae success       */ .jae("success")
-        /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+        /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
         /*   leave             */ .leave()
         /*   ret               */ .ret()
         /* success:            */ .label("success")
-        /*   mov %rdi, %rax    */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
         /*   leave             */ .leave()
         /*   ret               */ .ret()
                                   .build();
@@ -458,14 +458,14 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   cmp   $10, %rdi   */ .cmp(Register.RDI, 10, OptionalInt.empty())
         /*   je success        */ .je("success")
-        /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+        /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
         /*   leave             */ .leave()
         /*   ret               */ .ret()
         /* success:            */ .label("success")
-        /*   mov %rdi, %rax    */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
         /*   leave             */ .leave()
         /*   ret               */ .ret()
                                   .build();
@@ -493,14 +493,14 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
         /*   jne success       */ .jne("success")
-        /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+        /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
         /*   leave             */ .leave()
         /*   ret               */ .ret()
         /* success:            */ .label("success")
-        /*   mov %rdi, %rax    */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
         /*   leave             */ .leave()
         /*   ret               */ .ret()
                                   .build();
@@ -528,16 +528,16 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
         /*   jl fwd            */ .jl("fwd")
         /* exit:               */ .label("exit")
-        /*   mov %rdi, %rax    */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
         /*   leave             */ .leave()
         /*   ret               */ .ret()
         /* fwd:                */ .label("fwd")
         /*   jmp exit          */ .jmp("exit")
-        /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+        /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
         /*   leave             */ .leave()
         /*   ret               */ .ret()
                                   .build();
@@ -565,8 +565,8 @@ public class AsmTest{
                  );
       var builder = AMD64AsmBuilder.create(seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
-         /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
          /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
          /*   jl success        */ .jl("success");
       for(int i = 0; i < 200; i++){
@@ -575,7 +575,7 @@ public class AsmTest{
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
         /* success:            */        .label("success")
-        /*   mov %rdi, %rax    */        .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov %rdi, %rax    */        .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
         /*   leave             */        .leave()
         /*   ret               */        .ret();
 
@@ -603,8 +603,8 @@ public class AsmTest{
                  );
       var builder = AMD64AsmBuilder.create(seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
-         /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
          /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
          /*   jae success       */ .jae("success");
       for(int i = 0; i < 200; i++){
@@ -613,7 +613,7 @@ public class AsmTest{
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
         /* success:            */        .label("success")
-        /*   mov %rdi, %rax    */        .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov %rdi, %rax    */        .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
         /*   leave             */        .leave()
         /*   ret               */        .ret();
 
@@ -641,8 +641,8 @@ public class AsmTest{
                  );
       var builder = AMD64AsmBuilder.create(seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
-         /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
          /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
          /*   jne success       */ .jne("success");
       for(int i = 0; i < 200; i++){
@@ -651,7 +651,7 @@ public class AsmTest{
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
         /* success:            */        .label("success")
-        /*   mov %rdi, %rax    */        .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov %rdi, %rax    */        .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
         /*   leave             */        .leave()
         /*   ret               */        .ret();
 
@@ -679,8 +679,8 @@ public class AsmTest{
                  );
       var builder = AMD64AsmBuilder.create(seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
-         /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
          /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 10, OptionalInt.empty())
          /*   je success        */ .je("success");
       for(int i = 0; i < 200; i++){
@@ -689,7 +689,7 @@ public class AsmTest{
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
         /* success:            */        .label("success")
-        /*   mov %rdi, %rax    */        .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov %rdi, %rax    */        .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
         /*   leave             */        .leave()
         /*   ret               */        .ret();
 
@@ -717,8 +717,8 @@ public class AsmTest{
                  );
       var builder = AMD64AsmBuilder.create(seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
-         /*   mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov %rsi, %rax    */ .movRM(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
          /*   jmp success       */ .jmp("success");
       for(int i = 0; i < 200; i++){
          /* nop */ builder.nop();
@@ -726,7 +726,7 @@ public class AsmTest{
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
         /* success:            */        .label("success")
-        /*   mov %rdi, %rax    */        .movRM(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov %rdi, %rax    */        .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
         /*   leave             */        .leave()
         /*   ret               */        .ret();
 
@@ -775,7 +775,7 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
          /*   push %rbp      */ .push(Register.RBP)
-         /*   mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+         /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
          /*   rdrand %ax     */ .rdrand(Register.AX)  // encode check
          /*   rdrand %eax    */ .rdrand(Register.EAX) // encode check
          /* retry:           */ .label("retry")
@@ -807,7 +807,7 @@ public class AsmTest{
                  );
       var method = AMD64AsmBuilder.create(seg, desc)
          /*   push %rbp      */ .push(Register.RBP)
-         /*   mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+         /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
          /*   rdseed %ax     */ .rdseed(Register.AX)  // encode check
          /*   rdseed %eax    */ .rdseed(Register.EAX) // encode check
          /* retry:           */ .label("retry")
