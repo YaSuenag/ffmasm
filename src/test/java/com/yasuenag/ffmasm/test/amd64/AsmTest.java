@@ -825,6 +825,33 @@ public class AsmTest{
   }
 
   /**
+   * Test RDTSC
+   */
+  @Test
+  @Tag("amd64")
+  @Tag("linux")
+  @Tag("windows")
+  public void testRDTSC(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT // return value
+                 );
+      var method = AMD64AsmBuilder.create(seg, desc)
+         /*   push %rbp      */ .push(Register.RBP)
+         /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /*   rdtsc          */ .rdtsc()
+         /*   leave          */ .leave()
+         /*   ret            */ .ret()
+                                .build();
+
+      method.invoke();
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Test address alignment
    */
   @Test

@@ -728,6 +728,21 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Read time-stamp counter into EDX:EAX.
+   *   Opcode: 0F 31
+   *   Instruction: RDTSC
+   *   Op/En: ZO
+   *
+   * @return This instance
+   */
+  public AMD64AsmBuilder rdtsc(){
+    byteBuf.put((byte)0x0f); // RDTSC (1)
+    byteBuf.put((byte)0x31); // RDTSC (2)
+
+    return this;
+  }
+
+  /**
    * Align the position to 16 bytes with NOP.
    *
    * @return This instance
