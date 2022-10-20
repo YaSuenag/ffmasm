@@ -46,7 +46,10 @@ public class AMD64AsmBuilder{
 
   private final MemorySegment mem;
 
-  private final ByteBuffer byteBuf;
+  /**
+   * ByteBuffer which includes code content.
+   */
+  protected final ByteBuffer byteBuf;
 
   private final FunctionDescriptor desc;
 
@@ -57,7 +60,13 @@ public class AMD64AsmBuilder{
   private static record PendingJump(Consumer<Integer> emitOp, int position){}
   private final Map<String, Set<PendingJump>> pendingLabelMap;
 
-  private AMD64AsmBuilder(CodeSegment seg, FunctionDescriptor desc){
+  /**
+   * Constructor.
+   *
+   * @param seg CodeSegment which is used by this builder.
+   * @param desc FunctionDescriptor for this builder. It will be used by build().
+   */
+  protected AMD64AsmBuilder(CodeSegment seg, FunctionDescriptor desc){
     this.seg = seg;
     this.mem = seg.getTailOfMemorySegment();
     this.byteBuf = mem.asByteBuffer().order(ByteOrder.nativeOrder());

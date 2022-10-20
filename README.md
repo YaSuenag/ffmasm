@@ -8,7 +8,7 @@ It uses Foreign Function & Memory API, so the application can call assembled cod
 
 * Javadoc: https://yasuenag.github.io/ffmasm/
 * Maven package: https://github.com/YaSuenag/ffmasm/packages/
-* Supported instructions: https://yasuenag.github.io/ffmasm/com.yasuenag.ffmasm/com/yasuenag/ffmasm/amd64/AMD64AsmBuilder.html
+* Supported instructions: See builder classes in [com.yasuenag.ffmasm.amd64](https://yasuenag.github.io/ffmasm/com.yasuenag.ffmasm/com/yasuenag/ffmasm/amd64/package-summary.html).
 
 # Requirements
 
