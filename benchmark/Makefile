@@ -5,7 +5,7 @@ LDFLAGS  = -Wl,-z,noexecstack
 
 TARGET = librdtsc.so
 OBJS   = target/rdtsc.o
-SRCS   = src/main/native/rdrand.S
+SRCS   = src/main/native/rdtsc.S
 
 all: $(TARGET)
 

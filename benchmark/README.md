@@ -3,7 +3,7 @@ Benchmark for ffmasm
 
 [JMH](https://github.com/openjdk/jmh) benchmark to comparison between JNI and ffmasm.
 
-This benchmark runs RDTSC instruction. JNI function is written in assembly code in [rdrand.S](src/main/native/rdrand.S), and same code is assembled by ffmasm in [FFMComparison.java](src/main/java/com/yasuenag/ffmasm/benchmark/FFMComparison.java). So you can see calling performacne JNI and Foreign Function & Memory API.
+This benchmark runs RDTSC instruction. JNI function is written in assembly code in [rdtsc.S](src/main/native/rdtsc.S), and same code is assembled by ffmasm in [FFMComparison.java](src/main/java/com/yasuenag/ffmasm/benchmark/FFMComparison.java). So you can see calling performacne JNI and Foreign Function & Memory API.
 
 # Requirements
 
