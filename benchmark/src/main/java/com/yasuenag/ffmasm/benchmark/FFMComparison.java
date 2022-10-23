@@ -28,7 +28,7 @@ public class FFMComparison{
 
     try{
       seg = new CodeSegment();
-      ffmRDTSC = AMD64AsmBuilder.create(seg, FunctionDescriptor.of(ValueLayout.JAVA_LONG))
+      ffmRDTSC = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, FunctionDescriptor.of(ValueLayout.JAVA_LONG))
            /* push %rbp      */ .push(Register.RBP)
            /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
            /* rdtsc          */ .rdtsc()

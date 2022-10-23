@@ -22,6 +22,7 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.function.Consumer;
@@ -84,14 +85,46 @@ public class AMD64AsmBuilder{
    * @throws UnsupportedPlatformException thrown when AMD64AsmBuilder is
    *          attempted to instantiate on unsupported platform.
    */
-  public static AMD64AsmBuilder create(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
+  public static <T extends AMD64AsmBuilder> T create(Class<T> clazz, CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
     int bits = Integer.valueOf(System.getProperty("sun.arch.data.model"));
     if(bits != 64){
       throw new UnsupportedPlatformException("AMD64AsmBuilder supports 64 bit only.");
     }
 
     seg.alignTo16Bytes();
-    return new AMD64AsmBuilder(seg, desc);
+    try{
+      return clazz.getDeclaredConstructor(CodeSegment.class, FunctionDescriptor.class)
+                  .newInstance(seg, desc);
+    }
+    catch(NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e){
+      throw new RuntimeException("Unexpected", e);
+    }
+  }
+
+  /**
+   * Cast this instance to clazz.
+   * This method is useful in following case because movMR() returns
+   * AMD64AsmBuilder, not AVXAsmBuilder.
+   * <pre>{@code
+   * AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
+                    .movMR(Register.RAX, Register.RBX)
+                    .vmovdqaMR(Register.YMM0, Register.RAX); // ERROR!
+   * }</pre>
+   *
+   * In following code, it will not be reported error from javac
+   * because cast() returns AVXAsmBuilder instance which is casted.
+   * <pre>{@code
+   * AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
+                    .movMR(Register.RAX, Register.RBX)
+                    .cast(AVXAsmBuilder.class)
+                    .vmovdqaMR(Register.YMM0, Register.RAX);
+   * }</pre>
+   *
+   * @param clazz The class which will be casted.
+   * @return Casted this instance.
+   */
+  public <T extends AMD64AsmBuilder> T cast(Class<T> clazz){
+    return clazz.cast(this);
   }
 
   /**
@@ -163,7 +196,7 @@ public class AMD64AsmBuilder{
     }
   }
 
-  private byte calcModRMMode(OptionalInt disp){
+  protected byte calcModRMMode(OptionalInt disp){
     byte mode = (byte)0b11; // reg-reg by default
     if(disp.isPresent()){
       int dispAsInt = disp.getAsInt();

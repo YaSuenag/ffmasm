@@ -41,12 +41,4 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
     super(seg, desc);
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public static SSEAsmBuilder create(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
-    seg.alignTo16Bytes();
-    return new SSEAsmBuilder(seg, desc);
-  }
-
 }

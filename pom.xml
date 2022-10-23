@@ -24,7 +24,7 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
 
     <groupId>com.yasuenag</groupId>
     <artifactId>ffmasm</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.4</version>
     <packaging>jar</packaging>
 
     <name>ffmasm</name>

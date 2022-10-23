@@ -57,7 +57,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
           /* push %rbp         */ .push(Register.RBP)
           /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
           /* mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
@@ -87,7 +87,7 @@ public class AsmTest{
                    ValueLayout.JAVA_SHORT, // 2nd Argument
                    ValueLayout.ADDRESS     // 3rd Argument
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
           /* push %rbp         */ .push(Register.RBP)
           /* mov  %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
           /* push %rdi         */ .push(Register.RDI)
@@ -126,7 +126,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // 1st argument
                    ValueLayout.JAVA_INT  // 2nd argument
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
              /* push %rbp      */ .push(Register.RBP)
              /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
              /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
@@ -155,7 +155,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
           /* push %rbp         */ .push(Register.RBP)
           /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
           /* mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
@@ -186,7 +186,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
           /* push %rbp         */ .push(Register.RBP)
           /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
           /* nop               */ .nop()
@@ -218,7 +218,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
@@ -253,7 +253,7 @@ public class AsmTest{
                    ValueLayout.JAVA_SHORT, // 1st argument (success)
                    ValueLayout.JAVA_SHORT  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   cmp   $1, %di     */ .cmp(Register.DI, 1, OptionalInt.empty())
@@ -288,7 +288,7 @@ public class AsmTest{
                    ValueLayout.JAVA_BYTE, // 1st argument (success)
                    ValueLayout.JAVA_BYTE  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   mov %rdi, %rcx    */ .movMR(Register.RDI, Register.RCX, OptionalInt.empty())
@@ -324,7 +324,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT  // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
              /* push %rbp      */ .push(Register.RBP)
              /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
              /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
@@ -356,7 +356,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT  // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
              /* push %rbp      */ .push(Register.RBP)
              /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
              /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
@@ -388,7 +388,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT  // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
              /* push %rbp      */ .push(Register.RBP)
              /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
              /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
@@ -421,7 +421,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
@@ -456,7 +456,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   cmp   $10, %rdi   */ .cmp(Register.RDI, 10, OptionalInt.empty())
@@ -491,7 +491,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
@@ -526,7 +526,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
@@ -563,7 +563,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var builder = AMD64AsmBuilder.create(seg, desc)
+      var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
          /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
          /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
@@ -601,7 +601,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var builder = AMD64AsmBuilder.create(seg, desc)
+      var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
          /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
          /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
@@ -639,7 +639,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var builder = AMD64AsmBuilder.create(seg, desc)
+      var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
          /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
          /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
@@ -677,7 +677,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var builder = AMD64AsmBuilder.create(seg, desc)
+      var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
          /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
          /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
@@ -715,7 +715,7 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var builder = AMD64AsmBuilder.create(seg, desc)
+      var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
          /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
          /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
@@ -751,7 +751,7 @@ public class AsmTest{
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid();
       Assertions.assertThrows(IllegalStateException.class, () -> {
-          AMD64AsmBuilder.create(seg, desc)
+          AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
                          .jl("SilverBullet")
                          .build();
       });
@@ -773,7 +773,7 @@ public class AsmTest{
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT // return value
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp      */ .push(Register.RBP)
          /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
          /*   rdrand %ax     */ .rdrand(Register.AX)  // encode check
@@ -805,7 +805,7 @@ public class AsmTest{
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT // return value
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp      */ .push(Register.RBP)
          /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
          /*   rdseed %ax     */ .rdseed(Register.AX)  // encode check
@@ -836,7 +836,7 @@ public class AsmTest{
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT // return value
                  );
-      var method = AMD64AsmBuilder.create(seg, desc)
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp      */ .push(Register.RBP)
          /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
          /*   rdtsc          */ .rdtsc()
@@ -864,7 +864,7 @@ public class AsmTest{
                        .asByteBuffer()
                        .order(ByteOrder.nativeOrder());
       var desc = FunctionDescriptor.ofVoid();
-      var builder = AMD64AsmBuilder.create(seg, desc)
+      var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
                                    .nop()
                                    .alignTo16BytesWithNOP()
                                    .build();
