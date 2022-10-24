@@ -60,7 +60,7 @@ public class AVXAsmTest{
                  );
       var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
       /* push %rbp             */ .push(Register.RBP)
-      /* mov %rsp, %rb p       */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+      /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
                                   .cast(AVXAsmBuilder.class)
       /* vmovdqa (%rdi), %ymm0 */ .vmovdqaMR(Register.YMM0, Register.RDI, OptionalInt.of(0))
       /* vmovdqa %ymm0, (%rsi) */ .vmovdqaRM(Register.YMM0, Register.RSI, OptionalInt.of(0))
@@ -78,6 +78,51 @@ public class AVXAsmTest{
 
       Assertions.assertArrayEquals(expected, src.toArray(ValueLayout.JAVA_LONG));
       Assertions.assertArrayEquals(expected, dest.toArray(ValueLayout.JAVA_LONG));
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests PADDD
+   */
+  @Test
+  @Tag("avx")
+  @Tag("linux")
+  public void testPADDD(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.ofVoid(
+                   ValueLayout.ADDRESS, // 1st argument
+                   ValueLayout.ADDRESS, // 2nd argument
+                   ValueLayout.ADDRESS  // 3rd argument
+                 );
+      var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
+/* push %rbp                   */ .push(Register.RBP)
+/* mov %rsp, %rbp              */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+                                  .cast(AVXAsmBuilder.class)
+/* vmovdqa (%rdi), %ymm0       */ .vmovdqaMR(Register.YMM0, Register.RDI, OptionalInt.of(0))
+/* vpaddd (%rsi), %ymm0, %ymm1 */ .vpaddd(Register.YMM0, Register.RSI, Register.YMM1, OptionalInt.of(0))
+/* vmovdqa %ymm0, (%rdx)       */ .vmovdqaRM(Register.YMM1, Register.RDX, OptionalInt.of(0))
+      /* leave                 */ .leave()
+      /* ret                   */ .ret()
+                                  .build();
+
+      int[]     src1 = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
+      int[]     src2 = new int[]{8, 7, 6, 5, 4, 3, 2, 1};
+      int[] expected = new int[]{9, 9, 9, 9, 9, 9, 9, 9};
+      var alloc = SegmentAllocator.implicitAllocator();
+      MemorySegment src1Seg = alloc.allocate(32, 32);  // 256 bit
+      MemorySegment src2Seg = alloc.allocate(32, 32);  // 256 bit
+      MemorySegment destSeg = alloc.allocate(32, 32); // 256 bit
+      MemorySegment.copy(src1, 0, src1Seg, ValueLayout.JAVA_INT, 0, src1.length);
+      MemorySegment.copy(src2, 0, src2Seg, ValueLayout.JAVA_INT, 0, src2.length);
+
+      method.invoke(src1Seg, src2Seg, destSeg);
+
+      Assertions.assertArrayEquals(src1, src1Seg.toArray(ValueLayout.JAVA_INT));
+      Assertions.assertArrayEquals(src2, src2Seg.toArray(ValueLayout.JAVA_INT));
+      Assertions.assertArrayEquals(expected, destSeg.toArray(ValueLayout.JAVA_INT));
     }
     catch(Throwable t){
       Assertions.fail(t);
