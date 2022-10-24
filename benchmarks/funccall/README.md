@@ -17,7 +17,7 @@ This benchmark runs RDTSC instruction. JNI function is written in assembly code 
 ```sh
 $ cd /path/to/ffasm
 $ mvn install
-$ cd benchmark
+$ cd benchmark/funccall
 $ mvn package
 ```
 
@@ -30,5 +30,6 @@ $ mvn exec:exec@single-run
 # Run benchmark
 
 ```sh
-$ $JAVA_HOME/bin/java -jar target/ffmasm-benchmark-1.0.0.jar
+$ cd target
+$ $JAVA_HOME/bin/java -jar ffmasm-benchmark-funccall-1.0.0.jar
 ```
