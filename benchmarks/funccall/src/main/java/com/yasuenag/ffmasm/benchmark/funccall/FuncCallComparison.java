@@ -1,4 +1,4 @@
-package com.yasuenag.ffmasm.benchmark;
+package com.yasuenag.ffmasm.benchmark.funccall;
 
 import java.lang.foreign.*;
 import java.lang.invoke.*;
@@ -16,7 +16,7 @@ import org.openjdk.jmh.annotations.*;
 @Fork(value = 1, jvmArgsAppend = {"--enable-preview", "--enable-native-access=ALL-UNNAMED", "-Djava.library.path=.", "-Xms4g", "-Xmx4g", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseEpsilonGC", "-XX:+AlwaysPreTouch"})
 @Warmup(iterations = 1, time = 3, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
-public class FFMComparison{
+public class FuncCallComparison{
 
   private CodeSegment seg;
 
@@ -67,7 +67,7 @@ public class FFMComparison{
   }
 
   public static void main(String[] args){
-    var inst = new FFMComparison();
+    var inst = new FuncCallComparison();
     inst.setup();
     long nativeVal = inst.rdtsc();
     long ffmVal = inst.invokeFFMRDTSC();

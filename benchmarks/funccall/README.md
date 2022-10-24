@@ -1,4 +1,4 @@
-Benchmark for ffmasm
+Benchmark for calling function
 ===================
 
 [JMH](https://github.com/openjdk/jmh) benchmark to comparison between JNI and ffmasm.

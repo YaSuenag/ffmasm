@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.yasuenag</groupId>
-    <artifactId>ffmasm-benchmark</artifactId>
+    <artifactId>ffmasm-benchmark-funccall</artifactId>
     <packaging>jar</packaging>
     <version>1.0.0</version>
 
@@ -78,7 +78,7 @@
                                 <argument>-Djava.library.path=.</argument>
                                 <argument>--enable-preview</argument>
                                 <argument>--enable-native-access=ALL-UNNAMED</argument>
-                                <argument>com.yasuenag.ffmasm.benchmark.FFMComparison</argument>
+                                <argument>com.yasuenag.ffmasm.benchmark.funccall.FuncCallComparison</argument>
                             </arguments>
                         </configuration>
                     </execution>
