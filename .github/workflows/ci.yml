@@ -22,7 +22,7 @@ jobs:
 
       - name: 'Download Temurin 19'
         id: download-java
-        uses: ./.github/actions/init-env
+        uses: ./.github/actions/download-java.yml
 
       - name: 'Setup Java'
         uses: actions/setup-java@v3
