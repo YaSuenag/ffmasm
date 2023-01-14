@@ -29,13 +29,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Initialize
-        id: init-env
-        uses: ./.github/actions/init-env
+      - name: 'Download Temurin 19'
+        id: download-java
+        uses: ./.github/actions/download-java
+      - name: 'Setup Java'
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'jdkfile'
+          jdkFile: ${{ env.FILE_PATH }}
+          java-version: '19'
+          architecture: 'x64'
+          cache: 'maven'
       - name: Build javadoc
-        run: ${{ steps.init-env.outputs.maven-home }}/bin/mvn --batch-mode -Dmaven.test.skip=true package javadoc:javadoc
-        env:
-          JAVA_HOME: ${{ steps.init-env.outputs.java-home }}
+        run: mvn -B -Dmaven.test.skip=true package javadoc:javadoc
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Upload artifact
