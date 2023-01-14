@@ -27,7 +27,7 @@ jobs:
       - name: 'Setup Java'
         uses: actions/setup-java@v3
         with:
-          distribution: 'jdkFile'
+          distribution: 'jdkfile'
           jdkFile: ${{ steps.download-java.outputs.filepath }}
           java-version: '19'
           architecture: 'x64'
