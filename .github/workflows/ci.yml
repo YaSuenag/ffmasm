@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'jdkfile'
-          jdkFile: ${{ steps.download-java.outputs.filepath }}
+          jdkFile: ${{ env.FILE_PATH }}
           java-version: '19'
           architecture: 'x64'
           cache: 'maven'

@@ -1,9 +1,5 @@
 name: download-java
 description: 'Download Temurin 19'
-outputs:
-  filepath:
-    description: 'Path to JDK archive'
-    value: ${{ env.FILE_PATH }}
 
 runs:
   using: composite
