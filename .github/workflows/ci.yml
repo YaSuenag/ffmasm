@@ -1,17 +1,41 @@
 name: Maven Build & Test
 
-on: [push]
+on:
+  push:
+    branches: [ main, gha ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    runs-on: ${{ matrix.os }}
+
+    name: Run Maven on ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Initialize
-        id: init-env
+      - name: 'Checkout repository'
+        uses: actions/checkout@v3
+
+      - name: 'Download Temurin 19'
+        id: download-java
         uses: ./.github/actions/init-env
-      - name: Build with Maven
-        run: ${{ steps.init-env.outputs.maven-home }}/bin/mvn --batch-mode -Dgroups='linux & amd64' package
-        env:
-          JAVA_HOME: ${{ steps.init-env.outputs.java-home }}
+
+      - name: 'Setup Java'
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin-19'
+          jdkFile: ${{ steps.download-java.outputs.filepath }}
+          java-version: '19'
+          architecture: 'x64'
+          cache: 'maven'
+
+      - name: 'Get OS in lower case'
+        id: get-os
+        run: echo "LOWER_OS=${RUNNER_OS,,}" >> ${GITHUB_ENV}
+
+      - name: 'Run Maven'
+        run: mvn -B -Dgroups="${{ env.LOWER_OS }} & amd64" package
