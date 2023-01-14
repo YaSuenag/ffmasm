@@ -2,13 +2,13 @@ name: download-java
 description: 'Download Temurin 19'
 outputs:
   filepath:
-    description: "Path to JDK archive"
+    description: 'Path to JDK archive'
     value: ${{ env.FILE_PATH }}
 
 runs:
   using: composite
   steps:
-    - if: runner.os == "Linux"
+    - if: runner.os == 'Linux'
       name: 'Download Temurin for Linux'
       id: download-temurin-linux
       run: |
@@ -17,7 +17,7 @@ runs:
         echo "FILE_PATH=$FILE_PATH" >> $GITHUB_ENV
       shell: bash
 
-    - if: runner.os == "Windows"
+    - if: runner.os == 'Windows'
       name: 'Download Temurin for Windows'
       id: download-temurin-windows
       run: |
