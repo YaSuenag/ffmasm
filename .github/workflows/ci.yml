@@ -36,6 +36,7 @@ jobs:
       - name: 'Get OS in lower case'
         id: get-os
         run: echo "LOWER_OS=${RUNNER_OS,,}" >> ${GITHUB_ENV}
+        shell: bash
 
       - name: 'Run Maven'
         run: mvn -B -Dgroups="${{ env.LOWER_OS }} & amd64" package
