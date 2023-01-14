@@ -2,6 +2,7 @@ ffmasm
 ===================
 
 ![CI result](../../actions/workflows/ci.yml/badge.svg)
+![CodeQL](../../actions/workflows/codeql-analysis.yml/badge.svg)
 
 ffmasm is an assembler for hand-assembling from Java.  
 It uses Foreign Function & Memory API, so the application can call assembled code via [MethodHandle](https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/invoke/MethodHandle.html).
