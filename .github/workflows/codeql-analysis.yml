@@ -24,18 +24,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: 'Download Temurin 19'
-        id: download-java
-        uses: ./.github/actions/download-java
-
-      - name: 'Setup Java'
-        uses: actions/setup-java@v3
+      - name: Setup Oracle OpenJDK 19
+        uses: oracle-actions/setup-java@v1
         with:
-          distribution: 'jdkfile'
-          jdkFile: ${{ env.FILE_PATH }}
-          java-version: '19'
-          architecture: 'x64'
-          cache: 'maven'
+          website: jdk.java.net
+          release: 19
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
