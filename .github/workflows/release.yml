@@ -1,12 +1,20 @@
-name: Publish package
+name: Publish new release
 on:
   release:
     types: [created]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "publish"
+  cancel-in-progress: true
+
 jobs:
-  publish:
+  upload:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       packages: write
     steps:
       - uses: actions/checkout@v3
@@ -16,8 +24,29 @@ jobs:
           website: jdk.java.net
           release: 19
       - name: 'Run Maven'
-        run: mvn -B -Dgroups="linux & amd64" package
-      - name: Publish to GitHub Packages Apache Maven
+        run: mvn -B -Dmaven.test.skip=true package javadoc:javadoc
+      - name: Publish to GitHub Packages via Apache Maven
         run: mvn deploy
         env:
           GITHUB_TOKEN: ${{ github.token }}
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          # Upload entire repository
+          path: 'target/site/apidocs'
+
+  deploy_page:
+    needs: upload
+    permissions:
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
