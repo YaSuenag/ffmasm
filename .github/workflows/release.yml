@@ -2,10 +2,6 @@ name: Publish new release
 on:
   release:
     types: [published]
-  workflow_dispatch:
-
-permissions:
-  contents: read
 
 concurrency:
   group: "publish"
@@ -29,12 +25,9 @@ jobs:
         run: mvn deploy
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - name: Setup Pages
-        uses: actions/configure-pages@v2
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          # Upload entire repository
           path: 'target/site/apidocs'
 
   deploy_page:
