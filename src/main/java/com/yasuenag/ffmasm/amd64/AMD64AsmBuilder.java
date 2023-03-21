@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2023, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -267,6 +267,39 @@ public class AMD64AsmBuilder{
     byte mode = calcModRMMode(disp);
     emitREXOp(r, m);
     byte opcode = (r.width() == 8) ? (byte)0x08 : (byte)0x09;
+    byteBuf.put(opcode); // OR
+    byteBuf.put((byte)(                 mode << 6  |
+                       ((r.encoding() & 0x7) << 3) |
+                        (m.encoding() & 0x7)));
+
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    return this;
+  }
+
+  /**
+   * r/m XOR r.
+   *   Opcode: REX.W + 31 /r (64 bit)
+   *                   31 /r (32 bit)
+   *              66 + 31 /r (16 bit)
+   *                   30 /r ( 8 bit)
+   *   Instruction: XOR r/m,r
+   *   Op/En: MR
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public AMD64AsmBuilder xorMR(Register r, Register m, OptionalInt disp){
+    byte mode = calcModRMMode(disp);
+    emitREXOp(r, m);
+    byte opcode = (r.width() == 8) ? (byte)0x30 : (byte)0x31;
     byteBuf.put(opcode); // OR
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |

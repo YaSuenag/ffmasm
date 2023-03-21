@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2023, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -137,6 +137,35 @@ public class AsmTest{
 
       int actual = (int)method.invoke(1, 2);
       Assertions.assertEquals(3, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests XOR
+   */
+  @Test
+  @Tag("amd64")
+  @Tag("linux")
+  public void testXOR(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT  // 1st argument
+                 );
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+             /* push %rbp      */ .push(Register.RBP)
+             /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+             /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
+             /* xor %rax, %rax */ .xorMR(Register.RAX, Register.RAX, OptionalInt.empty())
+             /* leave          */ .leave()
+             /* ret            */ .ret()
+                                  .build();
+
+      int actual = (int)method.invoke(100);
+      Assertions.assertEquals(0, actual);
     }
     catch(Throwable t){
       Assertions.fail(t);
