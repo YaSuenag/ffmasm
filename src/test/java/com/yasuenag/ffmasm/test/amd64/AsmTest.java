@@ -114,6 +114,34 @@ public class AsmTest{
   }
 
   /**
+   * Tests LEA
+   */
+  @Test
+  @Tag("amd64")
+  @Tag("linux")
+  public void testLEA(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT  // 1st argument
+                 );
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+             /* push %rbp         */ .push(Register.RBP)
+             /* mov %rsp,    %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+             /* lea 8(%rdi), %rax */ .lea(Register.RAX, Register.RDI, 8)
+             /* leave             */ .leave()
+             /* ret               */ .ret()
+                                     .build();
+
+      int actual = (int)method.invoke(100);
+      Assertions.assertEquals(108, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Tests OR
    */
   @Test

@@ -250,6 +250,39 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Store effective address for m in r.
+   * If "r" is 64 bit register, Add REX.W to instruction, otherwise it will not happen.
+   * If "r" is 16 bit register, Add 66H to instruction, otherwise it will not happen.
+   *   Opcode: REX.W + 8D /r (64 bit)
+   *                   8D /r (32 bit)
+   *              66 + 8D /r (16 bit)
+   *   Instruction: LEA r,m
+   *   Op/En: RM
+   *
+   * @param r "r" register
+   * @param m "m" register
+   * @param disp Displacement.
+   * @return This instance
+   */
+  public AMD64AsmBuilder lea(Register r, Register m, int disp){
+    byte mode = calcModRMMode(OptionalInt.of(disp));
+    emitREXOp(r, m);
+    byteBuf.put((byte)0x8D); // MOV
+    byteBuf.put((byte)(                 mode << 6  |
+                       ((r.encoding() & 0x7) << 3) |
+                        (m.encoding() & 0x7)));
+
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp);
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp);
+    }
+
+    return this;
+  }
+
+  /**
    * r/m OR r.
    *   Opcode: REX.W + 09 /r (64 bit)
    *                   09 /r (32 bit)
