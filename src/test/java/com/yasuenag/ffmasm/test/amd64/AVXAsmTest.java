@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2023, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -78,6 +78,46 @@ public class AVXAsmTest{
 
       Assertions.assertArrayEquals(expected, src.toArray(ValueLayout.JAVA_LONG));
       Assertions.assertArrayEquals(expected, dest.toArray(ValueLayout.JAVA_LONG));
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests PXOR
+   */
+  @Test
+  @Tag("avx")
+  @Tag("linux")
+  public void testPXOR(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.ofVoid(
+                   ValueLayout.ADDRESS, // 1st argument
+                   ValueLayout.ADDRESS  // 2nd argument
+                 );
+      var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
+  /* push %rbp                 */ .push(Register.RBP)
+  /* mov %rsp, %rbp            */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+                                  .cast(AVXAsmBuilder.class)
+  /* vmovdqa (%rdi), %ymm0     */ .vmovdqaMR(Register.YMM0, Register.RDI, OptionalInt.of(0))
+  /* vpxor %ymm0, %ymm0, %ymm1 */ .vpxor(Register.YMM0, Register.YMM0, Register.YMM1, OptionalInt.empty())
+  /* vmovdqa %ymm1, (%rsi)     */ .vmovdqaRM(Register.YMM1, Register.RSI, OptionalInt.of(0))
+  /* leave                     */ .leave()
+  /* ret                       */ .ret()
+                                  .build();
+
+      int[]      src = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
+      int[] expected = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
+      var alloc = SegmentAllocator.implicitAllocator();
+      MemorySegment srcSeg = alloc.allocate(32, 32);  // 256 bit
+      MemorySegment destSeg = alloc.allocate(32, 32); // 256 bit
+      MemorySegment.copy(src, 0, srcSeg, ValueLayout.JAVA_INT, 0, src.length);
+
+      method.invoke(srcSeg, destSeg);
+
+      Assertions.assertArrayEquals(src, srcSeg.toArray(ValueLayout.JAVA_INT));
+      Assertions.assertArrayEquals(expected, destSeg.toArray(ValueLayout.JAVA_INT));
     }
     catch(Throwable t){
       Assertions.fail(t);

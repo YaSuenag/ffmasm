@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2023, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -126,6 +126,41 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    */
   public AVXAsmBuilder vmovdqaRM(Register r, Register m, OptionalInt disp){
     return vmovdqa(r, m, disp, (byte)0x7f);
+  }
+
+  /**
+   * Bitwise XOR of r and r/m.
+   * NOTES: This method supports YMM register only now.
+   *   Opcode: VEX.256.66.0F.WIG EF /r (256 bit)
+   *   Instruction: VPXOR dest, r, r/m
+   *   Op/En: B
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param dest "dest" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg
+   *             then "r/m" have to be a SIMD register.
+   *             Otherwise it has to be 64 bit GPR because it have to be
+   *             a memory operand.
+   * @return This instance
+   */
+  public AVXAsmBuilder vpxor(Register r, Register m, Register dest, OptionalInt disp){
+    byte mode = calcModRMMode(disp);
+
+    emit2ByteVEXPrefix(r, PP.H66);
+    byteBuf.put((byte)0xef); // VPXOR
+    byteBuf.put((byte)(                    mode << 6  |
+                       ((dest.encoding() & 0x7) << 3) |
+                           (m.encoding() & 0x7)));
+
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    return this;
   }
 
   /**
