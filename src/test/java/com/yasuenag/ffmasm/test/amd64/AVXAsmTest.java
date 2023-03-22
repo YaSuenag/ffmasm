@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
+import java.lang.foreign.SegmentScope;
 import java.lang.foreign.ValueLayout;
 import java.util.OptionalInt;
 
@@ -42,7 +43,7 @@ public class AVXAsmTest{
    */
   private static void showDebugMessage(CodeSegment seg) throws IOException{
     System.out.println("PID: " + ProcessHandle.current().pid());
-    System.out.println("Addr: 0x" + Long.toHexString(seg.getAddr().toRawLongValue()));
+    System.out.println("Addr: 0x" + Long.toHexString(seg.getAddr().address()));
     System.in.read();
   }
 
@@ -69,7 +70,7 @@ public class AVXAsmTest{
                                   .build();
 
       long[] expected = new long[]{1, 2, 3, 4}; // 64 * 4 = 256 bit
-      var alloc = SegmentAllocator.implicitAllocator();
+      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
       MemorySegment src = alloc.allocate(32, 32);  // 256 bit
       MemorySegment dest = alloc.allocate(32, 32); // 256 bit
       MemorySegment.copy(expected, 0, src, ValueLayout.JAVA_LONG, 0, expected.length);
@@ -109,7 +110,7 @@ public class AVXAsmTest{
 
       int[]      src = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
       int[] expected = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
-      var alloc = SegmentAllocator.implicitAllocator();
+      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
       MemorySegment srcSeg = alloc.allocate(32, 32);  // 256 bit
       MemorySegment destSeg = alloc.allocate(32, 32); // 256 bit
       MemorySegment.copy(src, 0, srcSeg, ValueLayout.JAVA_INT, 0, src.length);
@@ -151,7 +152,7 @@ public class AVXAsmTest{
       int[]     src1 = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
       int[]     src2 = new int[]{8, 7, 6, 5, 4, 3, 2, 1};
       int[] expected = new int[]{9, 9, 9, 9, 9, 9, 9, 9};
-      var alloc = SegmentAllocator.implicitAllocator();
+      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
       MemorySegment src1Seg = alloc.allocate(32, 32);  // 256 bit
       MemorySegment src2Seg = alloc.allocate(32, 32);  // 256 bit
       MemorySegment destSeg = alloc.allocate(32, 32); // 256 bit

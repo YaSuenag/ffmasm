@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2023, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -20,7 +20,7 @@ package com.yasuenag.ffmasm.internal.linux;
 
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
@@ -72,9 +72,9 @@ public class LinuxExecMemory implements ExecMemory{
     sym = Linker.nativeLinker().defaultLookup();
   }
 
-  private MemoryAddress mmap(long addr, long length, int prot, int flags, int fd, long offset) throws PlatformException{
+  private MemorySegment mmap(long addr, long length, int prot, int flags, int fd, long offset) throws PlatformException{
     if(hndMmap == null){
-      var func = sym.lookup("mmap").get();
+      var func = sym.find("mmap").get();
       var desc = FunctionDescriptor.of(
                    ValueLayout.ADDRESS, // return value
                    ValueLayout.JAVA_LONG, // addr
@@ -88,20 +88,20 @@ public class LinuxExecMemory implements ExecMemory{
     }
 
     try{
-      MemoryAddress mem = (MemoryAddress)hndMmap.invoke(addr, length, prot, flags, fd, offset);
-      if(mem.toRawLongValue() == -1L){ // MAP_FAILED
+      MemorySegment mem = (MemorySegment)hndMmap.invoke(addr, length, prot, flags, fd, offset);
+      if(mem.address() == -1L){ // MAP_FAILED
         throw new PlatformException("mmap() failed", Errno.get());
       }
-      return mem;
+      return MemorySegment.ofAddress(mem.address(), length);
     }
     catch(Throwable t){
       throw new PlatformException(t);
     }
   }
 
-  private int munmap(MemoryAddress addr, long length) throws PlatformException{
+  private int munmap(MemorySegment addr, long length) throws PlatformException{
     if(hndMunmap == null){
-      var func = sym.lookup("munmap").get();
+      var func = sym.find("munmap").get();
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.ADDRESS, // addr
@@ -126,7 +126,7 @@ public class LinuxExecMemory implements ExecMemory{
    * {@inheritDoc}
    */
   @Override
-  public MemoryAddress allocate(long size) throws PlatformException{
+  public MemorySegment allocate(long size) throws PlatformException{
     return mmap(0, size, PROT_EXEC | PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   }
@@ -135,7 +135,7 @@ public class LinuxExecMemory implements ExecMemory{
    * {@inheritDoc}
    */
   @Override
-  public void deallocate(MemoryAddress addr, long size) throws PlatformException{
+  public void deallocate(MemorySegment addr, long size) throws PlatformException{
     munmap(addr, size);
   }
 

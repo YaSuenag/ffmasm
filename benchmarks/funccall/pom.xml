@@ -7,12 +7,12 @@
     <groupId>com.yasuenag</groupId>
     <artifactId>ffmasm-benchmark-funccall</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>19</maven.compiler.source>
-        <maven.compiler.target>19</maven.compiler.target>
+        <maven.compiler.source>20</maven.compiler.source>
+        <maven.compiler.target>20</maven.compiler.target>
         <jmh.version>1.35</jmh.version>
     </properties>
 
@@ -31,7 +31,7 @@
         <dependency>
             <groupId>com.yasuenag</groupId>
             <artifactId>ffmasm</artifactId>
-            <version>0.1.4</version>
+            <version>0.2.0</version>
         </dependency>
     </dependencies>
 

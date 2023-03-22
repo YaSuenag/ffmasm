@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2023, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -20,7 +20,7 @@ package com.yasuenag.ffmasm.internal.linux;
 
 import java.lang.foreign.Linker;
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 
@@ -41,15 +41,15 @@ public class Errno{
 
   static{
     var sym = Linker.nativeLinker().defaultLookup();
-    var func = sym.lookup("__errno_location").get();
+    var func = sym.find("__errno_location").get();
     var desc = FunctionDescriptor.of(ValueLayout.ADDRESS);
     hnd = Linker.nativeLinker().downcallHandle(func, desc);
   }
 
   public static int get() throws PlatformException{
-    MemoryAddress errno;
+    MemorySegment errno;
     try{
-      errno = (MemoryAddress)hnd.invoke();
+      errno = (MemorySegment)hnd.invoke();
     }
     catch(Throwable t){
       throw new PlatformException(t);

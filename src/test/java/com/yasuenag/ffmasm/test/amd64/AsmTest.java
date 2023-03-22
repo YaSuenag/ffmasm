@@ -24,7 +24,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.MemorySession;
+import java.lang.foreign.SegmentAllocator;
+import java.lang.foreign.SegmentScope;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteOrder;
 import java.util.OptionalInt;
@@ -41,7 +42,7 @@ public class AsmTest{
    */
   private static void showDebugMessage(CodeSegment seg) throws IOException{
     System.out.println("PID: " + ProcessHandle.current().pid());
-    System.out.println("Addr: 0x" + Long.toHexString(seg.getAddr().toRawLongValue()));
+    System.out.println("Addr: 0x" + Long.toHexString(seg.getAddr().address()));
     System.in.read();
   }
 
@@ -100,13 +101,12 @@ public class AsmTest{
                                   .build();
 
       //showDebugMessage(seg);
-      try(var session = MemorySession.openConfined()){
-        var mem = session.allocate(10, 8);
-        method.invoke(1, (short)2, mem);
+      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
+      var mem = alloc.allocate(10, 8);
+      method.invoke(1, (short)2, mem);
 
-        Assertions.assertEquals(1L, mem.get(ValueLayout.JAVA_LONG, 0));
-        Assertions.assertEquals((short)2, mem.get(ValueLayout.JAVA_SHORT, 8));
-      }
+      Assertions.assertEquals(1L, mem.get(ValueLayout.JAVA_LONG, 0));
+      Assertions.assertEquals((short)2, mem.get(ValueLayout.JAVA_SHORT, 8));
     }
     catch(Throwable t){
       Assertions.fail(t);

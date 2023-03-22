@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2023, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -35,7 +35,7 @@ public class CodeSegmentTest{
   public void testAllocateCodeSegmentWithDefaultSize(){
     try(var seg = new CodeSegment()){
       var addr = seg.getAddr();
-      long startAddr = addr.toRawLongValue();
+      long startAddr = addr.address();
       try(var stream = Files.lines(Path.of("/proc/self/maps"))){
         String[] entries = stream.filter(l -> l.startsWith(Long.toHexString(startAddr)))
                                  .findFirst()
@@ -61,7 +61,7 @@ public class CodeSegmentTest{
 
     try(var seg = new CodeSegment(size)){
       var addr = seg.getAddr();
-      long startAddr = addr.toRawLongValue();
+      long startAddr = addr.address();
       try(var stream = Files.lines(Path.of("/proc/self/maps"))){
         String[] entries = stream.filter(l -> l.startsWith(Long.toHexString(startAddr)))
                                  .findFirst()
@@ -85,7 +85,7 @@ public class CodeSegmentTest{
   public void testAlignment(){
     try(var seg = new CodeSegment()){
       seg.alignTo16Bytes();
-      Assertions.assertEquals((byte)0, (byte)(seg.getTail() & 0xf), "Memory is not aligned: " + Long.toHexString(seg.getAddr().toRawLongValue() + seg.getTail()));
+      Assertions.assertEquals((byte)0, (byte)(seg.getTail() & 0xf), "Memory is not aligned: " + Long.toHexString(seg.getAddr().address() + seg.getTail()));
     }
     catch(Throwable t){
       Assertions.fail(t);
