@@ -20,16 +20,10 @@ jobs:
       - name: 'Checkout repository'
         uses: actions/checkout@v3
 
-      - name: Setup Oracle OpenJDK 19
-        uses: oracle-actions/setup-java@v1
+      - name: Setup Java
+        uses: ./.github/actions/setup-temurin
         with:
-          website: jdk.java.net
-          release: 19
-
-      - name: 'Get OS in lower case'
-        id: get-os
-        run: echo "LOWER_OS=${RUNNER_OS,,}" >> ${GITHUB_ENV}
-        shell: bash
+          jdk-ver: 20
 
       - name: 'Run Maven'
-        run: mvn -B -Dgroups="${{ env.LOWER_OS }} & amd64" package
+        run: mvn -B -Dgroups="${{ env.TARGET_OS }} & amd64" package
