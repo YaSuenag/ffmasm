@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2023, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -20,7 +20,7 @@ package com.yasuenag.ffmasm.internal.windows;
 
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
@@ -56,9 +56,9 @@ public class WindowsExecMemory implements ExecMemory{
     sym = SymbolLookup.loaderLookup();
   }
 
-  private MemoryAddress virtualAlloc(long lpAddress, long dwSize, int flAllocationType, int flProtect) throws PlatformException{
+  private MemorySegment virtualAlloc(long lpAddress, long dwSize, int flAllocationType, int flProtect) throws PlatformException{
     if(hndVirtualAlloc == null){
-      var func = sym.lookup("VirtualAlloc").get();
+      var func = sym.find("VirtualAlloc").get();
       var desc = FunctionDescriptor.of(
                    ValueLayout.ADDRESS, // return value
                    ValueLayout.JAVA_LONG, // lpAddress
@@ -70,11 +70,11 @@ public class WindowsExecMemory implements ExecMemory{
     }
 
     try{
-      MemoryAddress mem = (MemoryAddress)hndVirtualAlloc.invoke(lpAddress, dwSize, flAllocationType, flProtect);
-      if(mem.equals(MemoryAddress.NULL)){
+      MemorySegment mem = (MemorySegment)hndVirtualAlloc.invoke(lpAddress, dwSize, flAllocationType, flProtect);
+      if(mem.equals(MemorySegment.NULL)){
         throw new PlatformException("VirtualAlloc() failed", GetLastError.get());
       }
-      return mem;
+      return MemorySegment.ofAddress(mem.address(), dwSize);
     }
     catch(Throwable t){
       throw new PlatformException(t);
@@ -85,9 +85,9 @@ public class WindowsExecMemory implements ExecMemory{
    * VirtualFree returns BOOL, it is defined in int.
    *   https://learn.microsoft.com/en-us/windows/win32/winprog/windows-data-types
    */
-  private int virtualFree(MemoryAddress lpAddress, long dwSize, int dwFreeType) throws PlatformException{
+  private int virtualFree(MemorySegment lpAddress, long dwSize, int dwFreeType) throws PlatformException{
     if(hndVirtualFree == null){
-      var func = sym.lookup("VirtualFree").get();
+      var func = sym.find("VirtualFree").get();
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.ADDRESS, // addr
@@ -113,7 +113,7 @@ public class WindowsExecMemory implements ExecMemory{
    * {@inheritDoc}
    */
   @Override
-  public MemoryAddress allocate(long size) throws PlatformException{
+  public MemorySegment allocate(long size) throws PlatformException{
     return virtualAlloc(0, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
   }
 
@@ -121,7 +121,7 @@ public class WindowsExecMemory implements ExecMemory{
    * {@inheritDoc}
    */
   @Override
-  public void deallocate(MemoryAddress addr, long size) throws PlatformException{
+  public void deallocate(MemorySegment addr, long size) throws PlatformException{
     virtualFree(addr, 0, MEM_RELEASE);
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2023, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -18,9 +18,7 @@
  */
 package com.yasuenag.ffmasm;
 
-import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.MemorySession;
 
 import com.yasuenag.ffmasm.internal.ExecMemory;
 import com.yasuenag.ffmasm.internal.linux.LinuxExecMemory;
@@ -41,11 +39,9 @@ public class CodeSegment implements AutoCloseable{
 
   private final ExecMemory mem;
 
-  private final MemoryAddress addr;
+  private final MemorySegment addr;
 
   private final long size;
-
-  private final MemorySegment seg;
 
   private long tail;
 
@@ -78,7 +74,6 @@ public class CodeSegment implements AutoCloseable{
 
     this.size = size;
     this.addr = mem.allocate(size);
-    this.seg = MemorySegment.ofAddress(addr, size, MemorySession.global());
     this.tail = 0L;
   }
 
@@ -96,7 +91,7 @@ public class CodeSegment implements AutoCloseable{
    * @return Slice of this segment from the tail.
    */
   public MemorySegment getTailOfMemorySegment(){
-    return seg.asSlice(tail);
+    return addr.asSlice(tail);
   }
 
   /**
@@ -126,11 +121,11 @@ public class CodeSegment implements AutoCloseable{
   }
 
   /**
-   * Get MemoryAddress which relates to this segment.
+   * Get MemorySegment which relates to this segment.
    *
-   * @return MemoryAddress of this segment.
+   * @return MemorySegment of this segment.
    */
-  public MemoryAddress getAddr(){
+  public MemorySegment getAddr(){
     return addr;
   }
 

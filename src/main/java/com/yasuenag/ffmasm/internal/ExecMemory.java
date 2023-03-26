@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2023, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -18,7 +18,7 @@
  */
 package com.yasuenag.ffmasm.internal;
 
-import java.lang.foreign.MemoryAddress;
+import java.lang.foreign.MemorySegment;
 
 import com.yasuenag.ffmasm.PlatformException;
 
@@ -38,7 +38,7 @@ public interface ExecMemory{
    * @return platform memory address
    * @throws PlatformMemoryException thrown when memory allocation fails.
    */
-  public MemoryAddress allocate(long size) throws PlatformException;
+  public MemorySegment allocate(long size) throws PlatformException;
 
   /**
    * Deallocate memory which is pointed addr.
@@ -47,6 +47,6 @@ public interface ExecMemory{
    * @param size required size
    * @throws PlatformMemoryException thrown when memory deallocation fails.
    */
-  public void deallocate(MemoryAddress addr, long size) throws PlatformException;
+  public void deallocate(MemorySegment addr, long size) throws PlatformException;
 
 }

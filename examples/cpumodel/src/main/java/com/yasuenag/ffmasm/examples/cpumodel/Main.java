@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2023, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -31,13 +31,13 @@ public class Main{
   public static void main(String[] args) throws Throwable{
     System.out.println("PID: " + ProcessHandle.current().pid());
 
-    var mem = SegmentAllocator.implicitAllocator().allocate(4 * 4 * 3); // 32bit * 4 regs (eax - edx) * 3 calls
+    var mem = SegmentAllocator.nativeAllocator(SegmentScope.auto()).allocate(4 * 4 * 3); // 32bit * 4 regs (eax - edx) * 3 calls
     var desc = FunctionDescriptor.ofVoid(
                  ValueLayout.JAVA_INT, // eax
                  ValueLayout.ADDRESS   // memory for eax - edx
                );
     try(var codeSegment = new CodeSegment()){
-      System.out.println("Addr: 0x" + Long.toHexString(codeSegment.getAddr().toRawLongValue()));
+      System.out.println("Addr: 0x" + Long.toHexString(codeSegment.getAddr().address()));
 
       Register arg1, arg2;
       String osName = System.getProperty("os.name");

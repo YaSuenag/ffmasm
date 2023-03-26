@@ -24,11 +24,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Oracle OpenJDK 19
-        uses: oracle-actions/setup-java@v1
+      - name: Setup Java
+        uses: ./.github/actions/setup-temurin
         with:
-          website: jdk.java.net
-          release: 19
+          jdk-ver: 20
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2

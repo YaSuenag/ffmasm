@@ -52,7 +52,7 @@ public class VectorOpComparison{
       throw new RuntimeException(e);
     }
 
-    var alloc = SegmentAllocator.implicitAllocator();
+    var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
     srcSeg = alloc.allocate(32, 32);
     destSeg = alloc.allocate(32, 32);
   }

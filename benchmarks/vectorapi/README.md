@@ -7,7 +7,7 @@ This benchmark adds with 256bit packed int. Pure Java and Vector API are expecte
 
 # Requirements
 
-* Java 19
+* Java 20
 * Maven
 
 # How to build
@@ -22,5 +22,5 @@ $ mvn package
 # Run benchmark
 
 ```sh
-$ $JAVA_HOME/bin/java -jar target/ffmasm-benchmark-vectorapi-1.0.0.jar
+$ $JAVA_HOME/bin/java -jar target/ffmasm-benchmark-vectorapi-1.0.1.jar
 ```

@@ -5,7 +5,7 @@ ffmasm
 ![CodeQL](../../actions/workflows/codeql-analysis.yml/badge.svg)
 
 ffmasm is an assembler for hand-assembling from Java.  
-It uses Foreign Function & Memory API, so the application can call assembled code via [MethodHandle](https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/invoke/MethodHandle.html).
+It uses Foreign Function & Memory API, so the application can call assembled code via [MethodHandle](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/invoke/MethodHandle.html).
 
 * Javadoc: https://yasuenag.github.io/ffmasm/
 * Maven package: https://github.com/YaSuenag/ffmasm/packages/
@@ -13,7 +13,7 @@ It uses Foreign Function & Memory API, so the application can call assembled cod
 
 # Requirements
 
-Java 19
+Java 20
 
 # Supported platform
 
@@ -60,7 +60,7 @@ See [Javadoc](https://yasuenag.github.io/ffmasm/) and [cpumodel](examples/cpumod
 ## 1. Create `CodeSegment`
 
 `CodeSegment` is a storage for assembled code. In Linux, it would be allocated by `mmap(2)` with executable bit.  
-It implements [AutoCloseable](https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/AutoCloseable.html), so you can use try-with-resources in below:
+It implements [AutoCloseable](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/AutoCloseable.html), so you can use try-with-resources in below:
 
 ```java
 try(var seg = new CodeSegment()){
@@ -70,7 +70,7 @@ try(var seg = new CodeSegment()){
 
 ## 2. Create `MethodHandle` via `AMD64AsmBuilder`
 
-You can assemble the code via `AMD64AsmBuilder`. It would be instanciated via `create()`, and it should be passed both `CodeSegment` and [FunctionDescriptor](https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/lang/foreign/FunctionDescriptor.html).
+You can assemble the code via `AMD64AsmBuilder`. It would be instanciated via `create()`, and it should be passed both `CodeSegment` and [FunctionDescriptor](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/foreign/FunctionDescriptor.html).
 
 In following example, the method is defined as `(I)I` (JNI signature) in `FunctionDescriptor`.  
 `AMD64AsmBuilder` is builder pattern, so you can add instruction in below. Following example shows method argument (`int`) would be returned straightly.

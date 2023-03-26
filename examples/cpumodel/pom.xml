@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-Copyright (C) 2022 Yasumasa Suenaga
+Copyright (C) 2022, 2023, Yasumasa Suenaga
 
 This file is part of ffmasm.
 
@@ -24,7 +24,7 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
 
     <groupId>com.yasuenag</groupId>
     <artifactId>cpumodel</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <packaging>jar</packaging>
 
     <name>cpumodel</name>
@@ -34,15 +34,15 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
         <moduleName>com.yasuenag.ffmasm.examples.cpumodel</moduleName>
         <mainClass>com.yasuenag.ffmasm.examples.cpumodel.Main</mainClass>
         <imageName>${project.artifactId}-${project.version}</imageName>
-        <maven.compiler.source>19</maven.compiler.source>
-        <maven.compiler.target>19</maven.compiler.target>
+        <maven.compiler.source>20</maven.compiler.source>
+        <maven.compiler.target>20</maven.compiler.target>
     </properties>
     
     <dependencies>
         <dependency>
             <groupId>com.yasuenag</groupId>
             <artifactId>ffmasm</artifactId>
-            <version>0.1.4</version>
+            <version>0.2.0</version>
         </dependency>
     </dependencies>
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2023, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -20,7 +20,6 @@ package com.yasuenag.ffmasm.internal.windows;
 
 import java.lang.foreign.Linker;
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.MemoryAddress;
 import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
@@ -40,7 +39,7 @@ public class GetLastError{
   static{
     System.loadLibrary("Kernel32");
     var sym = SymbolLookup.loaderLookup();
-    var func = sym.lookup("GetLastError").get();
+    var func = sym.find("GetLastError").get();
     var desc = FunctionDescriptor.of(ValueLayout.JAVA_INT);
     hnd = Linker.nativeLinker().downcallHandle(func, desc);
   }
