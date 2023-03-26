@@ -16,7 +16,7 @@ runs:
         $name = $json[0].binary.package.name
         $FILE_PATH = "$env:RUNNER_TEMP/$name"
         (New-Object System.Net.WebClient).DownloadFile("$link", "$FILE_PATH")
-        "TARGEGT_OS=$os" >> $env:GITHUB_ENV
+        "TARGET_OS=$os" >> $env:GITHUB_ENV
         "FILE_PATH=$FILE_PATH" >> $env:GITHUB_ENV
       shell: pwsh
     - name: Setup Java
