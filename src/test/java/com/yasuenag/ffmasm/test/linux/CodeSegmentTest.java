@@ -31,6 +31,7 @@ import com.yasuenag.ffmasm.CodeSegment;
 public class CodeSegmentTest{
 
   @Test
+  @Tag("common")
   @Tag("linux")
   public void testAllocateCodeSegmentWithDefaultSize(){
     try(var seg = new CodeSegment()){
@@ -55,6 +56,7 @@ public class CodeSegmentTest{
   }
 
   @Test
+  @Tag("common")
   @Tag("linux")
   public void testAllocateCodeSegmentWithGivenSize(){
     final long size = 8192L;
@@ -81,6 +83,7 @@ public class CodeSegmentTest{
   }
 
   @Test
+  @Tag("common")
   @Tag("linux")
   public void testAlignment(){
     try(var seg = new CodeSegment()){

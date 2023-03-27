@@ -26,4 +26,4 @@ jobs:
           jdk-ver: 20
 
       - name: 'Run Maven'
-        run: mvn -B -Dgroups="${{ env.TARGET_OS }} & amd64" package
+        run: mvn -B -Dgroups="(${{ env.TARGET_OS }} & amd64) | (${{ env.TARGET_OS }} & common)" package
