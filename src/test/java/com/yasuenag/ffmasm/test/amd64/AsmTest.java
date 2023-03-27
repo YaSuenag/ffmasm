@@ -35,16 +35,7 @@ import com.yasuenag.ffmasm.amd64.AMD64AsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
 
 
-public class AsmTest{
-
-  /**
-   * Show PID, address of CodeSegment, then waits stdin input.
-   */
-  private static void showDebugMessage(CodeSegment seg) throws IOException{
-    System.out.println("PID: " + ProcessHandle.current().pid());
-    System.out.println("Addr: 0x" + Long.toHexString(seg.getAddr().address()));
-    System.in.read();
-  }
+public class AsmTest extends TestBase{
 
   /**
    * Tests prologue (push, movMR), movMR, epilogue (leave, ret)
@@ -52,6 +43,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testBasicInstructions(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -61,7 +53,7 @@ public class AsmTest{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
           /* push %rbp         */ .push(Register.RBP)
           /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-          /* mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
+          /* mov arg1, %rax    */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
           /* leave             */ .leave()
           /* ret               */ .ret()
                                   .build();
@@ -119,6 +111,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testLEA(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -126,12 +119,12 @@ public class AsmTest{
                    ValueLayout.JAVA_INT  // 1st argument
                  );
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-             /* push %rbp         */ .push(Register.RBP)
-             /* mov %rsp,    %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* lea 8(%rdi), %rax */ .lea(Register.RAX, Register.RDI, 8)
-             /* leave             */ .leave()
-             /* ret               */ .ret()
-                                     .build();
+        /* push %rbp           */ .push(Register.RBP)
+        /* mov %rsp,    %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+        /* lea 8(arg1), retReg */ .lea(argReg.returnReg(), argReg.arg1(), 8)
+        /* leave               */ .leave()
+        /* ret                 */ .ret()
+                                  .build();
 
       int actual = (int)method.invoke(100);
       Assertions.assertEquals(108, actual);
@@ -147,6 +140,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testOR(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -155,12 +149,12 @@ public class AsmTest{
                    ValueLayout.JAVA_INT  // 2nd argument
                  );
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-             /* push %rbp      */ .push(Register.RBP)
-             /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
-             /* or  %rsi, %rax */ .orMR(Register.RSI, Register.RAX, OptionalInt.empty())
-             /* leave          */ .leave()
-             /* ret            */ .ret()
+           /* push %rbp        */ .push(Register.RBP)
+           /* mov %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+           /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+           /* or  arg2, retReg */ .orMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty())
+           /* leave            */ .leave()
+           /* ret              */ .ret()
                                   .build();
 
       int actual = (int)method.invoke(1, 2);
@@ -177,6 +171,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testXOR(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -184,12 +179,12 @@ public class AsmTest{
                    ValueLayout.JAVA_INT  // 1st argument
                  );
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-             /* push %rbp      */ .push(Register.RBP)
-             /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
-             /* xor %rax, %rax */ .xorMR(Register.RAX, Register.RAX, OptionalInt.empty())
-             /* leave          */ .leave()
-             /* ret            */ .ret()
+         /* push %rbp          */ .push(Register.RBP)
+         /* mov %rsp, %rbp     */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /* mov arg1, retReg   */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+         /* xor retReg, retReg */ .xorMR(argReg.returnReg(), argReg.returnReg(), OptionalInt.empty())
+         /* leave              */ .leave()
+         /* ret                */ .ret()
                                   .build();
 
       int actual = (int)method.invoke(100);
@@ -206,6 +201,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testCPUID(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -215,7 +211,7 @@ public class AsmTest{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
           /* push %rbp         */ .push(Register.RBP)
           /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-          /* mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
+          /* mov arg1, %rax    */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
           /* cpuid             */ .cpuid()
           /* mov %edx, %eax    */ .movMR(Register.EDX, Register.EAX, OptionalInt.empty())
           /* leave             */ .leave()
@@ -237,6 +233,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testNOP(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -247,7 +244,7 @@ public class AsmTest{
           /* push %rbp         */ .push(Register.RBP)
           /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
           /* nop               */ .nop()
-          /* mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
+          /* mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
           /* nop               */ .nop()
           /* leave             */ .leave()
           /* ret               */ .ret()
@@ -268,6 +265,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testCMPandJL(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -278,13 +276,13 @@ public class AsmTest{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
+        /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
         /*   jl success        */ .jl("success")
-        /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
         /*   leave             */ .leave()
         /*   ret               */ .ret()
         /* success:            */ .label("success")
-        /*   mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
         /*   leave             */ .leave()
         /*   ret               */ .ret()
                                   .build();
@@ -471,6 +469,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testJAE(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -481,13 +480,13 @@ public class AsmTest{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
+        /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
         /*   jae success       */ .jae("success")
-        /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
         /*   leave             */ .leave()
         /*   ret               */ .ret()
         /* success:            */ .label("success")
-        /*   mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
         /*   leave             */ .leave()
         /*   ret               */ .ret()
                                   .build();
@@ -506,6 +505,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testJE(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -516,13 +516,13 @@ public class AsmTest{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   cmp   $10, %rdi   */ .cmp(Register.RDI, 10, OptionalInt.empty())
+        /*   cmp   $10, arg1   */ .cmp(argReg.arg1(), 10, OptionalInt.empty())
         /*   je success        */ .je("success")
-        /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
         /*   leave             */ .leave()
         /*   ret               */ .ret()
         /* success:            */ .label("success")
-        /*   mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
         /*   leave             */ .leave()
         /*   ret               */ .ret()
                                   .build();
@@ -541,6 +541,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testJNE(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -551,13 +552,13 @@ public class AsmTest{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
+        /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
         /*   jne success       */ .jne("success")
-        /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
         /*   leave             */ .leave()
         /*   ret               */ .ret()
         /* success:            */ .label("success")
-        /*   mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
         /*   leave             */ .leave()
         /*   ret               */ .ret()
                                   .build();
@@ -576,6 +577,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testFwdBackJMP(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -586,15 +588,15 @@ public class AsmTest{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
+        /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
         /*   jl fwd            */ .jl("fwd")
         /* exit:               */ .label("exit")
-        /*   mov %rdi, %rax    */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
         /*   leave             */ .leave()
         /*   ret               */ .ret()
         /* fwd:                */ .label("fwd")
         /*   jmp exit          */ .jmp("exit")
-        /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
         /*   leave             */ .leave()
         /*   ret               */ .ret()
                                   .build();
@@ -613,6 +615,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testJLwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -623,8 +626,8 @@ public class AsmTest{
       var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
          /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
-         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
+         /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+         /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
          /*   jl success        */ .jl("success");
       for(int i = 0; i < 200; i++){
          /* nop */ builder.nop();
@@ -632,7 +635,7 @@ public class AsmTest{
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
         /* success:            */        .label("success")
-        /*   mov %rdi, %rax    */        .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov arg1, retReg  */        .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
         /*   leave             */        .leave()
         /*   ret               */        .ret();
 
@@ -651,6 +654,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testJAEwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -661,8 +665,8 @@ public class AsmTest{
       var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
          /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
-         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
+         /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+         /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
          /*   jae success       */ .jae("success");
       for(int i = 0; i < 200; i++){
          /* nop */ builder.nop();
@@ -670,7 +674,7 @@ public class AsmTest{
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
         /* success:            */        .label("success")
-        /*   mov %rdi, %rax    */        .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov arg1, retReg  */        .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
         /*   leave             */        .leave()
         /*   ret               */        .ret();
 
@@ -689,6 +693,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testJNEwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -699,8 +704,8 @@ public class AsmTest{
       var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
          /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
-         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 1, OptionalInt.empty())
+         /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+         /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
          /*   jne success       */ .jne("success");
       for(int i = 0; i < 200; i++){
          /* nop */ builder.nop();
@@ -708,7 +713,7 @@ public class AsmTest{
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
         /* success:            */        .label("success")
-        /*   mov %rdi, %rax    */        .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov arg1, retReg  */        .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
         /*   leave             */        .leave()
         /*   ret               */        .ret();
 
@@ -727,6 +732,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testJEwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -737,8 +743,8 @@ public class AsmTest{
       var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
          /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
-         /*   cmp   $1, %rdi    */ .cmp(Register.RDI, 10, OptionalInt.empty())
+         /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+         /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 10, OptionalInt.empty())
          /*   je success        */ .je("success");
       for(int i = 0; i < 200; i++){
          /* nop */ builder.nop();
@@ -746,7 +752,7 @@ public class AsmTest{
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
         /* success:            */        .label("success")
-        /*   mov %rdi, %rax    */        .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov arg1, retReg  */        .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
         /*   leave             */        .leave()
         /*   ret               */        .ret();
 
@@ -765,6 +771,7 @@ public class AsmTest{
   @Test
   @Tag("amd64")
   @Tag("linux")
+  @Tag("windows")
   public void testJMPwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -775,7 +782,7 @@ public class AsmTest{
       var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
          /*   push %rbp         */ .push(Register.RBP)
          /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov %rsi, %rax    */ .movMR(Register.RSI, Register.RAX, OptionalInt.empty()) // failure
+         /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
          /*   jmp success       */ .jmp("success");
       for(int i = 0; i < 200; i++){
          /* nop */ builder.nop();
@@ -783,7 +790,7 @@ public class AsmTest{
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
         /* success:            */        .label("success")
-        /*   mov %rdi, %rax    */        .movMR(Register.RDI, Register.RAX, OptionalInt.empty()) // success
+        /*   mov arg1, retReg  */        .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
         /*   leave             */        .leave()
         /*   ret               */        .ret();
 

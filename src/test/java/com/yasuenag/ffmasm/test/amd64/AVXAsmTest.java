@@ -36,16 +36,7 @@ import com.yasuenag.ffmasm.amd64.AVXAsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
 
 
-public class AVXAsmTest{
-
-  /**
-   * Show PID, address of CodeSegment, then waits stdin input.
-   */
-  private static void showDebugMessage(CodeSegment seg) throws IOException{
-    System.out.println("PID: " + ProcessHandle.current().pid());
-    System.out.println("Addr: 0x" + Long.toHexString(seg.getAddr().address()));
-    System.in.read();
-  }
+public class AVXAsmTest extends TestBase{
 
   /**
    * Tests MOVDQA A/B
@@ -53,6 +44,7 @@ public class AVXAsmTest{
   @Test
   @Tag("avx")
   @Tag("linux")
+  @Tag("windows")
   public void testMOVDQA(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
@@ -63,8 +55,8 @@ public class AVXAsmTest{
       /* push %rbp             */ .push(Register.RBP)
       /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
                                   .cast(AVXAsmBuilder.class)
-      /* vmovdqa (%rdi), %ymm0 */ .vmovdqaMR(Register.YMM0, Register.RDI, OptionalInt.of(0))
-      /* vmovdqa %ymm0, (%rsi) */ .vmovdqaRM(Register.YMM0, Register.RSI, OptionalInt.of(0))
+      /* vmovdqa (arg1), %ymm0 */ .vmovdqaMR(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+      /* vmovdqa %ymm0, (arg2) */ .vmovdqaRM(Register.YMM0, argReg.arg2(), OptionalInt.of(0))
       /* leave                 */ .leave()
       /* ret                   */ .ret()
                                   .build();
@@ -91,6 +83,7 @@ public class AVXAsmTest{
   @Test
   @Tag("avx")
   @Tag("linux")
+  @Tag("windows")
   public void testPXOR(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
@@ -101,9 +94,9 @@ public class AVXAsmTest{
   /* push %rbp                 */ .push(Register.RBP)
   /* mov %rsp, %rbp            */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
                                   .cast(AVXAsmBuilder.class)
-  /* vmovdqa (%rdi), %ymm0     */ .vmovdqaMR(Register.YMM0, Register.RDI, OptionalInt.of(0))
+  /* vmovdqa (arg1), %ymm0     */ .vmovdqaMR(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
   /* vpxor %ymm0, %ymm0, %ymm1 */ .vpxor(Register.YMM0, Register.YMM0, Register.YMM1, OptionalInt.empty())
-  /* vmovdqa %ymm1, (%rsi)     */ .vmovdqaRM(Register.YMM1, Register.RSI, OptionalInt.of(0))
+  /* vmovdqa %ymm1, (arg2)     */ .vmovdqaRM(Register.YMM1, argReg.arg2(), OptionalInt.of(0))
   /* leave                     */ .leave()
   /* ret                       */ .ret()
                                   .build();
@@ -142,9 +135,9 @@ public class AVXAsmTest{
 /* push %rbp                   */ .push(Register.RBP)
 /* mov %rsp, %rbp              */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
                                   .cast(AVXAsmBuilder.class)
-/* vmovdqa (%rdi), %ymm0       */ .vmovdqaMR(Register.YMM0, Register.RDI, OptionalInt.of(0))
-/* vpaddd (%rsi), %ymm0, %ymm1 */ .vpaddd(Register.YMM0, Register.RSI, Register.YMM1, OptionalInt.of(0))
-/* vmovdqa %ymm0, (%rdx)       */ .vmovdqaRM(Register.YMM1, Register.RDX, OptionalInt.of(0))
+/* vmovdqa (arg1), %ymm0       */ .vmovdqaMR(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+/* vpaddd (arg2), %ymm0, %ymm1 */ .vpaddd(Register.YMM0, argReg.arg2(), Register.YMM1, OptionalInt.of(0))
+/* vmovdqa %ymm1, (arg3)       */ .vmovdqaRM(Register.YMM1, argReg.arg3(), OptionalInt.of(0))
       /* leave                 */ .leave()
       /* ret                   */ .ret()
                                   .build();
