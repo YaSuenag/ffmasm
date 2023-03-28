@@ -124,6 +124,7 @@ public class AVXAsmTest extends TestBase{
   @Test
   @Tag("avx")
   @Tag("linux")
+  @Tag("windows")
   public void testPADDD(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(

@@ -59,6 +59,22 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
     }
   }
 
+  private static enum LeadingBytes{
+    H0F((byte)0b00001),
+    H0F38((byte)0b00010),
+    H0F3A((byte)0b00011);
+
+    private final byte bytes;
+
+    private LeadingBytes(byte bytes){
+      this.bytes = bytes;
+    }
+
+    public byte bytes(){
+      return bytes;
+    }
+  }
+
   private void emit2ByteVEXPrefix(Register src1, PP simdPrefix){
     byte VEXvvvv = (byte)((~src1.encoding()) & 0b1111);
     byte rexr = (byte)((VEXvvvv >> 3) & 1);
@@ -71,10 +87,33 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
                ));
   }
 
+  private void emit3ByteVEXPrefix(Register r, Register m, PP simdPrefix, LeadingBytes bytes){
+    byte VEXvvvv = (byte)((~r.encoding()) & 0b1111);
+    byte invMem = (byte)((~m.encoding()) & 0b1111);
+    byte rexr = (byte)((VEXvvvv >> 3) & 1);
+    byte rexb = (byte)((invMem >> 3) & 1);
+    byte is256Bit = (r.width() == 256) ? (byte)1 : (byte)0;
+    byteBuf.put((byte)0xC4); // 3-byte VEX
+    byteBuf.put((byte)(   (rexr << 7) | // REX.R
+                          (   1 << 6) | // inverse of REX.X
+                          (rexb << 5) | // REX.B
+                        bytes.bytes()   // leading opcode bytes
+               ));
+    byteBuf.put((byte)(     (VEXvvvv << 3) | // VEX.vvvv
+                           (is256Bit << 2) | // Vector Length
+                       simdPrefix.prefix()   // opcode extension (SIMD prefix)
+               ));
+  }
+
   private AVXAsmBuilder vmovdqa(Register r, Register m, OptionalInt disp, byte opcode){
     byte mode = calcModRMMode(disp);
 
-    emit2ByteVEXPrefix(Register.YMM0 /* unused */, PP.H66);
+    if(m.encoding() > 7){
+      emit3ByteVEXPrefix(Register.YMM0 /* unused */, m, PP.H66, LeadingBytes.H0F);
+    }
+    else{
+      emit2ByteVEXPrefix(Register.YMM0 /* unused */, PP.H66);
+    }
     byteBuf.put(opcode); // MOVDQA
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
@@ -147,7 +186,12 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
   public AVXAsmBuilder vpxor(Register r, Register m, Register dest, OptionalInt disp){
     byte mode = calcModRMMode(disp);
 
-    emit2ByteVEXPrefix(r, PP.H66);
+    if(m.encoding() > 7){
+      emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F);
+    }
+    else{
+      emit2ByteVEXPrefix(r, PP.H66);
+    }
     byteBuf.put((byte)0xef); // VPXOR
     byteBuf.put((byte)(                    mode << 6  |
                        ((dest.encoding() & 0x7) << 3) |
@@ -182,7 +226,12 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
   public AVXAsmBuilder vpaddd(Register r, Register m, Register dest, OptionalInt disp){
     byte mode = calcModRMMode(disp);
 
-    emit2ByteVEXPrefix(r, PP.H66);
+    if(m.encoding() > 7){
+      emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F);
+    }
+    else{
+      emit2ByteVEXPrefix(r, PP.H66);
+    }
     byteBuf.put((byte)0xfe); // VPADDD
     byteBuf.put((byte)(                    mode << 6  |
                        ((dest.encoding() & 0x7) << 3) |
