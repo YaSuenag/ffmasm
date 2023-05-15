@@ -19,8 +19,9 @@
 package com.yasuenag.ffmasm.test.amd64;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import java.io.IOException;
 import java.lang.foreign.FunctionDescriptor;
@@ -41,9 +42,7 @@ public class AsmTest extends TestBase{
    * Tests prologue (push, movMR), movMR, epilogue (leave, ret)
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testBasicInstructions(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -71,8 +70,7 @@ public class AsmTest extends TestBase{
    * Tests PUSH and POP
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
+  @EnabledOnOs(value = {OS.LINUX}, architectures = {"amd64"})
   public void testPUSHandPOP(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
@@ -109,9 +107,7 @@ public class AsmTest extends TestBase{
    * Tests LEA
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testLEA(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -138,9 +134,7 @@ public class AsmTest extends TestBase{
    * Tests OR
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testOR(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -169,9 +163,7 @@ public class AsmTest extends TestBase{
    * Tests XOR
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testXOR(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -199,9 +191,7 @@ public class AsmTest extends TestBase{
    * Tests CPUID and 32 bit movMR
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testCPUID(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -231,9 +221,7 @@ public class AsmTest extends TestBase{
    * Test NOP
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testNOP(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -263,9 +251,7 @@ public class AsmTest extends TestBase{
    * Tests CMP, JL, and label
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testCMPandJL(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -299,8 +285,7 @@ public class AsmTest extends TestBase{
    * Tests 16 bit CMP
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
+  @EnabledOnOs(value = {OS.LINUX}, architectures = {"amd64"})
   public void test16bitCMP(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -334,8 +319,7 @@ public class AsmTest extends TestBase{
    * Tests 8 bit CMP
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
+  @EnabledOnOs(value = {OS.LINUX}, architectures = {"amd64"})
   public void test8bitCMP(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -371,8 +355,7 @@ public class AsmTest extends TestBase{
    * Tests ADDs
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
+  @EnabledOnOs(value = {OS.LINUX}, architectures = {"amd64"})
   public void testADDs(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -403,8 +386,7 @@ public class AsmTest extends TestBase{
    * Tests SUBs
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
+  @EnabledOnOs(value = {OS.LINUX}, architectures = {"amd64"})
   public void testSUBs(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -435,8 +417,7 @@ public class AsmTest extends TestBase{
    * Tests SHLs
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
+  @EnabledOnOs(value = {OS.LINUX}, architectures = {"amd64"})
   public void testSHLs(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -467,9 +448,7 @@ public class AsmTest extends TestBase{
    * Test JAE
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testJAE(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -503,9 +482,7 @@ public class AsmTest extends TestBase{
    * Test JE
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testJE(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -539,9 +516,7 @@ public class AsmTest extends TestBase{
    * Test JNE
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testJNE(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -575,9 +550,7 @@ public class AsmTest extends TestBase{
    * Tests forward & backward jump.
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testFwdBackJMP(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -613,9 +586,7 @@ public class AsmTest extends TestBase{
    * Test JL with imm32
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testJLwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -652,9 +623,7 @@ public class AsmTest extends TestBase{
    * Test JAE with imm32
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testJAEwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -691,9 +660,7 @@ public class AsmTest extends TestBase{
    * Test JNE with imm32
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testJNEwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -730,9 +697,7 @@ public class AsmTest extends TestBase{
    * Test JE with imm32
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testJEwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -769,9 +734,7 @@ public class AsmTest extends TestBase{
    * Tests JMP with imm32
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testJMPwithImm32(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -808,9 +771,7 @@ public class AsmTest extends TestBase{
    * when build() is called.
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testUndefinedLabel(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid();
@@ -829,9 +790,7 @@ public class AsmTest extends TestBase{
    * Test RDRAND
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testRDRAND(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -861,9 +820,7 @@ public class AsmTest extends TestBase{
    * Test RDSEED
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testRDSEED(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -892,9 +849,7 @@ public class AsmTest extends TestBase{
    * Test RDTSC
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testRDTSC(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -919,9 +874,7 @@ public class AsmTest extends TestBase{
    * Test address alignment
    */
   @Test
-  @Tag("amd64")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testAlignment(){
     try(var seg = new CodeSegment()){
       var byteBuf = seg.getTailOfMemorySegment()

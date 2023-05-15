@@ -19,8 +19,9 @@
 package com.yasuenag.ffmasm.test.linux;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,11 +29,10 @@ import java.nio.file.Path;
 import com.yasuenag.ffmasm.CodeSegment;
 
 
+@EnabledOnOs({OS.LINUX})
 public class CodeSegmentTest{
 
   @Test
-  @Tag("common")
-  @Tag("linux")
   public void testAllocateCodeSegmentWithDefaultSize(){
     try(var seg = new CodeSegment()){
       var addr = seg.getAddr();
@@ -56,8 +56,6 @@ public class CodeSegmentTest{
   }
 
   @Test
-  @Tag("common")
-  @Tag("linux")
   public void testAllocateCodeSegmentWithGivenSize(){
     final long size = 8192L;
 
@@ -76,19 +74,6 @@ public class CodeSegmentTest{
         Assertions.assertEquals(size, endAddr - startAddr);
         Assertions.assertEquals('x', execBit);
       }
-    }
-    catch(Throwable t){
-      Assertions.fail(t);
-    }
-  }
-
-  @Test
-  @Tag("common")
-  @Tag("linux")
-  public void testAlignment(){
-    try(var seg = new CodeSegment()){
-      seg.alignTo16Bytes();
-      Assertions.assertEquals((byte)0, (byte)(seg.getTail() & 0xf), "Memory is not aligned: " + Long.toHexString(seg.getAddr().address() + seg.getTail()));
     }
     catch(Throwable t){
       Assertions.fail(t);

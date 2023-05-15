@@ -19,8 +19,10 @@
 package com.yasuenag.ffmasm.test.amd64;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import java.io.IOException;
 import java.lang.foreign.FunctionDescriptor;
@@ -36,15 +38,14 @@ import com.yasuenag.ffmasm.amd64.AVXAsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
 
 
+@EnabledIfSystemProperty(named = "avxtest", matches = "true")
 public class AVXAsmTest extends TestBase{
 
   /**
    * Tests MOVDQA A/B
    */
   @Test
-  @Tag("avx")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS})
   public void testMOVDQA(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
@@ -81,9 +82,7 @@ public class AVXAsmTest extends TestBase{
    * Tests PXOR
    */
   @Test
-  @Tag("avx")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS})
   public void testPXOR(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
@@ -122,9 +121,7 @@ public class AVXAsmTest extends TestBase{
    * Tests PADDD
    */
   @Test
-  @Tag("avx")
-  @Tag("linux")
-  @Tag("windows")
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS})
   public void testPADDD(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(

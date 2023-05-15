@@ -48,10 +48,14 @@ $ mvn -Dgroups=linux test
 ### Run both Linux and AMD64 tests
 
 ```bash
-$ mvn -Dgroups='linux & amd64' test
+$ mvn test
 ```
 
-See [JUnit 5 User Guide](https://junit.org/junit5/docs/current/user-guide/#running-tests-tag-expressions) for details.
+If you want to run tests for AVX, set `true` to `avxtest` system property.
+
+```bash
+$ mvn -Davxtest=true test
+```
 
 # How to use
 

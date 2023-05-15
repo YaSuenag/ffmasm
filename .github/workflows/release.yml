@@ -18,10 +18,8 @@ jobs:
         uses: ./.github/actions/setup-temurin
         with:
           jdk-ver: 20
-      - name: Run Maven
-        run: mvn -B -Dmaven.test.skip=true package javadoc:javadoc
       - name: Publish to GitHub Packages via Apache Maven
-        run: mvn -B -Dmaven.test.skip=true deploy
+        run: mvn -B -DskipTests deploy javadoc:javadoc
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: Upload artifact

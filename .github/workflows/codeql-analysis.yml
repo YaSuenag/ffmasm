@@ -36,7 +36,7 @@ jobs:
           queries: security-extended,security-and-quality
 
       - name: Build
-        run: mvn -B -Dmaven.test.skip=true package
+        run: mvn -B -DskipTests package
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
