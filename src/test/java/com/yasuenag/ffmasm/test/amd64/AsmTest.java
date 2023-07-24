@@ -542,6 +542,41 @@ public class AsmTest extends TestBase{
   }
 
   /**
+   * Test JZ
+   */
+  @Test
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
+  public void testJZ(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT, // 1st argument (operand)
+                   ValueLayout.JAVA_INT, // 2nd argument (success)
+                   ValueLayout.JAVA_INT  // 3rd argument (failure)
+                 );
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+        /*   push %rbp         */ .push(Register.RBP)
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   and arg1, arg2    */ .andMR(argReg.arg1(), argReg.arg2(), OptionalInt.empty())
+        /*   jz success        */ .jz("success")
+        /*   mov arg3, retReg  */ .movMR(argReg.arg3(), argReg.returnReg(), OptionalInt.empty()) // failure
+        /*   leave             */ .leave()
+        /*   ret               */ .ret()
+        /* success:            */ .label("success")
+        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // success
+        /*   leave             */ .leave()
+        /*   ret               */ .ret()
+                                  .build();
+
+      int actual = (int)method.invoke(0b1111, 0, 1);
+      Assertions.assertEquals(0, actual, "Seems not to jump at JZ.");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Test JNE
    */
   @Test

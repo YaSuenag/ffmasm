@@ -707,6 +707,17 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Jump if zero (ZF = 1).
+   * This method is an alias of {@link #je(java.lang.String)}.
+   *
+   * @param label the label to jump.
+   * @return This instance
+   */
+  public AMD64AsmBuilder jz(String label){
+    return je(label);
+  }
+
+  /**
    * Jump if less (SF ≠ OF).
    *   Opcode:    7C cb (rel8)
    *           0F 8C cd (rel32)
