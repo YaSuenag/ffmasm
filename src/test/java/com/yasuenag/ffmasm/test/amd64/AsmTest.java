@@ -131,6 +131,35 @@ public class AsmTest extends TestBase{
   }
 
   /**
+   * Tests AND
+   */
+  @Test
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
+  public void testAND(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT, // 1st argument
+                   ValueLayout.JAVA_INT  // 2nd argument
+                 );
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+           /* push %rbp        */ .push(Register.RBP)
+           /* mov %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+           /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+           /* and arg2, retReg */ .andMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty())
+           /* leave            */ .leave()
+           /* ret              */ .ret()
+                                  .build();
+
+      int actual = (int)method.invoke(0b1001, 0b1100);
+      Assertions.assertEquals(0b1000, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Tests OR
    */
   @Test

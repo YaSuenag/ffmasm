@@ -283,6 +283,39 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * r/m AND r.
+   *   Opcode: REX.W + 21 /r (64 bit)
+   *                   21 /r (32 bit)
+   *              66 + 21 /r (16 bit)
+   *                   20 /r ( 8 bit)
+   *   Instruction: AND r/m,r
+   *   Op/En: MR
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public AMD64AsmBuilder andMR(Register r, Register m, OptionalInt disp){
+    byte mode = calcModRMMode(disp);
+    emitREXOp(r, m);
+    byte opcode = (r.width() == 8) ? (byte)0x20 : (byte)0x21;
+    byteBuf.put(opcode); // AND
+    byteBuf.put((byte)(                 mode << 6  |
+                       ((r.encoding() & 0x7) << 3) |
+                        (m.encoding() & 0x7)));
+
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    return this;
+  }
+
+  /**
    * r/m OR r.
    *   Opcode: REX.W + 09 /r (64 bit)
    *                   09 /r (32 bit)
