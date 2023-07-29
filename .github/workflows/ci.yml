@@ -2,7 +2,7 @@ name: Maven Build & Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, gha-ci-cpufeat ]
   pull_request:
     branches: [ main ]
 
@@ -31,7 +31,8 @@ jobs:
           java -XX:+PrintFlagsFinal --version |
               Where-Object { [void] $_ -match 'UseAVX\s*=\s*(\d+)\s+' } |
               Select-Object -First 1
-          $testopt = $Matches[1] -gt 0 ? "-Davxtest=true" : ""
+          $Matches
+          $testopt = $Matches.1 -gt 0 ? "-Davxtest=true" : ""
           "SYSPROPS=$testopt" >> $env:GITHUB_OUTPUT
         shell: pwsh
 
