@@ -914,15 +914,16 @@ public class AMD64AsmBuilder{
   /**
    * Build as a MethodHandle
    *
+   * @param options Linker options to pass to downcallHandle().
    * @return MethodHandle for this assembly
    * @throws IllegalStateException when label(s) are not defined even if they are used
    */
-  public MethodHandle build(){
+  public MethodHandle build(Linker.Option... options){
     if(!pendingLabelMap.isEmpty()){
       throw new IllegalStateException("Label is not defined: " + pendingLabelMap.keySet().toString());
     }
     seg.incTail(byteBuf.position());
-    return Linker.nativeLinker().downcallHandle(mem, desc);
+    return Linker.nativeLinker().downcallHandle(mem, desc, options);
   }
 
 }
