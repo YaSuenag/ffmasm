@@ -43,7 +43,7 @@ public class Errno{
     var sym = Linker.nativeLinker().defaultLookup();
     var func = sym.find("__errno_location").get();
     var desc = FunctionDescriptor.of(ValueLayout.ADDRESS);
-    hnd = Linker.nativeLinker().downcallHandle(func, desc);
+    hnd = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.isTrivial());
   }
 
   public static int get() throws PlatformException{

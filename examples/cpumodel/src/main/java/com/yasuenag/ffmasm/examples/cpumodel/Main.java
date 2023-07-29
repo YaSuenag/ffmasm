@@ -67,7 +67,7 @@ public class Main{
         /* pop %rbx           */ .pop(Register.RBX, OptionalInt.empty())
         /* leave              */ .leave()
         /* ret                */ .ret()
-                                 .build();
+                                 .build(Linker.Option.isTrivial());
 
       cpuid.invoke(0x80000002, mem);
       cpuid.invoke(0x80000003, mem.asSlice(4 * 4));

@@ -46,7 +46,7 @@ public class VectorOpComparison{
 /* vmovdqa %ymm0, (%rdi)       */ .vmovdqaRM(Register.YMM0, Register.RDI, OptionalInt.of(0))
 /* leave                       */ .leave()
 /* ret                         */ .ret()
-                                  .build();
+                                  .build(Linker.Option.isTrivial());
     }
     catch(PlatformException | UnsupportedPlatformException e){
       throw new RuntimeException(e);
