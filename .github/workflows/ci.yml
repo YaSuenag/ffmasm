@@ -25,5 +25,15 @@ jobs:
         with:
           jdk-ver: 20
 
+      - name: Check CPU features for Maven tests
+        id: cpufeat-for-test
+        run: |
+          java -XX:+PrintFlagsFinal --version |
+              Where-Object { [void] $_ -match 'UseAVX\s*=\s*(\d+)\s+' } |
+              Select-Object -First 1
+          $testopt = $Matches[1] -gt 0 ? "-Davxtest=true" : ""
+          "SYSPROPS=$testopt" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
       - name: 'Run Maven'
-        run: mvn -B test
+        run: mvn ${{ steps.cpufeat-for-test.outputs.SYSPROPS }} -B test
