@@ -29,7 +29,7 @@ jobs:
         id: cpufeat-for-test
         run: |
           java -XX:+PrintFlagsFinal --version |
-              Where-Object { [void] $_ -match 'UseAVX\s*=\s*(\d+)\s+' } |
+              Where-Object { $_ -match 'UseAVX\s*=\s*(\d+)\s+' } |
               Select-Object -First 1
           $avx = $Matches.1
           Write-Host "AVX = $avx"
