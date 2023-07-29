@@ -31,11 +31,9 @@ jobs:
           java -XX:+PrintFlagsFinal --version |
               Where-Object { $_ -match 'UseAVX\s*=\s*(\d+)\s+' } |
               Select-Object -First 1
-          Write-Host "Debug message"
-          Write-Host $Matches
-          Write-Host $Matches.0
-          Write-Host $Matches.1
-          $testopt = $Matches.1 -gt 0 ? "-Davxtest=true" : ""
+          $avx = $Matches.1
+          Write-Host "AVX = $avx"
+          $testopt = $avx -gt 0 ? "-Davxtest=true" : ""
           "SYSPROPS=$testopt" >> $env:GITHUB_OUTPUT
         shell: pwsh
 
