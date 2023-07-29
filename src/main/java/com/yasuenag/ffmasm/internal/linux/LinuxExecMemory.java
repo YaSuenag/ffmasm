@@ -92,7 +92,7 @@ public class LinuxExecMemory implements ExecMemory{
       if(mem.address() == -1L){ // MAP_FAILED
         throw new PlatformException("mmap() failed", Errno.get());
       }
-      return MemorySegment.ofAddress(mem.address(), length);
+      return mem.reinterpret(length);
     }
     catch(Throwable t){
       throw new PlatformException(t);

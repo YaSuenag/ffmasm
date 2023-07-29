@@ -52,9 +52,9 @@ public class VectorOpComparison{
       throw new RuntimeException(e);
     }
 
-    var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
-    srcSeg = alloc.allocate(32, 32);
-    destSeg = alloc.allocate(32, 32);
+    var arena = Arena.ofAuto();
+    srcSeg = arena.allocate(32, 32);
+    destSeg = arena.allocate(32, 32);
   }
 
   @Setup(Level.Iteration)

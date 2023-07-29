@@ -74,7 +74,7 @@ public class WindowsExecMemory implements ExecMemory{
       if(mem.equals(MemorySegment.NULL)){
         throw new PlatformException("VirtualAlloc() failed", GetLastError.get());
       }
-      return MemorySegment.ofAddress(mem.address(), dwSize);
+      return mem.reinterpret(dwSize);
     }
     catch(Throwable t){
       throw new PlatformException(t);

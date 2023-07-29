@@ -24,9 +24,8 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import java.io.IOException;
+import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.SegmentAllocator;
-import java.lang.foreign.SegmentScope;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteOrder;
 import java.util.OptionalInt;
@@ -91,8 +90,8 @@ public class AsmTest extends TestBase{
                                   .build();
 
       //showDebugMessage(seg);
-      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
-      var mem = alloc.allocate(10, 8);
+      var arena = Arena.ofAuto();
+      var mem = arena.allocate(10, 8);
       method.invoke(1, (short)2, mem);
 
       Assertions.assertEquals(1L, mem.get(ValueLayout.JAVA_LONG, 0));
