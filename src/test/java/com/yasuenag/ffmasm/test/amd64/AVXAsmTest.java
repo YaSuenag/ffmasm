@@ -161,4 +161,49 @@ public class AVXAsmTest extends TestBase{
     }
   }
 
+  /**
+   * Tests PTEST
+   */
+  @Test
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS})
+  public void testPTEST(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.ADDRESS,  // 1st argument (operand)
+                   ValueLayout.JAVA_INT, // 2nd argument (success)
+                   ValueLayout.JAVA_INT  // 3rd argument (failure)
+                 );
+      var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
+  /* push %rbp                 */ .push(Register.RBP)
+  /* mov %rsp, %rbp            */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+                                  .cast(AVXAsmBuilder.class)
+  /* vpxor %ymm0, %ymm0, %ymm0 */ .vpxor(Register.YMM0, Register.YMM0, Register.YMM0, OptionalInt.empty())
+  /* vptest (arg1), %ymm0      */ .vptest(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+  /* jz success                */ .jz("success")
+  /* mov arg3, retReg          */ .movMR(argReg.arg3(), argReg.returnReg(), OptionalInt.empty())
+  /* leave                     */ .leave()
+  /* ret                       */ .ret()
+  /* success:                  */ .label("success")
+  /*   mov arg2, retReg        */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty())
+  /*   leave                   */ .leave()
+  /*   ret                     */ .ret()
+                                  .build();
+
+      int[]    zero = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
+      int[] nonzero = new int[]{1, 1, 1, 1, 1, 1, 1, 1};
+      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
+      MemorySegment zeroSeg = alloc.allocate(32, 32);  // 256 bit
+      MemorySegment nonzeroSeg = alloc.allocate(32, 32); // 256 bit
+      MemorySegment.copy(zero, 0, zeroSeg, ValueLayout.JAVA_INT, 0, zero.length);
+      MemorySegment.copy(nonzero, 0, nonzeroSeg, ValueLayout.JAVA_INT, 0, nonzero.length);
+
+      Assertions.assertEquals(0, (int)method.invoke(zeroSeg, 0, 1), "Should return zero");
+      Assertions.assertEquals(1, (int)method.invoke(zeroSeg, 1, 1), "Should return 1");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }

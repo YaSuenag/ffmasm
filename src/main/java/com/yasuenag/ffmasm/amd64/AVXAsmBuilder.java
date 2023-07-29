@@ -247,4 +247,37 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
     return this;
   }
 
+  /**
+   * Logical compare r with r/m.
+   * NOTES: This method supports YMM register only now.
+   *   Opcode: VEX.256.66.0F38.WIG 17 /r (256 bit)
+   *   Instruction: VPTEST r, r/m
+   *   Op/En: RM
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg
+   *             then "r/m" have to be a SIMD register.
+   *             Otherwise it has to be 64 bit GPR because it have to be
+   *             a memory operand.
+   * @return This instance
+   */
+  public AVXAsmBuilder vptest(Register r, Register m, OptionalInt disp){
+    byte mode = calcModRMMode(disp);
+    emit3ByteVEXPrefix(Register.YMM0 /* unused */, m, PP.H66, LeadingBytes.H0F38);
+    byteBuf.put((byte)0x17); // PTEST
+    byteBuf.put((byte)(                 mode << 6  |
+                       ((r.encoding() & 0x7) << 3) |
+                        (m.encoding() & 0x7)));
+
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    return this;
+  }
+
 }
