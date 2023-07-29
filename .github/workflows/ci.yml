@@ -2,7 +2,7 @@ name: Maven Build & Test
 
 on:
   push:
-    branches: [ main, gha-ci-cpufeat ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
