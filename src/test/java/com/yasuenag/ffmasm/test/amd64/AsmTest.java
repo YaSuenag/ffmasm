@@ -945,10 +945,10 @@ public class AsmTest extends TestBase{
                        .asByteBuffer()
                        .order(ByteOrder.nativeOrder());
       var desc = FunctionDescriptor.ofVoid();
-      var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-                                   .nop()
-                                   .alignTo16BytesWithNOP()
-                                   .build();
+      AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+                     .nop()
+                     .alignTo16BytesWithNOP()
+                     .build();
 
       Assertions.assertEquals(16, seg.getTail(), "Memory size is not aligned.");
       byte[] array = new byte[16];
