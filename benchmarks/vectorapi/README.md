@@ -7,7 +7,7 @@ This benchmark adds with 256bit packed int. Pure Java and Vector API are expecte
 
 # Requirements
 
-* Java 20
+* Java 21
 * Maven
 
 # How to build
