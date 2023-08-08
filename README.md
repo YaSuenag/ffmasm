@@ -28,25 +28,6 @@ $ mvn package
 
 ## Test for ffmasm
 
-ffmasm defines some groups for testing.
-
-* `linux`
-    * Tests for Linux
-* `windows`
-    * Tests for Windows
-* `amd64`
-    * Tests for AMD64
-
-You can set them via `groups` system property:
-
-### Run Linux tests only
-
-```bash
-$ mvn -Dgroups=linux test
-```
-
-### Run both Linux and AMD64 tests
-
 ```bash
 $ mvn test
 ```
