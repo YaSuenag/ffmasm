@@ -27,6 +27,9 @@ public class VectorOpComparison{
   private MethodHandle ffm;
   private MemorySegment srcSeg;
   private MemorySegment destSeg;
+  private MethodHandle ffmPinned;
+  private MemorySegment pinnedSrcSeg;
+  private MemorySegment pinnedDestSeg;
 
   private IntVector vectorSrc;
   private IntVector vectorDest;
@@ -44,6 +47,18 @@ public class VectorOpComparison{
 /* vmovdqa (%rdi), %ymm0       */ .vmovdqaMR(Register.YMM0, Register.RDI, OptionalInt.of(0))
 /* vpaddd (%rsi), %ymm0, %ymm0 */ .vpaddd(Register.YMM0, Register.RSI, Register.YMM0, OptionalInt.of(0))
 /* vmovdqa %ymm0, (%rdi)       */ .vmovdqaRM(Register.YMM0, Register.RDI, OptionalInt.of(0))
+/* leave                       */ .leave()
+/* ret                         */ .ret()
+                                  .build(Linker.Option.isTrivial());
+
+      var descPinned = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS);
+      ffmPinned = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, descPinned)
+/* push %rbp                   */ .push(Register.RBP)
+/* mov %rsp, %rbp              */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+                                  .cast(AVXAsmBuilder.class)
+/* vmovdqu (%rdi), %ymm0       */ .vmovdquMR(Register.YMM0, Register.RDI, OptionalInt.of(0))
+/* vpaddd (%rsi), %ymm0, %ymm0 */ .vpaddd(Register.YMM0, Register.RSI, Register.YMM0, OptionalInt.of(0))
+/* vmovdqu %ymm0, (%rdi)       */ .vmovdquRM(Register.YMM0, Register.RDI, OptionalInt.of(0))
 /* leave                       */ .leave()
 /* ret                         */ .ret()
                                   .build(Linker.Option.isTrivial());
@@ -69,7 +84,12 @@ public class VectorOpComparison{
 
     vectorSrc = IntVector.fromArray(IntVector.SPECIES_256, randArray, 0);
     vectorDest = IntVector.fromArray(IntVector.SPECIES_256, result, 0);
-   }
+
+    pinnedSrcSeg = MemorySegment.ofArray(randArray);
+    pinnedSrcSeg.pin();
+    pinnedDestSeg = MemorySegment.ofArray(result);
+    pinnedDestSeg.pin();
+  }
 
   @Benchmark
   public int[] invokeJava(){
@@ -91,9 +111,26 @@ public class VectorOpComparison{
   }
 
   @Benchmark
+  public int[] invokePinnedFFM(){
+    try{
+      ffmPinned.invoke(pinnedDestSeg, pinnedSrcSeg);
+      return result;
+    }
+    catch(Throwable t){
+      throw new RuntimeException(t);
+    }
+  }
+
+  @Benchmark
   public int[] invokeVector(){
     vectorDest.add(vectorSrc).intoArray(result, 0);
     return result;
+  }
+
+  @TearDown(Level.Iteration)
+  public void tearDownInIterate(){
+    pinnedSrcSeg.unpin();
+    pinnedDestSeg.unpin();
   }
 
   @TearDown

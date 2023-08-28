@@ -100,9 +100,9 @@ public class AVXAsmTest extends TestBase{
                                   .build();
 
       long[] expected = new long[]{1, 2, 3, 4}; // 64 * 4 = 256 bit
-      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
-      MemorySegment src = alloc.allocate(32, 8);  // 256 bit (unaligned)
-      MemorySegment dest = alloc.allocate(32, 8); // 256 bit (unaligned)
+      var arena = Arena.ofAuto();
+      MemorySegment src = arena.allocate(32, 8);  // 256 bit (unaligned)
+      MemorySegment dest = arena.allocate(32, 8); // 256 bit (unaligned)
       MemorySegment.copy(expected, 0, src, ValueLayout.JAVA_LONG, 0, expected.length);
 
       method.invoke(src, dest);
