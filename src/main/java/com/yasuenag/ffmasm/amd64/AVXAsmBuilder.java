@@ -105,14 +105,14 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
                ));
   }
 
-  private AVXAsmBuilder vmovdqa(Register r, Register m, OptionalInt disp, byte opcode){
+  private AVXAsmBuilder vmovdq(Register r, Register m, OptionalInt disp, PP pp, byte opcode){
     byte mode = calcModRMMode(disp);
 
     if(m.encoding() > 7){
-      emit3ByteVEXPrefix(Register.YMM0 /* unused */, m, PP.H66, LeadingBytes.H0F);
+      emit3ByteVEXPrefix(Register.YMM0 /* unused */, m, pp, LeadingBytes.H0F);
     }
     else{
-      emit2ByteVEXPrefix(Register.YMM0 /* unused */, PP.H66);
+      emit2ByteVEXPrefix(Register.YMM0 /* unused */, pp);
     }
     byteBuf.put(opcode); // MOVDQA
     byteBuf.put((byte)(                 mode << 6  |
@@ -145,7 +145,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    * @return This instance
    */
   public AVXAsmBuilder vmovdqaMR(Register r, Register m, OptionalInt disp){
-    return vmovdqa(r, m, disp, (byte)0x6f);
+    return vmovdq(r, m, disp, PP.H66, (byte)0x6f);
   }
 
   /**
@@ -164,7 +164,45 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    * @return This instance
    */
   public AVXAsmBuilder vmovdqaRM(Register r, Register m, OptionalInt disp){
-    return vmovdqa(r, m, disp, (byte)0x7f);
+    return vmovdq(r, m, disp, PP.H66, (byte)0x7f);
+  }
+
+  /**
+   * Move unaligned packed integer values from r/m to r.
+   * NOTES: This method supports YMM register only now.
+   *   Opcode: VEX.256.F3.0F.WIG 6F /r (256 bit)
+   *   Instruction: VMOVDQU r, r/m
+   *   Op/En: A
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg
+   *             then "r/m" have to be a SIMD register.
+   *             Otherwise it has to be 64 bit GPR because it have to be
+   *             a memory operand..
+   * @return This instance
+   */
+  public AVXAsmBuilder vmovdquMR(Register r, Register m, OptionalInt disp){
+    return vmovdq(r, m, disp, PP.HF3, (byte)0x6f);
+  }
+
+  /**
+   * Move unaligned packed integer values from r to r/m.
+   * NOTES: This method supports YMM register only now.
+   *   Opcode: VEX.256.F3.0F.WIG 7F /r (256 bit)
+   *   Instruction: VMOVDQU r/m, r
+   *   Op/En: B
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg
+   *             then "r/m" have to be a SIMD register.
+   *             Otherwise it has to be 64 bit GPR because it have to be
+   *             a memory operand..
+   * @return This instance
+   */
+  public AVXAsmBuilder vmovdquRM(Register r, Register m, OptionalInt disp){
+    return vmovdq(r, m, disp, PP.HF3, (byte)0x7f);
   }
 
   /**

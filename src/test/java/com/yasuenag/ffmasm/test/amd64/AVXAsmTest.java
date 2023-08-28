@@ -79,6 +79,43 @@ public class AVXAsmTest extends TestBase{
   }
 
   /**
+   * Tests MOVDQU A/B
+   */
+  @Test
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS})
+  public void testMOVDQU(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.ofVoid(
+                   ValueLayout.ADDRESS, // 1st argument
+                   ValueLayout.ADDRESS  // 2nd argument
+                 );
+      var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
+      /* push %rbp             */ .push(Register.RBP)
+      /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+                                  .cast(AVXAsmBuilder.class)
+      /* vmovdqu (arg1), %ymm0 */ .vmovdquMR(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+      /* vmovdqu %ymm0, (arg2) */ .vmovdquRM(Register.YMM0, argReg.arg2(), OptionalInt.of(0))
+      /* leave                 */ .leave()
+      /* ret                   */ .ret()
+                                  .build();
+
+      long[] expected = new long[]{1, 2, 3, 4}; // 64 * 4 = 256 bit
+      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
+      MemorySegment src = alloc.allocate(32, 8);  // 256 bit (unaligned)
+      MemorySegment dest = alloc.allocate(32, 8); // 256 bit (unaligned)
+      MemorySegment.copy(expected, 0, src, ValueLayout.JAVA_LONG, 0, expected.length);
+
+      method.invoke(src, dest);
+
+      Assertions.assertArrayEquals(expected, src.toArray(ValueLayout.JAVA_LONG));
+      Assertions.assertArrayEquals(expected, dest.toArray(ValueLayout.JAVA_LONG));
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Tests PXOR
    */
   @Test
