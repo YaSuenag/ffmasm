@@ -895,6 +895,32 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Call near, absolute indirect, address given in r/m64.
+   *   Opcode: FF /2
+   *   Instruction: CALL r/m64
+   *   Op/En: M
+   *
+   * @param m "r/m" register
+   * @return This instance
+   */
+  public AMD64AsmBuilder call(Register m){
+    // Emit REX prefix for REX.B if it's needed.
+    // We can ignore REX.W because this CALL op is on 64bit mode only.
+    byte rexb = (byte)((m.encoding() >> 3) & 0b0001);
+    if(rexb != 0){
+      byteBuf.put((byte)(0b01000000 | rexb));
+    }
+
+    byte mode = calcModRMMode(OptionalInt.empty());
+    byteBuf.put((byte)0xff); // CALL
+    byteBuf.put((byte)(             mode << 6 |
+                                       2 << 3 | // digit (/2)
+                       (m.encoding() & 0x7)));
+
+    return this;
+  }
+
+  /**
    * Align the position to 16 bytes with NOP.
    *
    * @return This instance
