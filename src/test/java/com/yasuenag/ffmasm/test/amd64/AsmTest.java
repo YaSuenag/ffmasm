@@ -26,6 +26,7 @@ import org.junit.jupiter.api.condition.OS;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
 import java.lang.foreign.ValueLayout;
 import java.nio.ByteOrder;
 import java.util.OptionalInt;
@@ -927,6 +928,40 @@ public class AsmTest extends TestBase{
                                 .build();
 
       method.invoke();
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Test CALL
+   */
+  @Test
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
+  public void testCALL(){
+    try(var arena = Arena.ofConfined();
+        var seg = new CodeSegment();){
+      var strlenAddr = Linker.nativeLinker().defaultLookup().find("strlen").get();
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_LONG, // return value
+                   ValueLayout.ADDRESS,   // address of strlen
+                   ValueLayout.ADDRESS    // char *
+                 );
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+         /*   push %rbp      */ .push(Register.RBP)
+         /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /*   mov arg1, %r10 */ .movMR(argReg.arg1(), Register.R10, OptionalInt.empty())
+         /*   mov arg2, arg1 */ .movMR(argReg.arg2(), argReg.arg1(), OptionalInt.empty())
+         /*   call %r10      */ .call(Register.R10)
+         /*   leave          */ .leave()
+         /*   ret            */ .ret()
+                                .build();
+
+      final String test = "test";
+      var cTest = arena.allocateUtf8String(test);
+      long len = (long)method.invoke(strlenAddr, cTest);
+      Assertions.assertEquals(test.length(), (int)len, "Invalid strlen() call");
     }
     catch(Throwable t){
       Assertions.fail(t);
