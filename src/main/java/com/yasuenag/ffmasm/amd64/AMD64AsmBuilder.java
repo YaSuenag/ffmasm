@@ -926,4 +926,13 @@ public class AMD64AsmBuilder{
     return Linker.nativeLinker().downcallHandle(mem, desc, options);
   }
 
+  /**
+   * Get MemorySegment which is associated with this builder.
+   *
+   * @return MemorySegment of this builder
+   */
+  public MemorySegment getMemorySegment(){
+    return mem;
+  }
+
 }
