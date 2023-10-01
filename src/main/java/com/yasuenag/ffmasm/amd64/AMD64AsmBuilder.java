@@ -155,6 +155,28 @@ public class AMD64AsmBuilder{
     return this;
   }
 
+  private void emitDisp(byte mode, OptionalInt disp, Register m){
+    if((mode != 0b11) && (m == Register.RSP)){
+      // We should add SIB byte.
+      //
+      // Intel SDM
+      //   Table 2-5. Special Cases of REX Encodings
+      byteBuf.put((byte)0x24); // index and base are SP
+    }
+
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+    else if((mode == 0) && (m == Register.RBP) || (m == Register.R13)){
+      // Intel SDM
+      //   Table 2-5. Special Cases of REX Encodings
+      byteBuf.put((byte)0);
+    }
+  }
+
   /**
    * Pop top of stack into r/m; increment stack pointer.
    *   Opcode: 66H + 8F /0 (64 bit)
@@ -186,14 +208,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(             mode << 6 |
                                             0 | // digit (/0)
                         (reg.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
-
+    emitDisp(mode, disp, reg);
     return this;
   }
 
@@ -256,14 +271,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
                         (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
-
+    emitDisp(mode, disp, m);
     return this;
   }
 
@@ -289,14 +297,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
                         (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp);
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp);
-    }
-
+    emitDisp(mode, OptionalInt.of(disp), m);
     return this;
   }
 
@@ -322,14 +323,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
                         (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
-
+    emitDisp(mode, disp, m);
     return this;
   }
 
@@ -355,14 +349,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
                         (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
-
+    emitDisp(mode, disp, m);
     return this;
   }
 
@@ -388,14 +375,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
                         (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
-
+    emitDisp(mode, disp, m);
     return this;
   }
 
@@ -472,13 +452,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(             mode << 6 |
                                        7 << 3 | // digit (/7)
                        (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
+    emitDisp(mode, disp, m);
 
     if(m.width() == 8){
       byteBuf.put((byte)imm); // imm8
@@ -524,13 +498,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(             mode << 6 |
                                             0 | // digit (/0)
                        (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
+    emitDisp(mode, disp, m);
 
     if(m.width() == 8){
       byteBuf.put((byte)imm); // imm8
@@ -576,13 +544,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(             mode << 6 |
                                        5 << 3 | // digit (/5)
                        (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
+    emitDisp(mode, disp, m);
 
     if(m.width() == 8){
       byteBuf.put((byte)imm); // imm8
@@ -625,14 +587,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(             mode << 6 |
                                        4 << 3 | // digit (/4)
                        (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
-
+    emitDisp(mode, disp, m);
     byteBuf.put(imm); // imm8
     return this;
   }
