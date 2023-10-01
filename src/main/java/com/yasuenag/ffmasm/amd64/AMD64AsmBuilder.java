@@ -247,7 +247,7 @@ public class AMD64AsmBuilder{
   }
 
   /**
-   * Move r/m to r.
+   * Move r to r/m.
    * If "r" is 64 bit register, Add REX.W to instruction, otherwise it will not happen.
    * If "r" is 16 bit register, Add 66H to instruction, otherwise it will not happen.
    * If "disp" is not empty, r/m operand treats as memory.
@@ -267,6 +267,35 @@ public class AMD64AsmBuilder{
     byte mode = calcModRMMode(disp);
     emitREXOp(r, m);
     byte opcode = (r.width() == 8) ? (byte)0x88 : (byte)0x89;
+    byteBuf.put(opcode); // MOV
+    byteBuf.put((byte)(                 mode << 6  |
+                       ((r.encoding() & 0x7) << 3) |
+                        (m.encoding() & 0x7)));
+    emitDisp(mode, disp, m);
+    return this;
+  }
+
+  /**
+   * Move r/m to r.
+   * If "r" is 64 bit register, Add REX.W to instruction, otherwise it will not happen.
+   * If "r" is 16 bit register, Add 66H to instruction, otherwise it will not happen.
+   * If "disp" is not empty, r/m operand treats as memory.
+   *   Opcode: REX.W + 8B /r (64 bit)
+   *                   8B /r (32 bit)
+   *              66 + 8B /r (16 bit)
+   *                   8A /r ( 8 bit)
+   *   Instruction: MOV r,r/m
+   *   Op/En: RM
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public AMD64AsmBuilder movRM(Register r, Register m, OptionalInt disp){
+    byte mode = calcModRMMode(disp);
+    emitREXOp(r, m);
+    byte opcode = (r.width() == 8) ? (byte)0x8A : (byte)0x8B;
     byteBuf.put(opcode); // MOV
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
