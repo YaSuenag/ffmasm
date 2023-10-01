@@ -81,22 +81,28 @@ public class AsmTest extends TestBase{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
           /* push %rbp         */ .push(Register.RBP)
           /* mov  %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* mov  %rdi, %r10   */ .movMR(Register.RDI, Register.R10, OptionalInt.empty())
           /* push %rdi         */ .push(Register.RDI)
           /* push %si          */ .push(Register.SI)
+          /* push %r10         */ .push(Register.R10)
+          /* pop  %r11         */ .pop(Register.R11, OptionalInt.empty())
+          /* mov %r11, (%rdx)  */ .movMR(Register.R11, Register.RDX, OptionalInt.of(0))
           /* pop  %ax          */ .pop(Register.AX, OptionalInt.empty())
           /* mov  %ax, 8(%rdx) */ .movMR(Register.AX, Register.RDX, OptionalInt.of(8))
-          /* pop  (%rdx)       */ .pop(Register.RDX, OptionalInt.of(0))
+          /* pop  16(%rdx)     */ .pop(Register.RDX, OptionalInt.of(16))
           /* leave             */ .leave()
           /* ret               */ .ret()
                                   .build();
 
       //showDebugMessage(seg);
-      var arena = Arena.ofAuto();
-      var mem = arena.allocate(10, 8);
-      method.invoke(1, (short)2, mem);
+      try(var arena = Arena.ofConfined()){
+        var mem = arena.allocate(24, 8);
+        method.invoke(1, (short)2, mem);
 
-      Assertions.assertEquals(1L, mem.get(ValueLayout.JAVA_LONG, 0));
-      Assertions.assertEquals((short)2, mem.get(ValueLayout.JAVA_SHORT, 8));
+        Assertions.assertEquals(1L, mem.get(ValueLayout.JAVA_LONG, 0));
+        Assertions.assertEquals((short)2, mem.get(ValueLayout.JAVA_SHORT, 8));
+        Assertions.assertEquals(1L, mem.get(ValueLayout.JAVA_LONG, 16));
+      }
     }
     catch(Throwable t){
       Assertions.fail(t);

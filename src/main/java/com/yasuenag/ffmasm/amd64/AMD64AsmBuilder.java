@@ -142,7 +142,16 @@ public class AMD64AsmBuilder{
       // Ops for 16 bits operands (66H)
       byteBuf.put((byte)0x66);
     }
-    byteBuf.put((byte)(0x50 | reg.encoding()));
+    else if(reg.width() == 64){
+      // Emit REX prefix for REX.B if it's needed.
+      // We can ignore REX.W because this op is on 64bit mode only.
+      byte rexb = (byte)((reg.encoding() >> 3) & 0b0001);
+      if(rexb != 0){
+        byteBuf.put((byte)(0b01000000 | rexb));
+      }
+    }
+
+    byteBuf.put((byte)(0x50 | (reg.encoding() & 0x7)));
     return this;
   }
 
@@ -164,6 +173,15 @@ public class AMD64AsmBuilder{
       // Ops for 16 bits operands (66H)
       byteBuf.put((byte)0x66);
     }
+    else if(reg.width() == 64){
+      // Emit REX prefix for REX.B if it's needed.
+      // We can ignore REX.W because this op is on 64bit mode only.
+      byte rexb = (byte)((reg.encoding() >> 3) & 0b0001);
+      if(rexb != 0){
+        byteBuf.put((byte)(0b01000000 | rexb));
+      }
+    }
+
     byteBuf.put((byte)0x8f); // POP
     byteBuf.put((byte)(             mode << 6 |
                                             0 | // digit (/0)
