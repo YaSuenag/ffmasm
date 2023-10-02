@@ -939,6 +939,13 @@ public class AMD64AsmBuilder{
     return this;
   }
 
+  private void updateTail(){
+    if(!pendingLabelMap.isEmpty()){
+      throw new IllegalStateException("Label is not defined: " + pendingLabelMap.keySet().toString());
+    }
+    seg.incTail(byteBuf.position());
+  }
+
   /**
    * Build as a MethodHandle
    *
@@ -947,10 +954,7 @@ public class AMD64AsmBuilder{
    * @throws IllegalStateException when label(s) are not defined even if they are used
    */
   public MethodHandle build(Linker.Option... options){
-    if(!pendingLabelMap.isEmpty()){
-      throw new IllegalStateException("Label is not defined: " + pendingLabelMap.keySet().toString());
-    }
-    seg.incTail(byteBuf.position());
+    updateTail();
     return Linker.nativeLinker().downcallHandle(mem, desc, options);
   }
 
@@ -960,6 +964,7 @@ public class AMD64AsmBuilder{
    * @return MemorySegment of this builder
    */
   public MemorySegment getMemorySegment(){
+    updateTail();
     return mem;
   }
 
