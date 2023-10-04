@@ -997,4 +997,32 @@ public class AsmTest extends TestBase{
     }
   }
 
+  /**
+   * Test movImm
+   */
+  @Test
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
+  public void testMOVImm(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT // return value
+                 );
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+        /* push %rbp           */ .push(Register.RBP)
+        /* mov %rsp, %rbp      */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+        /* xor  retReg, retReg */ .xorMR(argReg.returnReg(), argReg.returnReg(), OptionalInt.empty())
+        /* mov  retReg, $100   */ .movImm(argReg.returnReg(), 100)
+        /* leave               */ .leave()
+        /* ret                 */ .ret()
+                                  .build();
+      //showDebugMessage(seg);
+
+      int result = (int)method.invoke();
+      Assertions.assertEquals(100, result);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }
