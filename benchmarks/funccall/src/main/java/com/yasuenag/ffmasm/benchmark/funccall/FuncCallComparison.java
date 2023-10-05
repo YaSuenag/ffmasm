@@ -28,7 +28,8 @@ public class FuncCallComparison{
 
     try{
       seg = new CodeSegment();
-      ffmRDTSC = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, FunctionDescriptor.of(ValueLayout.JAVA_LONG))
+      var desc = FunctionDescriptor.of(ValueLayout.JAVA_LONG);
+      var mem = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
            /* push %rbp      */ .push(Register.RBP)
            /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
            /* rdtsc          */ .rdtsc()
@@ -36,10 +37,15 @@ public class FuncCallComparison{
            /* or %rdx, %rax  */ .orMR(Register.RDX, Register.RAX, OptionalInt.empty())
            /* leave          */ .leave()
            /* ret            */ .ret()
-                                .build(Linker.Option.isTrivial());
+                                .getMemorySegment();
+
+      ffmRDTSC = Linker.nativeLinker().downcallHandle(mem, desc, Linker.Option.isTrivial());
+
+      var register = NativeRegister.create(this.getClass());
+      register.registerNatives(Map.of(this.getClass().getMethod("rdtscFFMDirect"), mem));
     }
-    catch(PlatformException | UnsupportedPlatformException e){
-      throw new RuntimeException(e);
+    catch(Throwable t){
+      throw new RuntimeException(t);
     }
   }
 
@@ -56,6 +62,9 @@ public class FuncCallComparison{
     }
   }
 
+  @Benchmark
+  public native long rdtscFFMDirect();
+
   @TearDown
   public void tearDown(){
     try{
@@ -71,9 +80,11 @@ public class FuncCallComparison{
     inst.setup();
     long nativeVal = inst.rdtsc();
     long ffmVal = inst.invokeFFMRDTSC();
+    long ffmDirectVal = inst.rdtscFFMDirect();
 
-    System.out.println("native: " + nativeVal);
-    System.out.println("   FFM: " + ffmVal);
+    System.out.println("      native: " + nativeVal);
+    System.out.println("         FFM: " + ffmVal);
+    System.out.println("FFM (Direct): " + ffmDirectVal);
   }
 
 }

@@ -305,6 +305,23 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Move 64bit immediate value to 64bit register.
+   *   Opcode: REX.W + B8 + rd io
+   *   Instruction: MOV reg,imm64
+   *   Op/En: OI
+   *
+   * @param reg register
+   * @param imm immediate value
+   * @return This instance
+   */
+  public AMD64AsmBuilder movImm(Register reg, long imm){
+    emitREXOp(Register.RAX /* dummy */, reg);
+    byteBuf.put((byte)(0xB8 | (reg.encoding() & 0x7)));
+    byteBuf.putLong(imm);
+    return this;
+  }
+
+  /**
    * Store effective address for m in r.
    * If "r" is 64 bit register, Add REX.W to instruction, otherwise it will not happen.
    * If "r" is 16 bit register, Add 66H to instruction, otherwise it will not happen.
