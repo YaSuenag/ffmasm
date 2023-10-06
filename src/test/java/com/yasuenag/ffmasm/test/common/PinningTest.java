@@ -18,7 +18,6 @@
  */
 package com.yasuenag.ffmasm.test.common;
 
-import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
 import org.junit.jupiter.api.Assertions;
@@ -33,7 +32,7 @@ public class PinningTest{
 
   @Test
   @EnabledOnOs(value = {OS.LINUX}, architectures = {"amd64"})
-  public void testPinning() throws Exception{
+  public void testPinning() throws Throwable{
     int[] array = new int[]{1, 2, 3, 4};
     int[] expected = new int[]{5, 6, 7, 8};
 

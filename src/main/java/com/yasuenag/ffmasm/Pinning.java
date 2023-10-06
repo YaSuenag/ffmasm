@@ -18,26 +18,11 @@
  */
 package com.yasuenag.ffmasm;
 
-import java.lang.foreign.Arena;
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
-import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SymbolLookup;
-import java.lang.foreign.ValueLayout;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
-import java.lang.ref.Cleaner;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.OptionalInt;
 
-import com.yasuenag.ffmasm.CodeSegment;
-import com.yasuenag.ffmasm.amd64.AMD64AsmBuilder;
-import com.yasuenag.ffmasm.amd64.Register;
-import com.yasuenag.ffmasm.internal.JniEnv;
+import com.yasuenag.ffmasm.internal.amd64.AMD64Pinning;
 
 
 /**
@@ -47,87 +32,17 @@ import com.yasuenag.ffmasm.internal.JniEnv;
  * JNI functions. It means the change on pinned MemorySegment is propagated to the original array.
  * You need to get instance of Pinning from getInstance() method.
  */
-public final class Pinning{
-
-  private static final Arena arena;
-  private static final CodeSegment seg;
+public abstract class Pinning{
 
   private static Pinning instance;
 
   private final Map<MemorySegment, Object> pinnedMap;
 
-  private static MemorySegment pinWrapperImpl;
   private native long pinWrapper(Object array);
-
-  private static MemorySegment unpinWrapperImpl;
   private native long unpinWrapper(Object array, MemorySegment carray);
 
-  private static void createWrapper() throws Throwable{
-    var pinDesc = FunctionDescriptor.of(ValueLayout.JAVA_LONG, // return value (pinned address)
-                                        ValueLayout.ADDRESS,   // arg1 (JNIEnv *)
-                                        ValueLayout.ADDRESS,   // arg2 (jobject)
-                                        ValueLayout.ADDRESS);  // arg3 (array)
-    pinWrapperImpl = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, pinDesc)
-               /* push %rbp      */ .push(Register.RBP)
-               /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-               /* mov %rdx, %rsi */ .movMR(Register.RDX, Register.RSI, OptionalInt.empty()) // move arg3 (arg1 in Java)  to arg2
-               /* xor %rdx, %rdx */ .xorMR(Register.RDX, Register.RDX, OptionalInt.empty()) // xor arg3
-               /* mov addr, %r10 */ .movImm(Register.R10, JniEnv.getInstance().getPrimitiveArrayCriticalAddr().address()) // address of GetPrimitiveArrayCritical()
-               /* call %r10      */ .call(Register.R10)
-               /* leave          */ .leave()
-               /* ret            */ .ret()
-                                    .getMemorySegment();
-
-    var unpinDesc = FunctionDescriptor.of(ValueLayout.JAVA_LONG, // return value (pinned address)
-                                          ValueLayout.ADDRESS,   // arg1 (JNIEnv *)
-                                          ValueLayout.ADDRESS,   // arg2 (jobject)
-                                          ValueLayout.ADDRESS,   // arg3 (array)
-                                          ValueLayout.ADDRESS);  // arg4 (carray)
-    unpinWrapperImpl = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, pinDesc)
-                 /* push %rbp      */ .push(Register.RBP)
-                 /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                 /* mov %rdx, %rsi */ .movMR(Register.RDX, Register.RSI, OptionalInt.empty()) // move arg3 (arg1 in Java)  to arg2
-                 /* mov %rcx, %rdx */ .movMR(Register.RCX, Register.RDX, OptionalInt.empty()) // move arg4 (arg2 in Java)  to arg3
-                 /* xor %rcx, %rcx */ .xorMR(Register.RCX, Register.RCX, OptionalInt.empty()) // xor arg4
-                 /* mov addr, %r10 */ .movImm(Register.R10, JniEnv.getInstance().releasePrimitiveArrayCriticalAddr().address()) // address of ReleasePrimitiveArrayCritical()
-                 /* call %r10      */ .call(Register.R10)
-                 /* leave          */ .leave()
-                 /* ret            */ .ret()
-                                      .getMemorySegment();
-
-  }
-
-  static{
-    arena = Arena.ofAuto();
-    try{
-      seg = new CodeSegment();
-      var segForCleaner = seg;
-      Cleaner.create()
-             .register(Pinning.class, () -> {
-               try{
-                 segForCleaner.close();
-               }
-               catch(Exception e){
-                 // ignore
-               }
-             });
-
-      createWrapper();
-    }
-    catch(Throwable t){
-      throw new RuntimeException(t);
-    }
-
-  }
-
-  private Pinning() throws Throwable{
+  protected Pinning() throws Throwable{
     pinnedMap = new HashMap<>();
-
-    var clazz = this.getClass();
-    var methodMap = Map.of(clazz.getDeclaredMethod("pinWrapper", Object.class), pinWrapperImpl, 
-                           clazz.getDeclaredMethod("unpinWrapper", Object.class, MemorySegment.class), unpinWrapperImpl);
-    var register = NativeRegister.create(clazz);
-    register.registerNatives(methodMap);
   }
 
   /**
@@ -173,16 +88,17 @@ public final class Pinning{
    * Get instance of Pinning.
    *
    * @return Pinning insntance
-   * @throws RuntimeException if an error happens at initialization.
+   * @throws Throwable if some error happens in initialization.
    */
-  public static Pinning getInstance(){
+  public static Pinning getInstance() throws Throwable{
     if(instance == null){
-      try{
-        instance = new Pinning();
+      var arch = System.getProperty("os.arch");
+      if(arch.equals("amd64")){
+        instance = new AMD64Pinning();
       }
-      catch(Throwable t){
-        throw new RuntimeException(t);
-      }
+      else{
+        throw new UnsupportedPlatformException(STR."\{arch} is not supported");
+       }
     }
     return instance;
   }
