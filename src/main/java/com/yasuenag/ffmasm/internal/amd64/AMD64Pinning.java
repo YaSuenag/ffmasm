@@ -46,17 +46,11 @@ public final class AMD64Pinning extends Pinning{
     super();
     this.arena = Arena.ofAuto();
     var segMem = new CodeSegment();
-    var thisObj = this;
-    Cleaner.create()
-           .register(thisObj, () -> {
-             try{
-               segMem.close();
-             }
-             catch(Exception e){
-               // ignore
-             }
-           });
     this.seg = segMem;
+    var thisObj = this;
+    var action = new CodeSegment.CleanerAction(segMem);
+    Cleaner.create()
+           .register(thisObj, action);
 
     createWrapper();
 
