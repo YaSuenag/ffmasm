@@ -85,7 +85,7 @@ public class CodeSegmentTest{
   }
 
   @Test
-  public void testCloseWithCleaner() throws PlatformException, UnsupportedPlatformException{
+  public void testCloseWithCleaner() throws PlatformException, UnsupportedPlatformException, InterruptedException{
     Object obj = new Object();
     var seg = new CodeSegment();
     var rawAddr = seg.getAddr().address();
@@ -96,7 +96,10 @@ public class CodeSegmentTest{
     // Release obj
     obj = null;
     System.gc();
-    System.gc(); // again!
+
+    // Attempt to give opportunity to work Clerner
+    Thread.yield();
+    Thread.sleep(3000);
 
     // Check memory mapping whether region for CodeSegment is released.
     Assertions.assertThrows(NoSuchElementException.class, () -> {
