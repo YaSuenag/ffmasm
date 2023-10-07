@@ -27,8 +27,9 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: temurin
-          java-version: 20
+          distribution: oracle
+          java-version: 21
+          cache: maven
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
