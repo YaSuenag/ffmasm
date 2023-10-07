@@ -142,8 +142,39 @@ public class AMD64AsmBuilder{
       // Ops for 16 bits operands (66H)
       byteBuf.put((byte)0x66);
     }
-    byteBuf.put((byte)(0x50 | reg.encoding()));
+    else if(reg.width() == 64){
+      // Emit REX prefix for REX.B if it's needed.
+      // We can ignore REX.W because this op is on 64bit mode only.
+      byte rexb = (byte)((reg.encoding() >> 3) & 0b0001);
+      if(rexb != 0){
+        byteBuf.put((byte)(0b01000000 | rexb));
+      }
+    }
+
+    byteBuf.put((byte)(0x50 | (reg.encoding() & 0x7)));
     return this;
+  }
+
+  private void emitDisp(byte mode, OptionalInt disp, Register m){
+    if((mode != 0b11) && (m == Register.RSP)){
+      // We should add SIB byte.
+      //
+      // Intel SDM
+      //   Table 2-5. Special Cases of REX Encodings
+      byteBuf.put((byte)0x24); // index and base are SP
+    }
+
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+    else if((mode == 0) && (m == Register.RBP) || (m == Register.R13)){
+      // Intel SDM
+      //   Table 2-5. Special Cases of REX Encodings
+      byteBuf.put((byte)0);
+    }
   }
 
   /**
@@ -164,18 +195,20 @@ public class AMD64AsmBuilder{
       // Ops for 16 bits operands (66H)
       byteBuf.put((byte)0x66);
     }
+    else if(reg.width() == 64){
+      // Emit REX prefix for REX.B if it's needed.
+      // We can ignore REX.W because this op is on 64bit mode only.
+      byte rexb = (byte)((reg.encoding() >> 3) & 0b0001);
+      if(rexb != 0){
+        byteBuf.put((byte)(0b01000000 | rexb));
+      }
+    }
+
     byteBuf.put((byte)0x8f); // POP
     byteBuf.put((byte)(             mode << 6 |
                                             0 | // digit (/0)
                         (reg.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
-
+    emitDisp(mode, disp, reg);
     return this;
   }
 
@@ -214,7 +247,7 @@ public class AMD64AsmBuilder{
   }
 
   /**
-   * Move r/m to r.
+   * Move r to r/m.
    * If "r" is 64 bit register, Add REX.W to instruction, otherwise it will not happen.
    * If "r" is 16 bit register, Add 66H to instruction, otherwise it will not happen.
    * If "disp" is not empty, r/m operand treats as memory.
@@ -238,14 +271,53 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
                         (m.encoding() & 0x7)));
+    emitDisp(mode, disp, m);
+    return this;
+  }
 
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
+  /**
+   * Move r/m to r.
+   * If "r" is 64 bit register, Add REX.W to instruction, otherwise it will not happen.
+   * If "r" is 16 bit register, Add 66H to instruction, otherwise it will not happen.
+   * If "disp" is not empty, r/m operand treats as memory.
+   *   Opcode: REX.W + 8B /r (64 bit)
+   *                   8B /r (32 bit)
+   *              66 + 8B /r (16 bit)
+   *                   8A /r ( 8 bit)
+   *   Instruction: MOV r,r/m
+   *   Op/En: RM
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public AMD64AsmBuilder movRM(Register r, Register m, OptionalInt disp){
+    byte mode = calcModRMMode(disp);
+    emitREXOp(r, m);
+    byte opcode = (r.width() == 8) ? (byte)0x8A : (byte)0x8B;
+    byteBuf.put(opcode); // MOV
+    byteBuf.put((byte)(                 mode << 6  |
+                       ((r.encoding() & 0x7) << 3) |
+                        (m.encoding() & 0x7)));
+    emitDisp(mode, disp, m);
+    return this;
+  }
 
+  /**
+   * Move 64bit immediate value to 64bit register.
+   *   Opcode: REX.W + B8 + rd io
+   *   Instruction: MOV reg,imm64
+   *   Op/En: OI
+   *
+   * @param reg register
+   * @param imm immediate value
+   * @return This instance
+   */
+  public AMD64AsmBuilder movImm(Register reg, long imm){
+    emitREXOp(Register.RAX /* dummy */, reg);
+    byteBuf.put((byte)(0xB8 | (reg.encoding() & 0x7)));
+    byteBuf.putLong(imm);
     return this;
   }
 
@@ -271,14 +343,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
                         (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp);
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp);
-    }
-
+    emitDisp(mode, OptionalInt.of(disp), m);
     return this;
   }
 
@@ -304,14 +369,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
                         (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
-
+    emitDisp(mode, disp, m);
     return this;
   }
 
@@ -337,14 +395,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
                         (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
-
+    emitDisp(mode, disp, m);
     return this;
   }
 
@@ -370,14 +421,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(                 mode << 6  |
                        ((r.encoding() & 0x7) << 3) |
                         (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
-
+    emitDisp(mode, disp, m);
     return this;
   }
 
@@ -454,13 +498,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(             mode << 6 |
                                        7 << 3 | // digit (/7)
                        (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
+    emitDisp(mode, disp, m);
 
     if(m.width() == 8){
       byteBuf.put((byte)imm); // imm8
@@ -506,13 +544,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(             mode << 6 |
                                             0 | // digit (/0)
                        (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
+    emitDisp(mode, disp, m);
 
     if(m.width() == 8){
       byteBuf.put((byte)imm); // imm8
@@ -558,13 +590,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(             mode << 6 |
                                        5 << 3 | // digit (/5)
                        (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
+    emitDisp(mode, disp, m);
 
     if(m.width() == 8){
       byteBuf.put((byte)imm); // imm8
@@ -607,14 +633,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)(             mode << 6 |
                                        4 << 3 | // digit (/4)
                        (m.encoding() & 0x7)));
-
-    if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
-    }
-    else if(mode == 0b10){ // reg-mem disp32
-      byteBuf.putInt(disp.getAsInt());
-    }
-
+    emitDisp(mode, disp, m);
     byteBuf.put(imm); // imm8
     return this;
   }
@@ -890,6 +909,32 @@ public class AMD64AsmBuilder{
   public AMD64AsmBuilder rdtsc(){
     byteBuf.put((byte)0x0f); // RDTSC (1)
     byteBuf.put((byte)0x31); // RDTSC (2)
+
+    return this;
+  }
+
+  /**
+   * Call near, absolute indirect, address given in r/m64.
+   *   Opcode: FF /2
+   *   Instruction: CALL r/m64
+   *   Op/En: M
+   *
+   * @param m "r/m" register
+   * @return This instance
+   */
+  public AMD64AsmBuilder call(Register m){
+    // Emit REX prefix for REX.B if it's needed.
+    // We can ignore REX.W because this CALL op is on 64bit mode only.
+    byte rexb = (byte)((m.encoding() >> 3) & 0b0001);
+    if(rexb != 0){
+      byteBuf.put((byte)(0b01000000 | rexb));
+    }
+
+    byte mode = calcModRMMode(OptionalInt.empty());
+    byteBuf.put((byte)0xff); // CALL
+    byteBuf.put((byte)(             mode << 6 |
+                                       2 << 3 | // digit (/2)
+                       (m.encoding() & 0x7)));
 
     return this;
   }
