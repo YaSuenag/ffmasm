@@ -87,10 +87,19 @@ public class VectorOpComparison{
   @State(Scope.Benchmark)
   public static class PinnedState{
 
-    private static final Pinning pinning = Pinning.getInstance();
+    private static final Pinning pinning;
 
     private MemorySegment pinnedSrcSeg;
     private MemorySegment pinnedDestSeg;
+
+    static{
+      try{
+        pinning = Pinning.getInstance();
+      }
+      catch(Throwable t){
+        throw new RuntimeException(t);
+      }
+    }
 
     @Setup(Level.Iteration)
     public void setup(){
