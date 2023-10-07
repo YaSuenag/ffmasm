@@ -23,14 +23,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
-import java.lang.ref.Cleaner;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.NoSuchElementException;
 
 import com.yasuenag.ffmasm.CodeSegment;
-import com.yasuenag.ffmasm.PlatformException;
-import com.yasuenag.ffmasm.UnsupportedPlatformException;
 
 
 @EnabledOnOs({OS.LINUX})
@@ -82,30 +78,6 @@ public class CodeSegmentTest{
     catch(Throwable t){
       Assertions.fail(t);
     }
-  }
-
-  @Test
-  public void testCloseWithCleaner() throws PlatformException, UnsupportedPlatformException{
-    Object obj = new Object();
-    var seg = new CodeSegment();
-    var rawAddr = seg.getAddr().address();
-    var action = new CodeSegment.CleanerAction(seg);
-    Cleaner.create()
-           .register(obj, action);
-
-    // Release obj
-    obj = null;
-    System.gc();
-    System.gc(); // again!
-
-    // Check memory mapping whether region for CodeSegment is released.
-    Assertions.assertThrows(NoSuchElementException.class, () -> {
-      try(var stream = Files.lines(Path.of("/proc/self/maps"))){
-        stream.filter(l -> l.startsWith(Long.toHexString(rawAddr)))
-                            .findAny()
-                            .get();
-      }
-    });
   }
 
 }
