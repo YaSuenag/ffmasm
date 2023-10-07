@@ -103,16 +103,9 @@ public final class AMD64NativeRegister extends NativeRegister{
     arena = Arena.ofAuto();
     try{
       seg = new CodeSegment();
-      var segForCleaner = seg;
+      var action = new CodeSegment.CleanerAction(seg);
       Cleaner.create()
-             .register(NativeRegister.class, () -> {
-               try{
-                 segForCleaner.close();
-               }
-               catch(Exception e){
-                 // ignore
-               }
-             });
+             .register(NativeRegister.class, action);
     }
     catch(Throwable t){
       throw new RuntimeException(t);
