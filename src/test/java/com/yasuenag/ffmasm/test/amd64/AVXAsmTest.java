@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SegmentAllocator;
 import java.lang.foreign.ValueLayout;
 import java.util.OptionalInt;
 
@@ -84,7 +83,8 @@ public class AVXAsmTest extends TestBase{
   @Test
   @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS})
   public void testMOVDQU(){
-    try(var seg = new CodeSegment()){
+    try(var arena = Arena.ofConfined();
+        var seg = new CodeSegment();){
       var desc = FunctionDescriptor.ofVoid(
                    ValueLayout.ADDRESS, // 1st argument
                    ValueLayout.ADDRESS  // 2nd argument
@@ -100,9 +100,8 @@ public class AVXAsmTest extends TestBase{
                                   .build();
 
       long[] expected = new long[]{1, 2, 3, 4}; // 64 * 4 = 256 bit
-      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
-      MemorySegment src = alloc.allocate(32, 8);  // 256 bit (unaligned)
-      MemorySegment dest = alloc.allocate(32, 8); // 256 bit (unaligned)
+      MemorySegment src = arena.allocate(32, 8);  // 256 bit (unaligned)
+      MemorySegment dest = arena.allocate(32, 8); // 256 bit (unaligned)
       MemorySegment.copy(expected, 0, src, ValueLayout.JAVA_LONG, 0, expected.length);
 
       method.invoke(src, dest);

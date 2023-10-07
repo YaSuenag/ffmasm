@@ -81,22 +81,28 @@ public class AsmTest extends TestBase{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
           /* push %rbp         */ .push(Register.RBP)
           /* mov  %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* mov  %rdi, %r10   */ .movMR(Register.RDI, Register.R10, OptionalInt.empty())
           /* push %rdi         */ .push(Register.RDI)
           /* push %si          */ .push(Register.SI)
+          /* push %r10         */ .push(Register.R10)
+          /* pop  %r11         */ .pop(Register.R11, OptionalInt.empty())
+          /* mov %r11, (%rdx)  */ .movMR(Register.R11, Register.RDX, OptionalInt.of(0))
           /* pop  %ax          */ .pop(Register.AX, OptionalInt.empty())
           /* mov  %ax, 8(%rdx) */ .movMR(Register.AX, Register.RDX, OptionalInt.of(8))
-          /* pop  (%rdx)       */ .pop(Register.RDX, OptionalInt.of(0))
+          /* pop  16(%rdx)     */ .pop(Register.RDX, OptionalInt.of(16))
           /* leave             */ .leave()
           /* ret               */ .ret()
                                   .build();
 
       //showDebugMessage(seg);
-      var arena = Arena.ofAuto();
-      var mem = arena.allocate(10, 8);
-      method.invoke(1, (short)2, mem);
+      try(var arena = Arena.ofConfined()){
+        var mem = arena.allocate(24, 8);
+        method.invoke(1, (short)2, mem);
 
-      Assertions.assertEquals(1L, mem.get(ValueLayout.JAVA_LONG, 0));
-      Assertions.assertEquals((short)2, mem.get(ValueLayout.JAVA_SHORT, 8));
+        Assertions.assertEquals(1L, mem.get(ValueLayout.JAVA_LONG, 0));
+        Assertions.assertEquals((short)2, mem.get(ValueLayout.JAVA_SHORT, 8));
+        Assertions.assertEquals(1L, mem.get(ValueLayout.JAVA_LONG, 16));
+      }
     }
     catch(Throwable t){
       Assertions.fail(t);
@@ -990,6 +996,64 @@ public class AsmTest extends TestBase{
       for(byte b : array){
         Assertions.assertEquals((byte)0x90, b, "Not NOP");
       }
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Test movRM
+   */
+  @Test
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
+  public void testMOVRM(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT  // 1st argument
+                 );
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+         /* push %rbp          */ .push(Register.RBP)
+         /* mov %rsp, %rbp     */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+         /* push arg1          */ .push(argReg.arg1())
+         /* mov (%rsp), retReg */ .movRM(argReg.returnReg(), Register.RSP, OptionalInt.of(0))
+         /* add $8, %rsp       */ .add(Register.RSP, 8, OptionalInt.empty())
+         /* leave              */ .leave()
+         /* ret                */ .ret()
+                                  .build();
+      //showDebugMessage(seg);
+
+      int result = (int)method.invoke(100);
+      Assertions.assertEquals(100, result);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Test movImm
+   */
+  @Test
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
+  public void testMOVImm(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT // return value
+                 );
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+        /* push %rbp           */ .push(Register.RBP)
+        /* mov %rsp, %rbp      */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+        /* xor  retReg, retReg */ .xorMR(argReg.returnReg(), argReg.returnReg(), OptionalInt.empty())
+        /* mov  retReg, $100   */ .movImm(argReg.returnReg(), 100)
+        /* leave               */ .leave()
+        /* ret                 */ .ret()
+                                  .build();
+      //showDebugMessage(seg);
+
+      int result = (int)method.invoke();
+      Assertions.assertEquals(100, result);
     }
     catch(Throwable t){
       Assertions.fail(t);
