@@ -68,19 +68,21 @@ public final class AMD64Pinning extends Pinning{
   }
 
   private void createWrapper() throws Throwable{
+    var regs = CallingRegisters.getRegs();
+
     var pinDesc = FunctionDescriptor.of(ValueLayout.JAVA_LONG, // return value (pinned address)
                                         ValueLayout.ADDRESS,   // arg1 (JNIEnv *)
                                         ValueLayout.ADDRESS,   // arg2 (jobject)
                                         ValueLayout.ADDRESS);  // arg3 (array)
     pinWrapperImpl = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, pinDesc)
-               /* push %rbp      */ .push(Register.RBP)
-               /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-               /* mov %rdx, %rsi */ .movMR(Register.RDX, Register.RSI, OptionalInt.empty()) // move arg3 (arg1 in Java)  to arg2
-               /* xor %rdx, %rdx */ .xorMR(Register.RDX, Register.RDX, OptionalInt.empty()) // xor arg3
-               /* mov addr, %r10 */ .movImm(Register.R10, JniEnv.getInstance().getPrimitiveArrayCriticalAddr().address()) // address of GetPrimitiveArrayCritical()
-               /* call %r10      */ .call(Register.R10)
-               /* leave          */ .leave()
-               /* ret            */ .ret()
+            /* push %rbp         */ .push(Register.RBP)
+            /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+               /* mov arg3, arg2 */ .movMR(regs.arg3(), regs.arg2(), OptionalInt.empty()) // move arg3 (arg1 in Java)  to arg2
+            /* xor arg3, arg3    */ .xorMR(regs.arg3(), regs.arg3(), OptionalInt.empty()) // zero-clear arg3
+            /* mov addr, tmpReg1 */ .movImm(regs.tmpReg1(), JniEnv.getInstance().getPrimitiveArrayCriticalAddr().address()) // address of GetPrimitiveArrayCritical()
+            /* call tmpReg1      */ .call(regs.tmpReg1())
+            /* leave             */ .leave()
+            /* ret               */ .ret()
                                     .getMemorySegment();
 
     var unpinDesc = FunctionDescriptor.of(ValueLayout.JAVA_LONG, // return value (pinned address)
@@ -89,15 +91,15 @@ public final class AMD64Pinning extends Pinning{
                                           ValueLayout.ADDRESS,   // arg3 (array)
                                           ValueLayout.ADDRESS);  // arg4 (carray)
     unpinWrapperImpl = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, pinDesc)
-                 /* push %rbp      */ .push(Register.RBP)
-                 /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                 /* mov %rdx, %rsi */ .movMR(Register.RDX, Register.RSI, OptionalInt.empty()) // move arg3 (arg1 in Java)  to arg2
-                 /* mov %rcx, %rdx */ .movMR(Register.RCX, Register.RDX, OptionalInt.empty()) // move arg4 (arg2 in Java)  to arg3
-                 /* xor %rcx, %rcx */ .xorMR(Register.RCX, Register.RCX, OptionalInt.empty()) // xor arg4
-                 /* mov addr, %r10 */ .movImm(Register.R10, JniEnv.getInstance().releasePrimitiveArrayCriticalAddr().address()) // address of ReleasePrimitiveArrayCritical()
-                 /* call %r10      */ .call(Register.R10)
-                 /* leave          */ .leave()
-                 /* ret            */ .ret()
+              /* push %rbp         */ .push(Register.RBP)
+              /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+              /* mov arg3, arg2    */ .movMR(regs.arg3(), regs.arg2(), OptionalInt.empty()) // move arg3 (arg1 in Java)  to arg2
+              /* mov arg4, arg3    */ .movMR(regs.arg4(), regs.arg3(), OptionalInt.empty()) // move arg4 (arg2 in Java)  to arg3
+              /* xor arg4, arg4    */ .xorMR(regs.arg4(), regs.arg4(), OptionalInt.empty()) // zero-clear arg4
+              /* mov addr, tmpReg1 */ .movImm(regs.tmpReg1(), JniEnv.getInstance().releasePrimitiveArrayCriticalAddr().address()) // address of ReleasePrimitiveArrayCritical()
+              /* call tmpReg1      */ .call(regs.tmpReg1())
+              /* leave             */ .leave()
+              /* ret               */ .ret()
                                       .getMemorySegment();
 
   }

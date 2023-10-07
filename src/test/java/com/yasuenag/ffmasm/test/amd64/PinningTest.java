@@ -31,7 +31,7 @@ import com.yasuenag.ffmasm.Pinning;
 public class PinningTest{
 
   @Test
-  @EnabledOnOs(value = {OS.LINUX}, architectures = {"amd64"})
+  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
   public void testPinning() throws Throwable{
     int[] array = new int[]{1, 2, 3, 4};
     int[] expected = new int[]{5, 6, 7, 8};
