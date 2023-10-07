@@ -85,6 +85,47 @@ NOTE: [Linker.Option.isTrivial()](https://docs.oracle.com/en/java/javase/21/docs
 int ret = (int)method.invoke(100); // "ret" should be 100
 ```
 
+# Play with JNI
+
+You can bind native method to `MemorySegment` of ffmasm code dynamically.
+
+You have to construct `MemorySegment` of the machine code with `AMD64AsmBuilder`, and you have to get it from `getMemorySegment()`. Then you can bind it via `NativeRegister`.
+
+Following example shows native method `test` is binded to the code made by ffmasm. Note that 1st argument in Java is located at arg3 in native function because this is native function (1st arg is `JNIEnv*`, and 2nd arg is `jobject` or `jclass`).
+
+```java
+public native int test(int arg);
+
+<snip>
+
+try(var seg = new CodeSegment()){
+  var desc = FunctionDescriptor.of(
+               ValueLayout.JAVA_INT, // return value
+               ValueLayout.JAVA_INT, // 1st arg (JNIEnv *)
+               ValueLayout.JAVA_INT, // 2nd arg (jobject)
+               ValueLayout.JAVA_INT  // 3rd arg (arg1 of caller)
+             );
+  var stub = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+    /* push %rbp         */ .push(Register.RBP)
+    /* mov %rsp, %rbp    */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+    /* mov %arg3, retReg */ .movMR(argReg.arg3(), argReg.returnReg(), OptionalInt.empty()) // arg1 in Java is arg3 in native
+    /* leave             */ .leave()
+    /* ret               */ .ret()
+                            .getMemorySegment();
+
+  var method = this.getClass()
+                   .getMethod("test", int.class);
+
+  var methodMap = Map.of(method, stub);
+  var register = NativeRegister.create(this.getClass());
+  register.registerNatives(methodMap);
+
+  final int expected = 100;
+  int actual = test(expected);
+  Assertions.assertEquals(expected, actual);
+}
+```
+
 # Memory pinning
 
 You can pin Java primitive array via `Pinning`. It is same semantics of `GetPrimitiveArrayCritical()` / `ReleasePrimitiveArrayCritical()` in JNI. It expects performance improvement when you refer Java array in ffmasm code. However it might be serious problem (e.g. preventing GC) if you keep pinned memory long time. So you should use it carefully.

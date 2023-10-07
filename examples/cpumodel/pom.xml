@@ -24,7 +24,7 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
 
     <groupId>com.yasuenag</groupId>
     <artifactId>cpumodel</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
     <packaging>jar</packaging>
 
     <name>cpumodel</name>
@@ -42,7 +42,7 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
         <dependency>
             <groupId>com.yasuenag</groupId>
             <artifactId>ffmasm</artifactId>
-            <version>0.2.1</version>
+            <version>0.2.2</version>
         </dependency>
     </dependencies>
 

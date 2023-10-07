@@ -86,6 +86,35 @@ public class CodeSegment implements AutoCloseable{
   }
 
   /**
+   * Class to register calling close() as Cleaner action.
+   */
+  public static class CleanerAction implements Runnable{
+
+    private final CodeSegment seg;
+
+    /**
+     * @param seg <code>CodeSegment</code> instance to close.
+     */
+    public CleanerAction(CodeSegment seg){
+      this.seg = seg;
+    }
+
+    /**
+     * Close associated <code>CodeSegment</code>.
+     * All of exceptions are ignored during <code>close()</code> operation.
+     */
+    public void run(){
+      try{
+        seg.close();
+      }
+      catch(Exception e){
+        // ignore
+      }
+    }
+
+  }
+
+  /**
    * Get slice of this segment from the tail.
    *
    * @return Slice of this segment from the tail.
