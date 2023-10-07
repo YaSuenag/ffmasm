@@ -31,5 +31,5 @@ $ mvn exec:exec@single-run
 
 ```sh
 $ cd target
-$ $JAVA_HOME/bin/java -jar ffmasm-benchmark-funccall-1.0.2.jar
+$ $JAVA_HOME/bin/java -jar ffmasm-benchmark-funccall-1.0.3.jar
 ```
