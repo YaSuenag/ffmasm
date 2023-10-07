@@ -60,41 +60,42 @@ public final class AMD64NativeRegister extends NativeRegister{
                                    arena);
 
     var jvmtiEnv = JvmtiEnv.getInstance();
+    var regs = CallingRegisters.getRegs();
     var desc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS); // callbackParam
     registerStub = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
       // prologue
-          /* push %rbp         */ .push(Register.RBP)
-          /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+        /* push %rbp           */ .push(Register.RBP)
+        /* mov %rsp, %rbp      */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
       // evacutate
-          /* push %r12         */ .push(Register.R12)
-          /* mov %rdi, %r12    */ .movMR(Register.RDI, Register.R12, OptionalInt.empty()) // count
+        /* push savedReg1      */ .push(regs.savedReg1())
+        /* mov arg1, savedReg1 */ .movMR(regs.arg1(), regs.savedReg1(), OptionalInt.empty()) // callbackParam
       // call GetLoadedClasses()
-          /* sub $16, %rsp     */ .sub(Register.RSP, 16, OptionalInt.empty())
-          /* lea 8(%rsp), %rdx */ .lea(Register.RDX, Register.RSP, 8) // classes
-          /* mov %rsp, %rsi    */ .movMR(Register.RSP, Register.RSI, OptionalInt.empty()) // count
-          /* mov addr, %rdi    */ .movImm(Register.RDI, jvmtiEnv.getRawAddress()) // address of jvmtiEnv
-          /* mov addr, %r10    */ .movImm(Register.R10, jvmtiEnv.getLoadedClassesAddr().address()) // address of GetLoadedClasses()
-          /* sub $8, %rsp      */ .sub(Register.RSP, 8, OptionalInt.empty()) // for stack alignment
-          /* call %r10         */ .call(Register.R10)
-          /* add $8, %rsp      */ .add(Register.RSP, 8, OptionalInt.empty()) // for stack alignment
+        /* sub $16, %rsp       */ .sub(Register.RSP, 16, OptionalInt.empty())
+        /* lea 8(%rsp), arg3   */ .lea(regs.arg3(), Register.RSP, 8) // classes
+        /* mov %rsp, arg2      */ .movMR(Register.RSP, regs.arg2(), OptionalInt.empty()) // count
+        /* mov addr, arg1      */ .movImm(regs.arg1(), jvmtiEnv.getRawAddress()) // address of jvmtiEnv
+        /* mov addr, tmpReg1   */ .movImm(regs.tmpReg1(), jvmtiEnv.getLoadedClassesAddr().address()) // address of GetLoadedClasses()
+        /* sub $8, %rsp        */ .sub(Register.RSP, 8, OptionalInt.empty()) // for stack alignment
+        /* call tmpReg1        */ .call(regs.tmpReg1())
+        /* add $8, %rsp        */ .add(Register.RSP, 8, OptionalInt.empty()) // for stack alignment
       // call callback(jclass *classes, jint class_count)
-          /* pop %rsi          */ .pop(Register.RSI, OptionalInt.empty())
-          /* mov (%rsp), %rdi  */ .movRM(Register.RDI, Register.RSP, OptionalInt.of(0))
-          /* mov %rax, %rdx    */ .movMR(Register.RAX, Register.RDX, OptionalInt.empty()) // result of GetLoadedClasses()
-          /* mov %r12, %rcx    */ .movMR(Register.R12, Register.RCX, OptionalInt.empty()) // callbackParam
-          /* mov addr, %r10    */ .movImm(Register.R10, cbStub.address()) // address of callback
-          /* call %r12         */ .call(Register.R10)
+        /* pop arg2            */ .pop(regs.arg2(), OptionalInt.empty())
+        /* mov (%rsp), arg1    */ .movRM(regs.arg1(), Register.RSP, OptionalInt.of(0))
+        /* mov returnReg, arg3 */ .movMR(regs.returnReg(), regs.arg3(), OptionalInt.empty()) // result of GetLoadedClasses()
+        /* mov savedReg1, arg4 */ .movMR(regs.savedReg1(), regs.arg4(), OptionalInt.empty()) // callbackParam
+        /* mov addr, tmpReg1   */ .movImm(regs.tmpReg1(), cbStub.address()) // address of callback
+        /* call tmpReg1        */ .call(regs.tmpReg1())
       // call Deallocate()
-          /* mov addr, %rdi    */ .movImm(Register.RDI, jvmtiEnv.getRawAddress()) // address of jvmtiEnv
-          /* pop %rsi          */ .pop(Register.RSI, OptionalInt.empty()) // classes
-          /* mov addr, %r10    */ .movImm(Register.R10, jvmtiEnv.deallocateAddr().address()) // address of Deallocate()
-          /* sub $8, %rsp      */ .sub(Register.RSP, 8, OptionalInt.empty()) // for stack alignment
-          /* call %r10         */ .call(Register.R10)
-          /* add $8, %rsp      */ .add(Register.RSP, 8, OptionalInt.empty()) // for stack alignment
+        /* mov addr, arg1      */ .movImm(regs.arg1(), jvmtiEnv.getRawAddress()) // address of jvmtiEnv
+        /* pop arg2            */ .pop(regs.arg2(), OptionalInt.empty()) // classes
+        /* mov addr, tmpReg1   */ .movImm(regs.tmpReg1(), jvmtiEnv.deallocateAddr().address()) // address of Deallocate()
+        /* sub $8, %rsp        */ .sub(Register.RSP, 8, OptionalInt.empty()) // for stack alignment
+        /* call tmpReg1        */ .call(regs.tmpReg1())
+        /* add $8, %rsp        */ .add(Register.RSP, 8, OptionalInt.empty()) // for stack alignment
       // epilogue
-          /* pop %r12          */ .pop(Register.R12, OptionalInt.empty()) // classes
-          /* leave             */ .leave()
-          /* ret               */ .ret()
+        /* pop savedReg1       */ .pop(regs.savedReg1(), OptionalInt.empty())
+        /* leave               */ .leave()
+        /* ret                 */ .ret()
                                   .build();
   }
 
