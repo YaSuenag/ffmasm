@@ -36,7 +36,7 @@ public class FuncCallComparison{
            /* or %rdx, %rax  */ .orMR(Register.RDX, Register.RAX, OptionalInt.empty())
            /* leave          */ .leave()
            /* ret            */ .ret()
-                                .build();
+                                .build(Linker.Option.isTrivial());
     }
     catch(PlatformException | UnsupportedPlatformException e){
       throw new RuntimeException(e);

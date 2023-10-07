@@ -25,10 +25,9 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import java.io.IOException;
+import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SegmentAllocator;
-import java.lang.foreign.SegmentScope;
 import java.lang.foreign.ValueLayout;
 import java.util.OptionalInt;
 
@@ -63,9 +62,9 @@ public class AVXAsmTest extends TestBase{
                                   .build();
 
       long[] expected = new long[]{1, 2, 3, 4}; // 64 * 4 = 256 bit
-      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
-      MemorySegment src = alloc.allocate(32, 32);  // 256 bit
-      MemorySegment dest = alloc.allocate(32, 32); // 256 bit
+      var arena = Arena.ofAuto();
+      MemorySegment src = arena.allocate(32, 32);  // 256 bit
+      MemorySegment dest = arena.allocate(32, 32); // 256 bit
       MemorySegment.copy(expected, 0, src, ValueLayout.JAVA_LONG, 0, expected.length);
 
       method.invoke(src, dest);
@@ -84,7 +83,8 @@ public class AVXAsmTest extends TestBase{
   @Test
   @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS})
   public void testMOVDQU(){
-    try(var seg = new CodeSegment()){
+    try(var arena = Arena.ofConfined();
+        var seg = new CodeSegment();){
       var desc = FunctionDescriptor.ofVoid(
                    ValueLayout.ADDRESS, // 1st argument
                    ValueLayout.ADDRESS  // 2nd argument
@@ -100,9 +100,8 @@ public class AVXAsmTest extends TestBase{
                                   .build();
 
       long[] expected = new long[]{1, 2, 3, 4}; // 64 * 4 = 256 bit
-      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
-      MemorySegment src = alloc.allocate(32, 8);  // 256 bit (unaligned)
-      MemorySegment dest = alloc.allocate(32, 8); // 256 bit (unaligned)
+      MemorySegment src = arena.allocate(32, 8);  // 256 bit (unaligned)
+      MemorySegment dest = arena.allocate(32, 8); // 256 bit (unaligned)
       MemorySegment.copy(expected, 0, src, ValueLayout.JAVA_LONG, 0, expected.length);
 
       method.invoke(src, dest);
@@ -139,9 +138,9 @@ public class AVXAsmTest extends TestBase{
 
       int[]      src = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
       int[] expected = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
-      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
-      MemorySegment srcSeg = alloc.allocate(32, 32);  // 256 bit
-      MemorySegment destSeg = alloc.allocate(32, 32); // 256 bit
+      var arena = Arena.ofAuto();
+      MemorySegment srcSeg = arena.allocate(32, 32);  // 256 bit
+      MemorySegment destSeg = arena.allocate(32, 32); // 256 bit
       MemorySegment.copy(src, 0, srcSeg, ValueLayout.JAVA_INT, 0, src.length);
 
       method.invoke(srcSeg, destSeg);
@@ -180,10 +179,10 @@ public class AVXAsmTest extends TestBase{
       int[]     src1 = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
       int[]     src2 = new int[]{8, 7, 6, 5, 4, 3, 2, 1};
       int[] expected = new int[]{9, 9, 9, 9, 9, 9, 9, 9};
-      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
-      MemorySegment src1Seg = alloc.allocate(32, 32);  // 256 bit
-      MemorySegment src2Seg = alloc.allocate(32, 32);  // 256 bit
-      MemorySegment destSeg = alloc.allocate(32, 32); // 256 bit
+      var arena = Arena.ofAuto();
+      MemorySegment src1Seg = arena.allocate(32, 32);  // 256 bit
+      MemorySegment src2Seg = arena.allocate(32, 32);  // 256 bit
+      MemorySegment destSeg = arena.allocate(32, 32); // 256 bit
       MemorySegment.copy(src1, 0, src1Seg, ValueLayout.JAVA_INT, 0, src1.length);
       MemorySegment.copy(src2, 0, src2Seg, ValueLayout.JAVA_INT, 0, src2.length);
 
@@ -229,9 +228,9 @@ public class AVXAsmTest extends TestBase{
 
       int[]    zero = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
       int[] nonzero = new int[]{1, 1, 1, 1, 1, 1, 1, 1};
-      var alloc = SegmentAllocator.nativeAllocator(SegmentScope.auto());
-      MemorySegment zeroSeg = alloc.allocate(32, 32);  // 256 bit
-      MemorySegment nonzeroSeg = alloc.allocate(32, 32); // 256 bit
+      var arena = Arena.ofAuto();
+      MemorySegment zeroSeg = arena.allocate(32, 32);  // 256 bit
+      MemorySegment nonzeroSeg = arena.allocate(32, 32); // 256 bit
       MemorySegment.copy(zero, 0, zeroSeg, ValueLayout.JAVA_INT, 0, zero.length);
       MemorySegment.copy(nonzero, 0, nonzeroSeg, ValueLayout.JAVA_INT, 0, nonzero.length);
 

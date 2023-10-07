@@ -31,7 +31,7 @@ public class Main{
   public static void main(String[] args) throws Throwable{
     System.out.println("PID: " + ProcessHandle.current().pid());
 
-    var mem = SegmentAllocator.nativeAllocator(SegmentScope.auto()).allocate(4 * 4 * 3); // 32bit * 4 regs (eax - edx) * 3 calls
+    var mem = Arena.ofAuto().allocate(4 * 4 * 3); // 32bit * 4 regs (eax - edx) * 3 calls
     var desc = FunctionDescriptor.ofVoid(
                  ValueLayout.JAVA_INT, // eax
                  ValueLayout.ADDRESS   // memory for eax - edx
@@ -67,7 +67,7 @@ public class Main{
         /* pop %rbx           */ .pop(Register.RBX, OptionalInt.empty())
         /* leave              */ .leave()
         /* ret                */ .ret()
-                                 .build();
+                                 .build(Linker.Option.isTrivial());
 
       cpuid.invoke(0x80000002, mem);
       cpuid.invoke(0x80000003, mem.asSlice(4 * 4));

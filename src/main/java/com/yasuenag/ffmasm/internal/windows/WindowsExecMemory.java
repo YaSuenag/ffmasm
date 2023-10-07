@@ -66,7 +66,7 @@ public class WindowsExecMemory implements ExecMemory{
                    ValueLayout.JAVA_INT, // flAllocationType
                    ValueLayout.JAVA_INT // flProtect
                  );
-      hndVirtualAlloc = Linker.nativeLinker().downcallHandle(func, desc);
+      hndVirtualAlloc = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.isTrivial());
     }
 
     try{
@@ -74,7 +74,7 @@ public class WindowsExecMemory implements ExecMemory{
       if(mem.equals(MemorySegment.NULL)){
         throw new PlatformException("VirtualAlloc() failed", GetLastError.get());
       }
-      return MemorySegment.ofAddress(mem.address(), dwSize);
+      return mem.reinterpret(dwSize);
     }
     catch(Throwable t){
       throw new PlatformException(t);
@@ -94,7 +94,7 @@ public class WindowsExecMemory implements ExecMemory{
                    ValueLayout.JAVA_LONG, // dwSize
                    ValueLayout.JAVA_INT // dwFreeType
                  );
-      hndVirtualFree = Linker.nativeLinker().downcallHandle(func, desc);
+      hndVirtualFree = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.isTrivial());
     }
 
     try{

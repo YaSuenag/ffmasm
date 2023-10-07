@@ -84,7 +84,7 @@ public class LinuxExecMemory implements ExecMemory{
                    ValueLayout.JAVA_INT, // fd
                    ValueLayout.JAVA_LONG // offset
                  );
-      hndMmap = Linker.nativeLinker().downcallHandle(func, desc);
+      hndMmap = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.isTrivial());
     }
 
     try{
@@ -92,7 +92,7 @@ public class LinuxExecMemory implements ExecMemory{
       if(mem.address() == -1L){ // MAP_FAILED
         throw new PlatformException("mmap() failed", Errno.get());
       }
-      return MemorySegment.ofAddress(mem.address(), length);
+      return mem.reinterpret(length);
     }
     catch(Throwable t){
       throw new PlatformException(t);
@@ -107,7 +107,7 @@ public class LinuxExecMemory implements ExecMemory{
                    ValueLayout.ADDRESS, // addr
                    ValueLayout.JAVA_LONG // length
                  );
-      hndMunmap = Linker.nativeLinker().downcallHandle(func, desc);
+      hndMunmap = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.isTrivial());
     }
 
     try{
