@@ -85,6 +85,26 @@ NOTE: [Linker.Option.isTrivial()](https://docs.oracle.com/en/java/javase/21/docs
 int ret = (int)method.invoke(100); // "ret" should be 100
 ```
 
+# Memory pinning
+
+You can pin Java primitive array via `Pinning`. It is same semantics of `GetPrimitiveArrayCritical()` / `ReleasePrimitiveArrayCritical()` in JNI. It expects performance improvement when you refer Java array in ffmasm code. However it might be serious problem (e.g. preventing GC) if you keep pinned memory long time. So you should use it carefully.
+
+Following example shows pin `array` at first, then we modify value via `MemorySegment`.
+
+```java
+int[] array = new int[]{1, 2, 3, 4};
+
+var pinnedMem = Pinning.getInstance()
+                       .pin(array)
+                       .reinterpret(ValueLayout.JAVA_INT.byteSize() * array.length);
+for(int idx = 0; idx < expected.length; idx++){
+  pinnedMem.setAtIndex(ValueLayout.JAVA_INT, idx, idx * 2);
+}
+Pinning.getInstance().unpin(pinnedMem);
+
+// array is {0, 2, 4, 6} at this point
+```
+
 # License
 
 The GNU Lesser General Public License, version 3.0
