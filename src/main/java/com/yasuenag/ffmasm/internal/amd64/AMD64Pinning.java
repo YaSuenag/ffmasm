@@ -71,10 +71,12 @@ public final class AMD64Pinning extends Pinning{
     pinWrapperImpl = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, pinDesc)
             /* push %rbp         */ .push(Register.RBP)
             /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-               /* mov arg3, arg2 */ .movMR(regs.arg3(), regs.arg2(), OptionalInt.empty()) // move arg3 (arg1 in Java)  to arg2
+            /* mov arg3, arg2    */ .movMR(regs.arg3(), regs.arg2(), OptionalInt.empty()) // move arg3 (arg1 in Java)  to arg2
             /* xor arg3, arg3    */ .xorMR(regs.arg3(), regs.arg3(), OptionalInt.empty()) // zero-clear arg3
             /* mov addr, tmpReg1 */ .movImm(regs.tmpReg1(), JniEnv.getInstance().getPrimitiveArrayCriticalAddr().address()) // address of GetPrimitiveArrayCritical()
+            /* sub $32, %rsp     */ .sub(Register.RSP, 32, OptionalInt.empty()) // Shadow stack (for Windows: 32 bytes)
             /* call tmpReg1      */ .call(regs.tmpReg1())
+            /* add $32, %rsp     */ .add(Register.RSP, 32, OptionalInt.empty()) // Recover shadow stack
             /* leave             */ .leave()
             /* ret               */ .ret()
                                     .getMemorySegment();
@@ -91,7 +93,9 @@ public final class AMD64Pinning extends Pinning{
               /* mov arg4, arg3    */ .movMR(regs.arg4(), regs.arg3(), OptionalInt.empty()) // move arg4 (arg2 in Java)  to arg3
               /* xor arg4, arg4    */ .xorMR(regs.arg4(), regs.arg4(), OptionalInt.empty()) // zero-clear arg4
               /* mov addr, tmpReg1 */ .movImm(regs.tmpReg1(), JniEnv.getInstance().releasePrimitiveArrayCriticalAddr().address()) // address of ReleasePrimitiveArrayCritical()
+              /* sub $32, %rsp     */ .sub(Register.RSP, 32, OptionalInt.empty()) // Shadow stack (for Windows: 32 bytes)
               /* call tmpReg1      */ .call(regs.tmpReg1())
+              /* add $32, %rsp     */ .add(Register.RSP, 32, OptionalInt.empty()) // Recover shadow stack
               /* leave             */ .leave()
               /* ret               */ .ret()
                                       .getMemorySegment();
