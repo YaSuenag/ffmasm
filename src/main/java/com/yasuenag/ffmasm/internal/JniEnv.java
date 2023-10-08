@@ -36,6 +36,8 @@ public class JniEnv{
 
   /* Indices from API doc */
   private static final int JNI_RegisterNatives_INDEX = 215;
+  private static final int JNI_GetPrimitiveArrayCritical_INDEX = 222;
+  private static final int JNI_ReleasePrimitiveArrayCritical_INDEX = 223;
   private static final int JNI_IsVirtualThread_INDEX = 234;
   private static final int JNI_MAX_INDEX = JNI_IsVirtualThread_INDEX;
 
@@ -66,8 +68,10 @@ public class JniEnv{
   private final MemorySegment jniEnv;
   private final MemorySegment functionTable;
 
-  /* function handles */
+  /* function addresses / handles */
   private MethodHandle RegisterNatives;
+  private MemorySegment GetPrimitiveArrayCriticalAddr;
+  private MemorySegment ReleasePrimitiveArrayCriticalAddr;
 
   static{
     layoutJNINativeMethod = MemoryLayout.structLayout(ValueLayout.ADDRESS.withName("name"),
@@ -109,6 +113,20 @@ public class JniEnv{
                                                                     ValueLayout.JAVA_INT));
     }
     return (int)RegisterNatives.invoke(jniEnv, clazz, methods, nMethods);
+  }
+
+  public MemorySegment getPrimitiveArrayCriticalAddr(){
+    if(GetPrimitiveArrayCriticalAddr == null){
+      GetPrimitiveArrayCriticalAddr = functionTable.getAtIndex(ValueLayout.ADDRESS, JNI_GetPrimitiveArrayCritical_INDEX);
+    }
+    return GetPrimitiveArrayCriticalAddr;
+  }
+
+  public MemorySegment releasePrimitiveArrayCriticalAddr(){
+    if(ReleasePrimitiveArrayCriticalAddr == null){
+      ReleasePrimitiveArrayCriticalAddr = functionTable.getAtIndex(ValueLayout.ADDRESS, JNI_ReleasePrimitiveArrayCritical_INDEX);
+    }
+    return ReleasePrimitiveArrayCriticalAddr;
   }
 
 }

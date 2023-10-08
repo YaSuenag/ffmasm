@@ -22,5 +22,5 @@ $ mvn package
 # Run benchmark
 
 ```sh
-$ $JAVA_HOME/bin/java -jar target/ffmasm-benchmark-vectorapi-1.0.2.jar
+$ $JAVA_HOME/bin/java -jar target/ffmasm-benchmark-vectorapi-1.0.3.jar
 ```
