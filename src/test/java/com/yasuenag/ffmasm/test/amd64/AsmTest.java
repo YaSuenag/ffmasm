@@ -955,14 +955,16 @@ public class AsmTest extends TestBase{
                    ValueLayout.ADDRESS    // char *
                  );
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-         /*   push %rbp      */ .push(Register.RBP)
-         /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov arg1, %r10 */ .movMR(argReg.arg1(), Register.R10, OptionalInt.empty())
-         /*   mov arg2, arg1 */ .movMR(argReg.arg2(), argReg.arg1(), OptionalInt.empty())
-         /*   call %r10      */ .call(Register.R10)
-         /*   leave          */ .leave()
-         /*   ret            */ .ret()
-                                .build();
+             /* push %rbp      */ .push(Register.RBP)
+             /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+             /* mov arg1, %r10 */ .movMR(argReg.arg1(), Register.R10, OptionalInt.empty())
+             /* mov arg2, arg1 */ .movMR(argReg.arg2(), argReg.arg1(), OptionalInt.empty())
+             /* sub $32, %rsp  */ .sub(Register.RSP, 32, OptionalInt.empty()) // Shadow stack (for Windows: 32 bytes)
+             /* call %r10      */ .call(Register.R10)
+             /* add $32, %rsp  */ .add(Register.RSP, 32, OptionalInt.empty()) // Recover shadow stack
+             /* leave          */ .leave()
+             /* ret            */ .ret()
+                                  .build();
 
       final String test = "test";
       var cTest = arena.allocateUtf8String(test);
