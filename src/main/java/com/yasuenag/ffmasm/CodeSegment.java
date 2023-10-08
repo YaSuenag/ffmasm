@@ -103,6 +103,7 @@ public class CodeSegment implements AutoCloseable{
      * Close associated <code>CodeSegment</code>.
      * All of exceptions are ignored during <code>close()</code> operation.
      */
+    @Override
     public void run(){
       try{
         seg.close();
