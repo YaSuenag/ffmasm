@@ -86,7 +86,7 @@ public final class AMD64Pinning extends Pinning{
                                           ValueLayout.ADDRESS,   // arg2 (jobject)
                                           ValueLayout.ADDRESS,   // arg3 (array)
                                           ValueLayout.ADDRESS);  // arg4 (carray)
-    unpinWrapperImpl = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, pinDesc)
+    unpinWrapperImpl = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, unpinDesc)
               /* push %rbp         */ .push(Register.RBP)
               /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
               /* mov arg3, arg2    */ .movMR(regs.arg3(), regs.arg2(), OptionalInt.empty()) // move arg3 (arg1 in Java)  to arg2
