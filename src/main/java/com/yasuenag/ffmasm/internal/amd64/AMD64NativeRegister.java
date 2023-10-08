@@ -75,23 +75,25 @@ public final class AMD64NativeRegister extends NativeRegister{
         /* mov %rsp, arg2      */ .movMR(Register.RSP, regs.arg2(), OptionalInt.empty()) // count
         /* mov addr, arg1      */ .movImm(regs.arg1(), jvmtiEnv.getRawAddress()) // address of jvmtiEnv
         /* mov addr, tmpReg1   */ .movImm(regs.tmpReg1(), jvmtiEnv.getLoadedClassesAddr().address()) // address of GetLoadedClasses()
-        /* sub $8, %rsp        */ .sub(Register.RSP, 8, OptionalInt.empty()) // for stack alignment
+        /* sub $40, %rsp       */ .sub(Register.RSP, 40, OptionalInt.empty()) // Shadow stack (for Windows: 32 bytes) + stack alignment (8 bytes)
         /* call tmpReg1        */ .call(regs.tmpReg1())
-        /* add $8, %rsp        */ .add(Register.RSP, 8, OptionalInt.empty()) // for stack alignment
+        /* add $40, %rsp       */ .add(Register.RSP, 40, OptionalInt.empty()) // Recover shadow stack + stack alignments
       // call callback(jclass *classes, jint class_count)
         /* pop arg2            */ .pop(regs.arg2(), OptionalInt.empty())
         /* mov (%rsp), arg1    */ .movRM(regs.arg1(), Register.RSP, OptionalInt.of(0))
         /* mov returnReg, arg3 */ .movMR(regs.returnReg(), regs.arg3(), OptionalInt.empty()) // result of GetLoadedClasses()
         /* mov savedReg1, arg4 */ .movMR(regs.savedReg1(), regs.arg4(), OptionalInt.empty()) // callbackParam
         /* mov addr, tmpReg1   */ .movImm(regs.tmpReg1(), cbStub.address()) // address of callback
+        /* sub $32, %rsp       */ .sub(Register.RSP, 32, OptionalInt.empty()) // Shadow stack (for Windows: 32 bytes)
         /* call tmpReg1        */ .call(regs.tmpReg1())
+        /* add $32, %rsp       */ .add(Register.RSP, 32, OptionalInt.empty()) // Recover shadow stack
       // call Deallocate()
         /* mov addr, arg1      */ .movImm(regs.arg1(), jvmtiEnv.getRawAddress()) // address of jvmtiEnv
         /* pop arg2            */ .pop(regs.arg2(), OptionalInt.empty()) // classes
         /* mov addr, tmpReg1   */ .movImm(regs.tmpReg1(), jvmtiEnv.deallocateAddr().address()) // address of Deallocate()
-        /* sub $8, %rsp        */ .sub(Register.RSP, 8, OptionalInt.empty()) // for stack alignment
+        /* sub $40, %rsp       */ .sub(Register.RSP, 40, OptionalInt.empty()) // Shadow stack (for Windows: 32 bytes) + stack alignment (8 bytes)
         /* call tmpReg1        */ .call(regs.tmpReg1())
-        /* add $8, %rsp        */ .add(Register.RSP, 8, OptionalInt.empty()) // for stack alignment
+        /* add $40, %rsp       */ .add(Register.RSP, 40, OptionalInt.empty()) // Recover shadow stack + stack alignments
       // epilogue
         /* pop savedReg1       */ .pop(regs.savedReg1(), OptionalInt.empty())
         /* leave               */ .leave()
