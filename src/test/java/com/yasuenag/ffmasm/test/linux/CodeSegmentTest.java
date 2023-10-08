@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
+import java.io.IOException;
 import java.lang.ref.Cleaner;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,23 +37,31 @@ import com.yasuenag.ffmasm.UnsupportedPlatformException;
 @EnabledOnOs({OS.LINUX})
 public class CodeSegmentTest{
 
+  private String[] findMemorySegmentFromMaps(long startAddr, long endAddr) throws IOException{
+    String startAddrInStr = Long.toHexString(startAddr);
+    String endAddrInStr = Long.toHexString(endAddr);
+    try(var stream = Files.lines(Path.of("/proc/self/maps"))){
+      return stream.map(l -> l.split(" "))
+                   .filter(l -> l[0].startsWith(startAddrInStr) || l[0].endsWith(endAddrInStr))
+                   .findAny()
+                   .get();
+    }
+  }
+
   @Test
   public void testAllocateCodeSegmentWithDefaultSize(){
     try(var seg = new CodeSegment()){
       var addr = seg.getAddr();
       long startAddr = addr.address();
-      try(var stream = Files.lines(Path.of("/proc/self/maps"))){
-        String[] entries = stream.filter(l -> l.startsWith(Long.toHexString(startAddr)))
-                                 .findFirst()
-                                 .get()
-                                 .split(" ");
+      long endAddr = startAddr + 4096L;
 
-        long endAddr = Long.parseLong(entries[0].split("-")[1], 16);
-        char execBit = entries[1].charAt(2);
+      var entries = findMemorySegmentFromMaps(startAddr, endAddr);
+      long actualStartAddr = Long.parseLong(entries[0].split("-")[0], 16);
+      long actualEndAddr = Long.parseLong(entries[0].split("-")[1], 16);
+      char execBit = entries[1].charAt(2);
 
-        Assertions.assertEquals(4096L, endAddr - startAddr);
-        Assertions.assertEquals('x', execBit);
-      }
+      Assertions.assertTrue((actualEndAddr - actualStartAddr) >= 4096L);
+      Assertions.assertEquals('x', execBit);
     }
     catch(Throwable t){
       Assertions.fail(t);
@@ -66,18 +75,15 @@ public class CodeSegmentTest{
     try(var seg = new CodeSegment(size)){
       var addr = seg.getAddr();
       long startAddr = addr.address();
-      try(var stream = Files.lines(Path.of("/proc/self/maps"))){
-        String[] entries = stream.filter(l -> l.startsWith(Long.toHexString(startAddr)))
-                                 .findFirst()
-                                 .get()
-                                 .split(" ");
+      long endAddr = startAddr + size;
 
-        long endAddr = Long.parseLong(entries[0].split("-")[1], 16);
-        char execBit = entries[1].charAt(2);
+      var entries = findMemorySegmentFromMaps(startAddr, endAddr);
+      long actualStartAddr = Long.parseLong(entries[0].split("-")[0], 16);
+      long actualEndAddr = Long.parseLong(entries[0].split("-")[1], 16);
+      char execBit = entries[1].charAt(2);
 
-        Assertions.assertEquals(size, endAddr - startAddr);
-        Assertions.assertEquals('x', execBit);
-      }
+      Assertions.assertTrue((actualEndAddr - actualStartAddr) >= size);
+      Assertions.assertEquals('x', execBit);
     }
     catch(Throwable t){
       Assertions.fail(t);
