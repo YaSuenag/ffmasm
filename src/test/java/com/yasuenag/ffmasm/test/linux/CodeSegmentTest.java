@@ -34,7 +34,7 @@ import com.yasuenag.ffmasm.PlatformException;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
 
 
-@EnabledOnOs({OS.LINUX})
+@EnabledOnOs(OS.LINUX)
 public class CodeSegmentTest{
 
   private String[] findMemorySegmentFromMaps(long startAddr, long endAddr) throws IOException{

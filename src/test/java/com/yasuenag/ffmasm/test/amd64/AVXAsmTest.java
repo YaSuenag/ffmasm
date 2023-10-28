@@ -44,7 +44,7 @@ public class AVXAsmTest extends TestBase{
    * Tests MOVDQA A/B
    */
   @Test
-  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS})
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testMOVDQA(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
@@ -81,7 +81,7 @@ public class AVXAsmTest extends TestBase{
    * Tests MOVDQU A/B
    */
   @Test
-  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS})
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testMOVDQU(){
     try(var arena = Arena.ofConfined();
         var seg = new CodeSegment();){
@@ -118,7 +118,7 @@ public class AVXAsmTest extends TestBase{
    * Tests PXOR
    */
   @Test
-  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS})
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testPXOR(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
@@ -157,7 +157,7 @@ public class AVXAsmTest extends TestBase{
    * Tests PADDD
    */
   @Test
-  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS})
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testPADDD(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
@@ -201,7 +201,7 @@ public class AVXAsmTest extends TestBase{
    * Tests PTEST
    */
   @Test
-  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS})
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testPTEST(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(

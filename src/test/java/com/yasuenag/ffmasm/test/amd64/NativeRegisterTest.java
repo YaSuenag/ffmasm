@@ -34,12 +34,13 @@ import com.yasuenag.ffmasm.amd64.AMD64AsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
 
 
+@EnabledOnOs(architectures = {"amd64"})
 public class NativeRegisterTest extends TestBase{
 
   public native int test(int arg);
 
   @Test
-  @EnabledOnOs(value = {OS.LINUX, OS.WINDOWS}, architectures = {"amd64"})
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testNativeRegister(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
