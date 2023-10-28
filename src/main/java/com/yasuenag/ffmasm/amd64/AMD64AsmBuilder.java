@@ -969,6 +969,25 @@ public class AMD64AsmBuilder{
     return this;
   }
 
+  /**
+   * Reverses the byte order of a register.
+   *   Opcode:         0F C8 + rd (32 bit)
+   *           REX.W + 0F C8 + rd (64 bit)
+   *   Instruction: BSWAP r
+   *   Op/En: O
+   *
+   * @param reg Register to push to the stack.
+   * @return This instance
+   */
+  public AMD64AsmBuilder bswap(Register reg){
+    if(reg.width() == 64){
+      emitREXOp(Register.RAX /* dummy */, reg);
+    }
+    byteBuf.put((byte)0x0f);
+    byteBuf.put((byte)(0xc8 | (reg.encoding() & 0x7)));
+    return this;
+  }
+
   private void updateTail(){
     if(!pendingLabelMap.isEmpty()){
       throw new IllegalStateException("Label is not defined: " + pendingLabelMap.keySet().toString());

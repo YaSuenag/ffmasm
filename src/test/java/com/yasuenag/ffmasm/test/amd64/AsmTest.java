@@ -1090,4 +1090,88 @@ public class AsmTest extends TestBase{
     }
   }
 
+  /**
+   * Test BSWAP
+   */
+  @Test
+  @EnabledOnOs(value = {OS.LINUX}, architectures = {"amd64"})
+  public void testBSWAP(){
+    // test 64bit register
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_LONG, // return value
+                   ValueLayout.JAVA_LONG  // arg1
+                 );
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+           /* push %rbp        */ .push(Register.RBP)
+           /* mov %rsp, %rbp   */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+           /* bswap arg1       */ .bswap(argReg.arg1())
+           /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+           /* leave            */ .leave()
+           /* ret              */ .ret()
+                                  .build();
+      //showDebugMessage(seg);
+
+      long param    = 0x1122334455667788L;
+      long expected = 0x8877665544332211L;
+      long result = (long)method.invoke(param);
+      Assertions.assertEquals(expected, result);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+
+    // test 64bit extended register
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_LONG, // return value
+                   ValueLayout.JAVA_LONG  // arg1
+                 );
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+            /* push %rbp       */ .push(Register.RBP)
+            /* mov %rsp, %rbp  */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+            /* mov arg1, %r8   */ .movMR(argReg.arg1(), Register.R8, OptionalInt.empty())
+            /* bswap %r8       */ .bswap(Register.R8)
+            /* mov %r8, retReg */ .movMR(Register.R8, argReg.returnReg(), OptionalInt.empty())
+            /* leave           */ .leave()
+            /* ret             */ .ret()
+                                  .build();
+      //showDebugMessage(seg);
+
+      long param    = 0x1122334455667788L;
+      long expected = 0x8877665544332211L;
+      long result = (long)method.invoke(param);
+      Assertions.assertEquals(expected, result);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+
+    // test 32bit register
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT  // arg1
+                 );
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+           /* push %rbp        */ .push(Register.RBP)
+           /* mov %rsp, %rbp   */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+           /* bswap arg1       */ .bswap(Register.EDI)
+           /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+           /* leave            */ .leave()
+           /* ret              */ .ret()
+                                  .build();
+      //showDebugMessage(seg);
+
+      int param    = 0x11223344;
+      int expected = 0x44332211;
+      int result = (int)method.invoke(param);
+      Assertions.assertEquals(expected, result);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+
+  }
+
 }
