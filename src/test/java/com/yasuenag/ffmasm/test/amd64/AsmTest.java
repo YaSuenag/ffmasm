@@ -1062,4 +1062,32 @@ public class AsmTest extends TestBase{
     }
   }
 
+  /**
+   * Test SYSCALL
+   */
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  public void testSYSCALL(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT // return value
+                 );
+      // getpid in libc does not have prologue/epilogue
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+              /* mov %rax, $39 */ .movImm(Register.RAX, 39) // getpid
+              /* syscall       */ .syscall()
+              /* ret           */ .ret()
+                                  .build();
+      //showDebugMessage(seg);
+
+      // __PID_T_TYPE is defined as __S32_TYPE in bits/typesizes.h
+      int result = (int)method.invoke();
+      int pidFromJava = (int)ProcessHandle.current().pid();
+      Assertions.assertEquals(pidFromJava, result);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }

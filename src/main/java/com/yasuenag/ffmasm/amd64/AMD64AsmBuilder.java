@@ -940,6 +940,19 @@ public class AMD64AsmBuilder{
   }
 
   /**
+   * Fast call to privilege level 0 system procedures.
+   *   Opcode: 0F 05
+   *   Instruction: SYSCALL
+   *   Op/En: ZO
+   *
+   * @return This instance
+   */
+  public AMD64AsmBuilder syscall(){
+    byteBuf.putShort((short)0x050f);
+    return this;
+  }
+
+  /**
    * Align the position to 16 bytes with NOP.
    *
    * @return This instance
