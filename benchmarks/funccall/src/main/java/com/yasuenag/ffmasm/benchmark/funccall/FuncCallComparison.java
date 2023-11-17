@@ -39,7 +39,7 @@ public class FuncCallComparison{
            /* ret            */ .ret()
                                 .getMemorySegment();
 
-      ffmRDTSC = Linker.nativeLinker().downcallHandle(mem, desc, Linker.Option.isTrivial());
+      ffmRDTSC = Linker.nativeLinker().downcallHandle(mem, desc, Linker.Option.critical(false));
 
       var register = NativeRegister.create(this.getClass());
       register.registerNatives(Map.of(this.getClass().getMethod("rdtscFFMDirect"), mem));

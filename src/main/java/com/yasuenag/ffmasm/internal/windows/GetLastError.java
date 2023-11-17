@@ -41,7 +41,7 @@ public class GetLastError{
     var sym = SymbolLookup.loaderLookup();
     var func = sym.find("GetLastError").get();
     var desc = FunctionDescriptor.of(ValueLayout.JAVA_INT);
-    hnd = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.isTrivial());
+    hnd = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.critical(false));
   }
 
   public static int get() throws PlatformException{

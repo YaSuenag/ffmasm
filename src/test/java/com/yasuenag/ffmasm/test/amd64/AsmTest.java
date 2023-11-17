@@ -971,7 +971,7 @@ public class AsmTest extends TestBase{
                                   .build();
 
       final String test = "test";
-      var cTest = arena.allocateUtf8String(test);
+      var cTest = arena.allocateFrom(test);
       long len = (long)method.invoke(strlenAddr, cTest);
       Assertions.assertEquals(test.length(), (int)len, "Invalid strlen() call");
     }

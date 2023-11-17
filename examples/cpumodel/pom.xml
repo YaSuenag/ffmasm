@@ -34,8 +34,8 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
         <moduleName>com.yasuenag.ffmasm.examples.cpumodel</moduleName>
         <mainClass>com.yasuenag.ffmasm.examples.cpumodel.Main</mainClass>
         <imageName>${project.artifactId}-${project.version}</imageName>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>22</maven.compiler.source>
+        <maven.compiler.target>22</maven.compiler.target>
     </properties>
     
     <dependencies>
@@ -56,29 +56,15 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
                     <compilerArgs>
                         <arg>-Xlint:all</arg>
                     </compilerArgs>
-                    <enablePreview>true</enablePreview>
                     <debug>true</debug>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <executable>${java.home}/bin/java</executable>
-                    <arguments>
-                        <argument>--module-path</argument>
-                        <modulepath/>
-                        <argument>--enable-preview</argument>
-                        <argument>--enable-native-access=com.yasuenag.ffmasm</argument>
-                        <argument>--module</argument>
-                        <argument>${moduleName}/${mainClass}</argument>
-                    </arguments>
+                    <mainClass>${mainClass}</mainClass>
                 </configuration>
             </plugin>
         </plugins>

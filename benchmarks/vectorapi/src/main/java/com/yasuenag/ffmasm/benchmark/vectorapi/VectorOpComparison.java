@@ -47,7 +47,7 @@ public class VectorOpComparison{
 /* vmovdqa %ymm0, (%rdi)       */ .vmovdqaRM(Register.YMM0, Register.RDI, OptionalInt.of(0))
 /* leave                       */ .leave()
 /* ret                         */ .ret()
-                                  .build(Linker.Option.isTrivial());
+                                  .build(Linker.Option.critical(false));
 
       var descPinned = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS);
       ffmPinned = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, descPinned)
@@ -59,7 +59,7 @@ public class VectorOpComparison{
 /* vmovdqu %ymm0, (%rdi)       */ .vmovdquRM(Register.YMM0, Register.RDI, OptionalInt.of(0))
 /* leave                       */ .leave()
 /* ret                         */ .ret()
-                                  .build(Linker.Option.isTrivial());
+                                  .build(Linker.Option.critical(true));
     }
     catch(PlatformException | UnsupportedPlatformException e){
       throw new RuntimeException(e);
@@ -92,6 +92,9 @@ public class VectorOpComparison{
     private MemorySegment pinnedSrcSeg;
     private MemorySegment pinnedDestSeg;
 
+    private MemorySegment pinnedOnHeapSrcSeg;
+    private MemorySegment pinnedOnHeapDestSeg;
+
     static{
       try{
         pinning = Pinning.getInstance();
@@ -105,6 +108,8 @@ public class VectorOpComparison{
     public void setup(){
       pinnedSrcSeg = pinning.pin(randArray);
       pinnedDestSeg = pinning.pin(result);
+      pinnedOnHeapSrcSeg = MemorySegment.ofArray(randArray);
+      pinnedOnHeapDestSeg = MemorySegment.ofArray(result);
     }
 
     @TearDown(Level.Iteration)
@@ -119,6 +124,14 @@ public class VectorOpComparison{
 
     public MemorySegment getPinnedDestSeg(){
       return pinnedDestSeg;
+    }
+
+    public MemorySegment getPinnedOnHeapSrcSeg(){
+      return pinnedOnHeapSrcSeg;
+    }
+
+    public MemorySegment getPinnedOnHeapDestSeg(){
+      return pinnedOnHeapDestSeg;
     }
 
   }
@@ -146,6 +159,17 @@ public class VectorOpComparison{
   public int[] invokePinnedFFM(PinnedState state){
     try{
       ffmPinned.invoke(state.getPinnedDestSeg(), state.getPinnedSrcSeg());
+      return result;
+    }
+    catch(Throwable t){
+      throw new RuntimeException(t);
+    }
+  }
+
+  @Benchmark
+  public int[] invokePinnedOnHeapFFM(PinnedState state){
+    try{
+      ffmPinned.invoke(state.getPinnedOnHeapDestSeg(), state.getPinnedOnHeapSrcSeg());
       return result;
     }
     catch(Throwable t){

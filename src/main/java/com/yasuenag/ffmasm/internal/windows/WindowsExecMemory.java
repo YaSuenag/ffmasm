@@ -66,7 +66,7 @@ public class WindowsExecMemory implements ExecMemory{
                    ValueLayout.JAVA_INT, // flAllocationType
                    ValueLayout.JAVA_INT // flProtect
                  );
-      hndVirtualAlloc = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.isTrivial());
+      hndVirtualAlloc = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.critical(false));
     }
 
     try{
@@ -94,7 +94,7 @@ public class WindowsExecMemory implements ExecMemory{
                    ValueLayout.JAVA_LONG, // dwSize
                    ValueLayout.JAVA_INT // dwFreeType
                  );
-      hndVirtualFree = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.isTrivial());
+      hndVirtualFree = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.critical(false));
     }
 
     try{

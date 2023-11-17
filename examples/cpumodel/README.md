@@ -5,7 +5,7 @@ This is an example of ffmasm to obtain CPU model from `CPUID` instruction in AMD
 
 # Requirements
 
-* Java 21
+* Java 22
 * AMD64 Linux or Windows
 * Maven
 
@@ -27,7 +27,7 @@ $ mvn clean package
 ## 3. Run via Maven
 
 ```
-$ mvn exec:exec
+$ mvn exec:java
 ```
 
 Press enter to exit.
