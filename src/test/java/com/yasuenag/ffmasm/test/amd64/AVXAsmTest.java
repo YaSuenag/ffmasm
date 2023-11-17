@@ -27,6 +27,7 @@ import org.junit.jupiter.api.condition.OS;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.OptionalInt;
@@ -169,28 +170,28 @@ public class AVXAsmTest extends TestBase{
 /* push %rbp                   */ .push(Register.RBP)
 /* mov %rsp, %rbp              */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
                                   .cast(AVXAsmBuilder.class)
-/* vmovdqa (arg1), %ymm0       */ .vmovdqaMR(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+/* vmovdqu (arg1), %ymm0       */ .vmovdquMR(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
 /* vpaddd (arg2), %ymm0, %ymm1 */ .vpaddd(Register.YMM0, argReg.arg2(), Register.YMM1, OptionalInt.of(0))
-/* vmovdqa %ymm1, (arg3)       */ .vmovdqaRM(Register.YMM1, argReg.arg3(), OptionalInt.of(0))
+/* vmovdqu %ymm1, (arg3)       */ .vmovdquRM(Register.YMM1, argReg.arg3(), OptionalInt.of(0))
       /* leave                 */ .leave()
       /* ret                   */ .ret()
-                                  .build();
+                                  .build(Linker.Option.critical(true));
 
       int[]     src1 = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
       int[]     src2 = new int[]{8, 7, 6, 5, 4, 3, 2, 1};
       int[] expected = new int[]{9, 9, 9, 9, 9, 9, 9, 9};
-      var arena = Arena.ofAuto();
-      MemorySegment src1Seg = arena.allocate(32, 32);  // 256 bit
-      MemorySegment src2Seg = arena.allocate(32, 32);  // 256 bit
-      MemorySegment destSeg = arena.allocate(32, 32); // 256 bit
-      MemorySegment.copy(src1, 0, src1Seg, ValueLayout.JAVA_INT, 0, src1.length);
-      MemorySegment.copy(src2, 0, src2Seg, ValueLayout.JAVA_INT, 0, src2.length);
+      int[]   result = new int[8];
 
+      MemorySegment src1Seg = MemorySegment.ofArray(src1);
+      MemorySegment src2Seg = MemorySegment.ofArray(src2);
+      MemorySegment destSeg = MemorySegment.ofArray(result);
+
+      //showDebugMessage(seg);
       method.invoke(src1Seg, src2Seg, destSeg);
 
-      Assertions.assertArrayEquals(src1, src1Seg.toArray(ValueLayout.JAVA_INT));
-      Assertions.assertArrayEquals(src2, src2Seg.toArray(ValueLayout.JAVA_INT));
-      Assertions.assertArrayEquals(expected, destSeg.toArray(ValueLayout.JAVA_INT));
+      Assertions.assertArrayEquals(src1, new int[]{1, 2, 3, 4, 5, 6, 7, 8});
+      Assertions.assertArrayEquals(src2, new int[]{8, 7, 6, 5, 4, 3, 2, 1});
+      Assertions.assertArrayEquals(expected, result);
     }
     catch(Throwable t){
       Assertions.fail(t);

@@ -89,6 +89,8 @@ int ret = (int)method.invoke(100); // "ret" should be 100
 
 You can bind native method to `MemorySegment` of ffmasm code dynamically.
 
+⚠️JNI binding ( `NativeRegister` class) depends on [JEP 459](https://openjdk.org/jeps/459) which is preview feature in JDK 22. So you need to add `--enable-preview` when you compile / run your application.
+
 You have to construct `MemorySegment` of the machine code with `AMD64AsmBuilder`, and you have to get it from `getMemorySegment()`. Then you can bind it via `NativeRegister`.
 
 Following example shows native method `test` is binded to the code made by ffmasm. Note that 1st argument in Java is located at arg3 in native function because this is native function (1st arg is `JNIEnv*`, and 2nd arg is `jobject` or `jclass`).
@@ -124,26 +126,6 @@ try(var seg = new CodeSegment()){
   int actual = test(expected);
   Assertions.assertEquals(expected, actual);
 }
-```
-
-# Memory pinning
-
-You can pin Java primitive array via `Pinning`. It is same semantics of `GetPrimitiveArrayCritical()` / `ReleasePrimitiveArrayCritical()` in JNI. It expects performance improvement when you refer Java array in ffmasm code. However it might be serious problem (e.g. preventing GC) if you keep pinned memory long time. So you should use it carefully.
-
-Following example shows pin `array` at first, then we modify value via `MemorySegment`.
-
-```java
-int[] array = new int[]{1, 2, 3, 4};
-
-var pinnedMem = Pinning.getInstance()
-                       .pin(array)
-                       .reinterpret(ValueLayout.JAVA_INT.byteSize() * array.length);
-for(int idx = 0; idx < expected.length; idx++){
-  pinnedMem.setAtIndex(ValueLayout.JAVA_INT, idx, idx * 2);
-}
-Pinning.getInstance().unpin(pinnedMem);
-
-// array is {0, 2, 4, 6} at this point
 ```
 
 # License

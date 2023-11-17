@@ -43,7 +43,6 @@
                         <arg>--add-exports</arg>
                         <arg>jdk.incubator.vector/jdk.incubator.vector=ALL-UNNAMED</arg>
                     </compilerArgs>
-                    <enablePreview>true</enablePreview>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.openjdk.jmh</groupId>
