@@ -332,6 +332,7 @@ public class AsmTest extends TestBase{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   xor %rax, %rax    */ .xorMR(Register.RAX, Register.RAX, OptionalInt.empty())
         /*   cmp   $1, %di     */ .cmp(Register.DI, 1, OptionalInt.empty())
         /*   jl success        */ .jl("success")
         /*   mov %si, %ax      */ .movMR(Register.SI, Register.AX, OptionalInt.empty()) // failure
@@ -343,6 +344,7 @@ public class AsmTest extends TestBase{
         /*   ret               */ .ret()
                                   .build();
 
+      //showDebugMessage(seg);
       int actual = (int)method.invoke((short)0, (short)10);
       Assertions.assertEquals(0, actual, "16 bit CMP test failed.");
     }
@@ -366,6 +368,7 @@ public class AsmTest extends TestBase{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
         /*   push %rbp         */ .push(Register.RBP)
         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   xor %rax, %rax    */ .xorMR(Register.RAX, Register.RAX, OptionalInt.empty())
         /*   mov %rdi, %rcx    */ .movMR(Register.RDI, Register.RCX, OptionalInt.empty())
         /*   mov %rsi, %rcx    */ .movMR(Register.RSI, Register.RDX, OptionalInt.empty())
         /*   cmp   $1, %cl     */ .cmp(Register.CL, 1, OptionalInt.empty())
