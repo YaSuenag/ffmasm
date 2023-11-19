@@ -89,7 +89,8 @@ int ret = (int)method.invoke(100); // "ret" should be 100
 
 You can bind native method to `MemorySegment` of ffmasm code dynamically.
 
-⚠️JNI binding ( `NativeRegister` class) depends on [JEP 459](https://openjdk.org/jeps/459) which is preview feature in JDK 22. So you need to add `--enable-preview` when you compile / run your application.
+> [!IMPORTANT]
+> JNI binding ( `NativeRegister` class) depends on [JEP 459](https://openjdk.org/jeps/459) which is preview feature in JDK 22. So you need to add `--enable-preview` when you compile / run your application.
 
 You have to construct `MemorySegment` of the machine code with `AMD64AsmBuilder`, and you have to get it from `getMemorySegment()`. Then you can bind it via `NativeRegister`.
 
