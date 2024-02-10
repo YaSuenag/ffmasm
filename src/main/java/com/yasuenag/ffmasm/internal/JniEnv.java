@@ -52,7 +52,7 @@ public class JniEnv{
    * JNIEnv* is associated with JavaThread in HotSpot.
    * So keep this insntance with ThreadLocal.
    */
-  private static ThreadLocal<JniEnv> instance = new ThreadLocal(){
+  private static ThreadLocal<JniEnv> instance = new ThreadLocal<>(){
     @Override
     protected JniEnv initialValue(){
       try{
