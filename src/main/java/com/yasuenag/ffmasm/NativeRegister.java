@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -116,7 +116,7 @@ public abstract class NativeRegister{
 
   protected static void callback(MemorySegment classes, int class_count, int resultGetLoadedClasses, MemorySegment callbackParam){
     if(resultGetLoadedClasses != JvmtiEnv.JVMTI_ERROR_NONE){
-      throw new RuntimeException(STR."GetLoadedClasses() returns \{resultGetLoadedClasses}");
+      throw new RuntimeException("GetLoadedClasses() returns " + resultGetLoadedClasses);
     }
 
     classes = classes.reinterpret(ValueLayout.ADDRESS.byteSize() * class_count);
@@ -130,7 +130,7 @@ public abstract class NativeRegister{
         var clazz = classes.getAtIndex(ValueLayout.ADDRESS, idx);
         int result = jvmtiEnv.getClassSignature(clazz, sigPtr, MemorySegment.NULL);
         if(result != JvmtiEnv.JVMTI_ERROR_NONE){
-          throw new RuntimeException(STR."GetClassSignature() returns \{result}");
+          throw new RuntimeException("GetClassSignature() returns " + result);
         }
 
         var sig = sigPtr.get(ValueLayout.ADDRESS, 0);
@@ -144,7 +144,7 @@ public abstract class NativeRegister{
           result = JniEnv.getInstance()
                          .registerNatives(clazz, methods, nMethods);
           if(result != JniEnv.JNI_OK){
-            throw new RuntimeException(STR."RegisterNatives() returns \{result}");
+            throw new RuntimeException("RegisterNatives() returns " + result);
           }
           return;
         }
@@ -254,7 +254,7 @@ public abstract class NativeRegister{
       return new AMD64NativeRegister(klass);
     }
     else{
-      throw new UnsupportedPlatformException(STR."\{arch} is not supported");
+      throw new UnsupportedPlatformException(arch + " is not supported");
     }
   }
 

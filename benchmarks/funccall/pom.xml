@@ -77,7 +77,6 @@
                                 <argument>-classpath</argument>
                                 <classpath/>
                                 <argument>-Djava.library.path=.</argument>
-                                <argument>--enable-preview</argument>
                                 <argument>--enable-native-access=ALL-UNNAMED</argument>
                                 <argument>com.yasuenag.ffmasm.benchmark.funccall.FuncCallComparison</argument>
                             </arguments>
