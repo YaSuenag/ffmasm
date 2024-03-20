@@ -109,7 +109,9 @@ public class WindowsExecMemory implements ExecMemory{
     }
 
     try{
-      int result = (int)hndVirtualFree.invoke(lpAddress, dwSize, dwFreeType);
+      int result = (int)hndVirtualFree.invoke(lpAddress,
+                                              (int)dwSize, // "long" is 32bit in LLP64
+                                              dwFreeType);
       if(result == 0){
         throw new PlatformException("VirtualFree() failed", GetLastError.get());
       }
