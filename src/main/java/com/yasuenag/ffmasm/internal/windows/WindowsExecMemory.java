@@ -78,7 +78,10 @@ public class WindowsExecMemory implements ExecMemory{
     }
 
     try{
-      MemorySegment mem = (MemorySegment)hndVirtualAlloc.invoke(lpAddress, dwSize, flAllocationType, flProtect);
+      MemorySegment mem = (MemorySegment)hndVirtualAlloc.invoke(lpAddress,
+                                                                (int)dwSize, // "long" is 32bit in LLP64
+                                                                flAllocationType,
+                                                                flProtect);
       if(mem.equals(MemorySegment.NULL)){
         throw new PlatformException("VirtualAlloc() failed", GetLastError.get());
       }
