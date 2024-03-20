@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -34,7 +34,7 @@ public record CallingRegisters(
   public static CallingRegisters getRegs() throws UnsupportedPlatformException{
     var arch = System.getProperty("os.arch");
     if(!arch.equals("amd64")){
-      throw new UnsupportedPlatformException(STR."\{arch} is not supported.");
+      throw new UnsupportedPlatformException(arch + " is not supported.");
     }
 
     String osName = System.getProperty("os.name");
@@ -57,7 +57,7 @@ public record CallingRegisters(
                                   Register.R10);
     }
     else{
-      throw new UnsupportedPlatformException(STR."\{osName} is not supported.");
+      throw new UnsupportedPlatformException(osName + " is not supported.");
     }
   }
 

@@ -20,10 +20,12 @@ package com.yasuenag.ffmasm.internal.linux;
 
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
+import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.util.Map;
 
 import com.yasuenag.ffmasm.internal.ExecMemory;
 import com.yasuenag.ffmasm.PlatformException;
@@ -37,7 +39,11 @@ import com.yasuenag.ffmasm.PlatformException;
  */
 public class LinuxExecMemory implements ExecMemory{
 
+  private static final Linker nativeLinker;
+
   private static final SymbolLookup sym;
+
+  private static final Map<String, MemoryLayout> canonicalLayouts;
 
   private MethodHandle hndMmap = null;
 
@@ -69,22 +75,24 @@ public class LinuxExecMemory implements ExecMemory{
   public static final int MAP_ANONYMOUS = 0x20;
 
   static{
-    sym = Linker.nativeLinker().defaultLookup();
+    nativeLinker = Linker.nativeLinker();
+    sym = nativeLinker.defaultLookup();
+    canonicalLayouts = nativeLinker.canonicalLayouts();
   }
 
-  private MemorySegment mmap(long addr, long length, int prot, int flags, int fd, long offset) throws PlatformException{
+  private MemorySegment mmap(MemorySegment addr, long length, int prot, int flags, int fd, long offset) throws PlatformException{
     if(hndMmap == null){
       var func = sym.find("mmap").get();
       var desc = FunctionDescriptor.of(
                    ValueLayout.ADDRESS, // return value
-                   ValueLayout.JAVA_LONG, // addr
-                   ValueLayout.JAVA_LONG, // length
+                   ValueLayout.ADDRESS, // addr
+                   canonicalLayouts.get("size_t"), // length
                    ValueLayout.JAVA_INT, // prot
                    ValueLayout.JAVA_INT, // flags
                    ValueLayout.JAVA_INT, // fd
                    ValueLayout.JAVA_LONG // offset
                  );
-      hndMmap = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.isTrivial());
+      hndMmap = nativeLinker.downcallHandle(func, desc, Linker.Option.critical(false));
     }
 
     try{
@@ -105,9 +113,9 @@ public class LinuxExecMemory implements ExecMemory{
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.ADDRESS, // addr
-                   ValueLayout.JAVA_LONG // length
+                   canonicalLayouts.get("size_t") // length
                  );
-      hndMunmap = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.isTrivial());
+      hndMunmap = nativeLinker.downcallHandle(func, desc, Linker.Option.critical(false));
     }
 
     try{
@@ -127,7 +135,7 @@ public class LinuxExecMemory implements ExecMemory{
    */
   @Override
   public MemorySegment allocate(long size) throws PlatformException{
-    return mmap(0, size, PROT_EXEC | PROT_READ | PROT_WRITE,
+    return mmap(MemorySegment.NULL, size, PROT_EXEC | PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   }
 

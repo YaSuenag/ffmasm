@@ -67,13 +67,13 @@ public class Main{
         /* pop %rbx           */ .pop(Register.RBX, OptionalInt.empty())
         /* leave              */ .leave()
         /* ret                */ .ret()
-                                 .build(Linker.Option.isTrivial());
+                                 .build(Linker.Option.critical(false));
 
       cpuid.invoke(0x80000002, mem);
       cpuid.invoke(0x80000003, mem.asSlice(4 * 4));
       cpuid.invoke(0x80000004, mem.asSlice(4 * 4 * 2));
 
-      String model = mem.getUtf8String(0L);
+      String model = mem.getString(0L);
       System.out.println(model);
 
       System.out.println();

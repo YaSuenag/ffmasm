@@ -15,7 +15,7 @@ import org.openjdk.jmh.annotations.*;
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
-@Fork(value = 1, jvmArgsAppend = {"--enable-preview", "--enable-native-access=ALL-UNNAMED", "--add-modules", "jdk.incubator.vector", "--add-exports", "jdk.incubator.vector/jdk.incubator.vector=ALL-UNNAMED", "-Xms6g", "-Xmx6g"})
+@Fork(value = 1, jvmArgsAppend = {"--enable-native-access=ALL-UNNAMED", "--add-modules", "jdk.incubator.vector", "--add-exports", "jdk.incubator.vector/jdk.incubator.vector=ALL-UNNAMED", "-Xms6g", "-Xmx6g"})
 @Warmup(iterations = 1, time = 3, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 public class VectorOpComparison{
@@ -27,6 +27,8 @@ public class VectorOpComparison{
   private MethodHandle ffm;
   private MemorySegment srcSeg;
   private MemorySegment destSeg;
+  private MemorySegment pinnedSrcSeg;
+  private MemorySegment pinnedDestSeg;
   private MethodHandle ffmPinned;
 
   private IntVector vectorSrc;
@@ -47,7 +49,7 @@ public class VectorOpComparison{
 /* vmovdqa %ymm0, (%rdi)       */ .vmovdqaRM(Register.YMM0, Register.RDI, OptionalInt.of(0))
 /* leave                       */ .leave()
 /* ret                         */ .ret()
-                                  .build(Linker.Option.isTrivial());
+                                  .build(Linker.Option.critical(false));
 
       var descPinned = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS);
       ffmPinned = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, descPinned)
@@ -59,7 +61,7 @@ public class VectorOpComparison{
 /* vmovdqu %ymm0, (%rdi)       */ .vmovdquRM(Register.YMM0, Register.RDI, OptionalInt.of(0))
 /* leave                       */ .leave()
 /* ret                         */ .ret()
-                                  .build(Linker.Option.isTrivial());
+                                  .build(Linker.Option.critical(true));
     }
     catch(PlatformException | UnsupportedPlatformException e){
       throw new RuntimeException(e);
@@ -80,47 +82,11 @@ public class VectorOpComparison{
     MemorySegment.copy(randArray, 0, srcSeg, ValueLayout.JAVA_INT, 0, 8);
     MemorySegment.copy(result, 0, destSeg, ValueLayout.JAVA_INT, 0, 8);
 
+    pinnedSrcSeg = MemorySegment.ofArray(randArray);
+    pinnedDestSeg = MemorySegment.ofArray(result);
+
     vectorSrc = IntVector.fromArray(IntVector.SPECIES_256, randArray, 0);
     vectorDest = IntVector.fromArray(IntVector.SPECIES_256, result, 0);
-  }
-
-  @State(Scope.Benchmark)
-  public static class PinnedState{
-
-    private static final Pinning pinning;
-
-    private MemorySegment pinnedSrcSeg;
-    private MemorySegment pinnedDestSeg;
-
-    static{
-      try{
-        pinning = Pinning.getInstance();
-      }
-      catch(Throwable t){
-        throw new RuntimeException(t);
-      }
-    }
-
-    @Setup(Level.Iteration)
-    public void setup(){
-      pinnedSrcSeg = pinning.pin(randArray);
-      pinnedDestSeg = pinning.pin(result);
-    }
-
-    @TearDown(Level.Iteration)
-    public void tearDownInIterate(){
-      pinning.unpin(pinnedSrcSeg);
-      pinning.unpin(pinnedDestSeg);
-    }
-
-    public MemorySegment getPinnedSrcSeg(){
-      return pinnedSrcSeg;
-    }
-
-    public MemorySegment getPinnedDestSeg(){
-      return pinnedDestSeg;
-    }
-
   }
 
   @Benchmark
@@ -143,9 +109,9 @@ public class VectorOpComparison{
   }
 
   @Benchmark
-  public int[] invokePinnedFFM(PinnedState state){
+  public int[] invokePinnedFFM(){
     try{
-      ffmPinned.invoke(state.getPinnedDestSeg(), state.getPinnedSrcSeg());
+      ffmPinned.invoke(pinnedDestSeg, pinnedSrcSeg);
       return result;
     }
     catch(Throwable t){

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -52,7 +52,7 @@ public class JniEnv{
    * JNIEnv* is associated with JavaThread in HotSpot.
    * So keep this insntance with ThreadLocal.
    */
-  private static ThreadLocal<JniEnv> instance = new ThreadLocal(){
+  private static ThreadLocal<JniEnv> instance = new ThreadLocal<>(){
     @Override
     protected JniEnv initialValue(){
       try{
@@ -89,7 +89,7 @@ public class JniEnv{
     var env = arena.allocate(ValueLayout.ADDRESS);
     int result = vm.getEnv(env, JNI_VERSION_21);
     if(result != JniEnv.JNI_OK){
-      throw new RuntimeException(STR."GetEnv() returns \{result}");
+      throw new RuntimeException("GetEnv() returns " + result);
     }
     jniEnv = env.get(ValueLayout.ADDRESS, 0)
                 .reinterpret(ValueLayout.ADDRESS.byteSize());

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -59,7 +59,7 @@ public class JvmtiEnv{
     var env = arena.allocate(ValueLayout.ADDRESS);
     int result = vm.getEnv(env, JVMTI_VERSION_21);
     if(result != JniEnv.JNI_OK){
-      throw new RuntimeException(STR."GetEnv() returns \{result}");
+      throw new RuntimeException("GetEnv() returns " + result);
     }
     jvmtiEnv = env.get(ValueLayout.ADDRESS, 0)
                   .reinterpret(ValueLayout.ADDRESS.byteSize());

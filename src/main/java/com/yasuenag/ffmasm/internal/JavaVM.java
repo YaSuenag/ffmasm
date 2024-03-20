@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -72,10 +72,10 @@ public class JavaVM{
                                                                             ValueLayout.ADDRESS,
                                                                             ValueLayout.JAVA_INT,
                                                                             ValueLayout.ADDRESS));
-    var vms = arena.allocateArray(ValueLayout.ADDRESS, 1);
+    var vms = arena.allocate(ValueLayout.ADDRESS, 1);
     int result = (int)JNI_GetCreatedJavaVMs.invoke(vms, 1, MemorySegment.NULL);
     if(result != JniEnv.JNI_OK){
-      throw new RuntimeException(STR."JNI_GetCreatedJavaVMs() returns \{result}");
+      throw new RuntimeException("JNI_GetCreatedJavaVMs() returns " + result);
     }
     vm = vms.getAtIndex(ValueLayout.ADDRESS, 0)
             .reinterpret(ValueLayout.ADDRESS.byteSize());

@@ -20,10 +20,12 @@ package com.yasuenag.ffmasm.internal.windows;
 
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
+import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.util.Map;
 
 import com.yasuenag.ffmasm.internal.ExecMemory;
 import com.yasuenag.ffmasm.PlatformException;
@@ -37,7 +39,11 @@ import com.yasuenag.ffmasm.PlatformException;
  */
 public class WindowsExecMemory implements ExecMemory{
 
+  private static final Linker nativeLinker;
+
   private static final SymbolLookup sym;
+
+  private static final Map<String, MemoryLayout> canonicalLayouts;
 
   private MethodHandle hndVirtualAlloc = null;
 
@@ -54,6 +60,8 @@ public class WindowsExecMemory implements ExecMemory{
   static{
     System.loadLibrary("Kernel32");
     sym = SymbolLookup.loaderLookup();
+    nativeLinker = Linker.nativeLinker();
+    canonicalLayouts = nativeLinker.canonicalLayouts();
   }
 
   private MemorySegment virtualAlloc(long lpAddress, long dwSize, int flAllocationType, int flProtect) throws PlatformException{
@@ -62,15 +70,18 @@ public class WindowsExecMemory implements ExecMemory{
       var desc = FunctionDescriptor.of(
                    ValueLayout.ADDRESS, // return value
                    ValueLayout.JAVA_LONG, // lpAddress
-                   ValueLayout.JAVA_LONG, // dwSize
+                   canonicalLayouts.get("long"), // dwSize
                    ValueLayout.JAVA_INT, // flAllocationType
                    ValueLayout.JAVA_INT // flProtect
                  );
-      hndVirtualAlloc = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.isTrivial());
+      hndVirtualAlloc = nativeLinker.downcallHandle(func, desc, Linker.Option.critical(false));
     }
 
     try{
-      MemorySegment mem = (MemorySegment)hndVirtualAlloc.invoke(lpAddress, dwSize, flAllocationType, flProtect);
+      MemorySegment mem = (MemorySegment)hndVirtualAlloc.invoke(lpAddress,
+                                                                (int)dwSize, // "long" is 32bit in LLP64
+                                                                flAllocationType,
+                                                                flProtect);
       if(mem.equals(MemorySegment.NULL)){
         throw new PlatformException("VirtualAlloc() failed", GetLastError.get());
       }
@@ -91,14 +102,16 @@ public class WindowsExecMemory implements ExecMemory{
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.ADDRESS, // addr
-                   ValueLayout.JAVA_LONG, // dwSize
+                   canonicalLayouts.get("long"), // dwSize
                    ValueLayout.JAVA_INT // dwFreeType
                  );
-      hndVirtualFree = Linker.nativeLinker().downcallHandle(func, desc, Linker.Option.isTrivial());
+      hndVirtualFree = nativeLinker.downcallHandle(func, desc, Linker.Option.critical(false));
     }
 
     try{
-      int result = (int)hndVirtualFree.invoke(lpAddress, dwSize, dwFreeType);
+      int result = (int)hndVirtualFree.invoke(lpAddress,
+                                              (int)dwSize, // "long" is 32bit in LLP64
+                                              dwFreeType);
       if(result == 0){
         throw new PlatformException("VirtualFree() failed", GetLastError.get());
       }

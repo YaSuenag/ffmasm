@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -116,7 +116,7 @@ public abstract class NativeRegister{
 
   protected static void callback(MemorySegment classes, int class_count, int resultGetLoadedClasses, MemorySegment callbackParam){
     if(resultGetLoadedClasses != JvmtiEnv.JVMTI_ERROR_NONE){
-      throw new RuntimeException(STR."GetLoadedClasses() returns \{resultGetLoadedClasses}");
+      throw new RuntimeException("GetLoadedClasses() returns " + resultGetLoadedClasses);
     }
 
     classes = classes.reinterpret(ValueLayout.ADDRESS.byteSize() * class_count);
@@ -124,13 +124,13 @@ public abstract class NativeRegister{
     try(var arena = Arena.ofConfined()){
       var sigPtr = arena.allocate(ValueLayout.ADDRESS);
       var targetSig = (MemorySegment)layoutCallbackParam.varHandle(peClassSig)
-                                                        .get(callbackParam);
+                                                        .get(callbackParam, 0L);
       var jvmtiEnv = JvmtiEnv.getInstance();
       for(int idx = 0; idx < class_count; idx++){
         var clazz = classes.getAtIndex(ValueLayout.ADDRESS, idx);
         int result = jvmtiEnv.getClassSignature(clazz, sigPtr, MemorySegment.NULL);
         if(result != JvmtiEnv.JVMTI_ERROR_NONE){
-          throw new RuntimeException(STR."GetClassSignature() returns \{result}");
+          throw new RuntimeException("GetClassSignature() returns " + result);
         }
 
         var sig = sigPtr.get(ValueLayout.ADDRESS, 0);
@@ -138,13 +138,13 @@ public abstract class NativeRegister{
         jvmtiEnv.deallocate(sig);
         if(cmp == 0){
           MemorySegment methods = (MemorySegment)layoutCallbackParam.varHandle(peMethods)
-                                                                    .get(callbackParam);
+                                                                    .get(callbackParam, 0L);
           int nMethods = (int)layoutCallbackParam.varHandle(peNumMethods)
-                                                 .get(callbackParam);
+                                                 .get(callbackParam, 0L);
           result = JniEnv.getInstance()
                          .registerNatives(clazz, methods, nMethods);
           if(result != JniEnv.JNI_OK){
-            throw new RuntimeException(STR."RegisterNatives() returns \{result}");
+            throw new RuntimeException("RegisterNatives() returns " + result);
           }
           return;
         }
@@ -215,30 +215,28 @@ public abstract class NativeRegister{
    */
   public void registerNatives(Map<Method, MemorySegment> methods) throws Throwable{
     var classSig = "L" + klass.getCanonicalName().replace('.', '/') + ";";
-    var layout = MemoryLayout.sequenceLayout(methods.size(), JniEnv.layoutJNINativeMethod);
+    var peNameHandle = JniEnv.layoutJNINativeMethod.arrayElementVarHandle(JniEnv.peName);
+    var peSignatureHandle = JniEnv.layoutJNINativeMethod.arrayElementVarHandle(JniEnv.peSignature);
+    var peFnPtrHandle = JniEnv.layoutJNINativeMethod.arrayElementVarHandle(JniEnv.peFnPtr);
 
     try(var arena = Arena.ofConfined()){
-      var nativeMethods = arena.allocate(layout);
+      var nativeMethods = arena.allocate(JniEnv.layoutJNINativeMethod, methods.size());
       int idx = 0;
       for(var es : methods.entrySet()){
         Method method = es.getKey();
         MemorySegment mem = es.getValue();
-        var idxPath = MemoryLayout.PathElement.sequenceElement(idx);
 
-        layout.varHandle(idxPath, JniEnv.peName)
-              .set(nativeMethods, arena.allocateUtf8String(method.getName()));
-        layout.varHandle(idxPath, JniEnv.peSignature)
-              .set(nativeMethods, arena.allocateUtf8String(getJNIMethodSignature(method)));
-        layout.varHandle(idxPath, JniEnv.peFnPtr)
-              .set(nativeMethods, mem);
+        peNameHandle.set(nativeMethods, 0L, (long)idx, arena.allocateFrom(method.getName()));
+        peSignatureHandle.set(nativeMethods, 0L, (long)idx, arena.allocateFrom(getJNIMethodSignature(method)));
+        peFnPtrHandle.set(nativeMethods, 0L, (long)idx, mem);
 
         idx++;
       }
 
       var callbackParam = arena.allocate(layoutCallbackParam);
-      layoutCallbackParam.varHandle(peClassSig).set(callbackParam, arena.allocateUtf8String(classSig));
-      layoutCallbackParam.varHandle(peMethods).set(callbackParam, nativeMethods);
-      layoutCallbackParam.varHandle(peNumMethods).set(callbackParam, methods.size());
+      layoutCallbackParam.varHandle(peClassSig).set(callbackParam, 0L, arena.allocateFrom(classSig));
+      layoutCallbackParam.varHandle(peMethods).set(callbackParam, 0L, nativeMethods);
+      layoutCallbackParam.varHandle(peNumMethods).set(callbackParam, 0L, methods.size());
 
       callRegisterStub(callbackParam);
     }
@@ -256,7 +254,7 @@ public abstract class NativeRegister{
       return new AMD64NativeRegister(klass);
     }
     else{
-      throw new UnsupportedPlatformException(STR."\{arch} is not supported");
+      throw new UnsupportedPlatformException(arch + " is not supported");
     }
   }
 

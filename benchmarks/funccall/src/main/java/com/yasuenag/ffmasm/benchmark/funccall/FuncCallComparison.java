@@ -13,7 +13,7 @@ import org.openjdk.jmh.annotations.*;
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
-@Fork(value = 1, jvmArgsAppend = {"--enable-preview", "--enable-native-access=ALL-UNNAMED", "-Djava.library.path=.", "-Xms4g", "-Xmx4g", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseEpsilonGC", "-XX:+AlwaysPreTouch"})
+@Fork(value = 1, jvmArgsAppend = {"--enable-native-access=ALL-UNNAMED", "-Djava.library.path=.", "-Xms4g", "-Xmx4g", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseEpsilonGC", "-XX:+AlwaysPreTouch"})
 @Warmup(iterations = 1, time = 3, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 public class FuncCallComparison{
@@ -39,7 +39,7 @@ public class FuncCallComparison{
            /* ret            */ .ret()
                                 .getMemorySegment();
 
-      ffmRDTSC = Linker.nativeLinker().downcallHandle(mem, desc, Linker.Option.isTrivial());
+      ffmRDTSC = Linker.nativeLinker().downcallHandle(mem, desc, Linker.Option.critical(false));
 
       var register = NativeRegister.create(this.getClass());
       register.registerNatives(Map.of(this.getClass().getMethod("rdtscFFMDirect"), mem));

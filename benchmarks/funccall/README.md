@@ -7,7 +7,7 @@ This benchmark runs RDTSC instruction. JNI function is written in assembly code 
 
 # Requirements
 
-* Java 21
+* Java 22
 * Maven
 * GNU Make
 * GNU assembler

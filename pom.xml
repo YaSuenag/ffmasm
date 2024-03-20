@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-Copyright (C) 2022, 2023, Yasumasa Suenaga
+Copyright (C) 2022, 2024, Yasumasa Suenaga
 
 This file is part of ffmasm.
 
@@ -32,8 +32,8 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <imageName>${project.artifactId}-${project.version}</imageName>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>22</maven.compiler.source>
+        <maven.compiler.target>22</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -63,9 +63,6 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.4.1</version>
-                <configuration>
-                    <additionalOptions>--enable-preview</additionalOptions>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -73,7 +70,7 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
                 <version>3.0.0-M7</version>
                 <configuration>
                     <jvm>${java.home}/bin/java</jvm>
-                    <argLine>--enable-preview --enable-native-access=ALL-UNNAMED</argLine>
+                    <argLine>--enable-native-access=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
         </plugins>
