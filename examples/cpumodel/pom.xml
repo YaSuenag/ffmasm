@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-Copyright (C) 2022, 2023, Yasumasa Suenaga
+Copyright (C) 2022, 2024, Yasumasa Suenaga
 
 This file is part of ffmasm.
 
@@ -33,7 +33,6 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <moduleName>com.yasuenag.ffmasm.examples.cpumodel</moduleName>
         <mainClass>com.yasuenag.ffmasm.examples.cpumodel.Main</mainClass>
-        <imageName>${project.artifactId}-${project.version}</imageName>
         <maven.compiler.source>22</maven.compiler.source>
         <maven.compiler.target>22</maven.compiler.target>
     </properties>
