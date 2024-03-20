@@ -1,0 +1,32 @@
+name: Publish snapshot library
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: push-snapshot
+  cancel-in-progress: true
+
+jobs:
+  publish-jar:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: oracle
+          java-version: 22
+          cache: maven
+      - name: Deploy snapshot library to GitHub Packages by Maven
+        run: mvn -B deploy
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
