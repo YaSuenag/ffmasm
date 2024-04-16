@@ -21,6 +21,7 @@ public class FuncCallComparison{
   private CodeSegment seg;
 
   private MethodHandle ffmRDTSC;
+  private MethodHandle ffmRDTSCCritical;
 
   @Setup
   public void setup(){
@@ -39,10 +40,11 @@ public class FuncCallComparison{
            /* ret            */ .ret()
                                 .getMemorySegment();
 
-      ffmRDTSC = Linker.nativeLinker().downcallHandle(mem, desc, Linker.Option.critical(false));
+      ffmRDTSC = Linker.nativeLinker().downcallHandle(mem, desc);
+      ffmRDTSCCritical = Linker.nativeLinker().downcallHandle(mem, desc, Linker.Option.critical(false));
 
       var register = NativeRegister.create(this.getClass());
-      register.registerNatives(Map.of(this.getClass().getMethod("rdtscFFMDirect"), mem));
+      register.registerNatives(Map.of(this.getClass().getMethod("invokeFFMRDTSCRegisterNatives"), mem));
     }
     catch(Throwable t){
       throw new RuntimeException(t);
@@ -50,7 +52,7 @@ public class FuncCallComparison{
   }
 
   @Benchmark
-  public native long rdtsc();
+  public native long invokeJNI();
 
   @Benchmark
   public long invokeFFMRDTSC(){
@@ -63,7 +65,17 @@ public class FuncCallComparison{
   }
 
   @Benchmark
-  public native long rdtscFFMDirect();
+  public long invokeFFMRDTSCCritical(){
+    try{
+      return (long)ffmRDTSCCritical.invoke();
+    }
+    catch(Throwable t){
+      throw new RuntimeException(t);
+    }
+  }
+
+  @Benchmark
+  public native long invokeFFMRDTSCRegisterNatives();
 
   @TearDown
   public void tearDown(){
@@ -78,13 +90,15 @@ public class FuncCallComparison{
   public static void main(String[] args){
     var inst = new FuncCallComparison();
     inst.setup();
-    long nativeVal = inst.rdtsc();
+    long nativeVal = inst.invokeJNI();
     long ffmVal = inst.invokeFFMRDTSC();
-    long ffmDirectVal = inst.rdtscFFMDirect();
+    long ffmCriticalVal = inst.invokeFFMRDTSCCritical();
+    long ffmRegisterNativesVal = inst.invokeFFMRDTSCRegisterNatives();
 
-    System.out.println("      native: " + nativeVal);
-    System.out.println("         FFM: " + ffmVal);
-    System.out.println("FFM (Direct): " + ffmDirectVal);
+    System.out.println("                  JNI: " + nativeVal);
+    System.out.println("                  FFM: " + ffmVal);
+    System.out.println("       FFM (Critical): " + ffmCriticalVal);
+    System.out.println("FFM (RegisterNatives): " + ffmRegisterNativesVal);
   }
 
 }
