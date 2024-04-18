@@ -27,9 +27,9 @@ public class VectorOpComparison{
   private MethodHandle ffm;
   private MemorySegment srcSeg;
   private MemorySegment destSeg;
-  private MemorySegment pinnedSrcSeg;
-  private MemorySegment pinnedDestSeg;
-  private MethodHandle ffmPinned;
+  private MemorySegment heapSrcSeg;
+  private MemorySegment heapDestSeg;
+  private MethodHandle ffmHeap;
 
   private IntVector vectorSrc;
   private IntVector vectorDest;
@@ -40,19 +40,7 @@ public class VectorOpComparison{
     try{
       seg = new CodeSegment();
       var desc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS);
-      ffm = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
-/* push %rbp                   */ .push(Register.RBP)
-/* mov %rsp, %rbp              */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                                  .cast(AVXAsmBuilder.class)
-/* vmovdqa (%rdi), %ymm0       */ .vmovdqaMR(Register.YMM0, Register.RDI, OptionalInt.of(0))
-/* vpaddd (%rsi), %ymm0, %ymm0 */ .vpaddd(Register.YMM0, Register.RSI, Register.YMM0, OptionalInt.of(0))
-/* vmovdqa %ymm0, (%rdi)       */ .vmovdqaRM(Register.YMM0, Register.RDI, OptionalInt.of(0))
-/* leave                       */ .leave()
-/* ret                         */ .ret()
-                                  .build(Linker.Option.critical(false));
-
-      var descPinned = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS);
-      ffmPinned = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, descPinned)
+      var ffmSeg = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
 /* push %rbp                   */ .push(Register.RBP)
 /* mov %rsp, %rbp              */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
                                   .cast(AVXAsmBuilder.class)
@@ -61,7 +49,11 @@ public class VectorOpComparison{
 /* vmovdqu %ymm0, (%rdi)       */ .vmovdquRM(Register.YMM0, Register.RDI, OptionalInt.of(0))
 /* leave                       */ .leave()
 /* ret                         */ .ret()
-                                  .build(Linker.Option.critical(true));
+                                  .getMemorySegment();
+
+      var linker = Linker.nativeLinker();
+      ffm = linker.downcallHandle(ffmSeg, desc);
+      ffmHeap = linker.downcallHandle(ffmSeg, desc, Linker.Option.critical(true));
     }
     catch(PlatformException | UnsupportedPlatformException e){
       throw new RuntimeException(e);
@@ -82,8 +74,8 @@ public class VectorOpComparison{
     MemorySegment.copy(randArray, 0, srcSeg, ValueLayout.JAVA_INT, 0, 8);
     MemorySegment.copy(result, 0, destSeg, ValueLayout.JAVA_INT, 0, 8);
 
-    pinnedSrcSeg = MemorySegment.ofArray(randArray);
-    pinnedDestSeg = MemorySegment.ofArray(result);
+    heapSrcSeg = MemorySegment.ofArray(randArray);
+    heapDestSeg = MemorySegment.ofArray(result);
 
     vectorSrc = IntVector.fromArray(IntVector.SPECIES_256, randArray, 0);
     vectorDest = IntVector.fromArray(IntVector.SPECIES_256, result, 0);
@@ -109,9 +101,9 @@ public class VectorOpComparison{
   }
 
   @Benchmark
-  public int[] invokePinnedFFM(){
+  public int[] invokeFFMHeap(){
     try{
-      ffmPinned.invoke(pinnedDestSeg, pinnedSrcSeg);
+      ffmHeap.invoke(heapDestSeg, heapSrcSeg);
       return result;
     }
     catch(Throwable t){
