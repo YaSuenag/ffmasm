@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2023, Yasumasa Suenaga
+ * Copyright (C) 2022, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -106,19 +106,16 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
   }
 
   private AVXAsmBuilder vmovdq(Register r, Register m, OptionalInt disp, PP pp, byte opcode){
-    byte mode = calcModRMMode(disp);
-
     if(m.encoding() > 7){
       emit3ByteVEXPrefix(Register.YMM0 /* unused */, m, pp, LeadingBytes.H0F);
     }
     else{
       emit2ByteVEXPrefix(Register.YMM0 /* unused */, pp);
     }
-    byteBuf.put(opcode); // MOVDQA
-    byteBuf.put((byte)(                 mode << 6  |
-                       ((r.encoding() & 0x7) << 3) |
-                        (m.encoding() & 0x7)));
 
+    byteBuf.put(opcode); // MOVDQA
+
+    byte mode = emitModRM(r, m, disp);
     if(mode == 0b01){ // reg-mem disp8
       byteBuf.put((byte)disp.getAsInt());
     }
@@ -222,19 +219,16 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    * @return This instance
    */
   public AVXAsmBuilder vpxor(Register r, Register m, Register dest, OptionalInt disp){
-    byte mode = calcModRMMode(disp);
-
     if(m.encoding() > 7){
       emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F);
     }
     else{
       emit2ByteVEXPrefix(r, PP.H66);
     }
-    byteBuf.put((byte)0xef); // VPXOR
-    byteBuf.put((byte)(                    mode << 6  |
-                       ((dest.encoding() & 0x7) << 3) |
-                           (m.encoding() & 0x7)));
 
+    byteBuf.put((byte)0xef); // VPXOR
+
+    byte mode = emitModRM(dest, m, disp);
     if(mode == 0b01){ // reg-mem disp8
       byteBuf.put((byte)disp.getAsInt());
     }
@@ -262,19 +256,16 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    * @return This instance
    */
   public AVXAsmBuilder vpaddd(Register r, Register m, Register dest, OptionalInt disp){
-    byte mode = calcModRMMode(disp);
-
     if(m.encoding() > 7){
       emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F);
     }
     else{
       emit2ByteVEXPrefix(r, PP.H66);
     }
-    byteBuf.put((byte)0xfe); // VPADDD
-    byteBuf.put((byte)(                    mode << 6  |
-                       ((dest.encoding() & 0x7) << 3) |
-                           (m.encoding() & 0x7)));
 
+    byteBuf.put((byte)0xfe); // VPADDD
+
+    byte mode = emitModRM(dest, m, disp);
     if(mode == 0b01){ // reg-mem disp8
       byteBuf.put((byte)disp.getAsInt());
     }
@@ -301,13 +292,9 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    * @return This instance
    */
   public AVXAsmBuilder vptest(Register r, Register m, OptionalInt disp){
-    byte mode = calcModRMMode(disp);
     emit3ByteVEXPrefix(Register.YMM0 /* unused */, m, PP.H66, LeadingBytes.H0F38);
     byteBuf.put((byte)0x17); // PTEST
-    byteBuf.put((byte)(                 mode << 6  |
-                       ((r.encoding() & 0x7) << 3) |
-                        (m.encoding() & 0x7)));
-
+    byte mode = emitModRM(r, m, disp);
     if(mode == 0b01){ // reg-mem disp8
       byteBuf.put((byte)disp.getAsInt());
     }
