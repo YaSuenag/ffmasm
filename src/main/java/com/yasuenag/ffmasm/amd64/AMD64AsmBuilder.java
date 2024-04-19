@@ -168,7 +168,7 @@ public class AMD64AsmBuilder{
     if(disp.isPresent()){
       int dispAsInt = disp.getAsInt();
       if(dispAsInt == 0){
-        mode = (byte)0b00;
+        mode = (m == Register.RBP.encoding()) ? (byte)0b01 : (byte)0b00;
       }
       else if(dispAsInt <= 0xff){
         mode = (byte)0b01; // disp8
@@ -195,7 +195,7 @@ public class AMD64AsmBuilder{
     }
 
     if(mode == 0b01){ // reg-mem disp8
-      byteBuf.put((byte)disp.getAsInt());
+      byteBuf.put((byte)disp.orElse(0));
     }
     else if(mode == 0b10){ // reg-mem disp32
       byteBuf.putInt(disp.getAsInt());
