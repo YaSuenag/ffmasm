@@ -4,6 +4,7 @@ import java.lang.foreign.*;
 import java.lang.invoke.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 import com.yasuenag.ffmasm.*;
 import com.yasuenag.ffmasm.amd64.*;
@@ -13,8 +14,8 @@ import org.openjdk.jmh.annotations.*;
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
-@Fork(value = 1, jvmArgsAppend = {"--enable-native-access=ALL-UNNAMED", "-Djava.library.path=.", "-Xms4g", "-Xmx4g", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseEpsilonGC", "-XX:+AlwaysPreTouch"})
-@Warmup(iterations = 1, time = 3, timeUnit = TimeUnit.SECONDS)
+@Fork(value = 1, jvmArgsAppend = {"--enable-native-access=ALL-UNNAMED", "-Djava.library.path=.", "-Xms4g", "-Xmx4g", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseEpsilonGC", "-XX:+AlwaysPreTouch", "-XX:+PreserveFramePointer", "-Xlog:jit+compilation=debug,jit+inlining=debug:file=jit%p.log::filesize=0"})
+@Warmup(iterations = 1, time = 10, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 public class FuncCallComparison{
 
@@ -57,7 +58,7 @@ public class FuncCallComparison{
   @Benchmark
   public long invokeFFMRDTSC(){
     try{
-      return (long)ffmRDTSC.invoke();
+      return (long)ffmRDTSC.invokeExact();
     }
     catch(Throwable t){
       throw new RuntimeException(t);
@@ -67,7 +68,7 @@ public class FuncCallComparison{
   @Benchmark
   public long invokeFFMRDTSCCritical(){
     try{
-      return (long)ffmRDTSCCritical.invoke();
+      return (long)ffmRDTSCCritical.invokeExact();
     }
     catch(Throwable t){
       throw new RuntimeException(t);
@@ -87,18 +88,75 @@ public class FuncCallComparison{
     }
   }
 
-  public static void main(String[] args){
-    var inst = new FuncCallComparison();
-    inst.setup();
-    long nativeVal = inst.invokeJNI();
-    long ffmVal = inst.invokeFFMRDTSC();
-    long ffmCriticalVal = inst.invokeFFMRDTSCCritical();
-    long ffmRegisterNativesVal = inst.invokeFFMRDTSCRegisterNatives();
+  public void singleRun(){
+    long nativeVal = invokeJNI();
+    long ffmVal = invokeFFMRDTSC();
+    long ffmCriticalVal = invokeFFMRDTSCCritical();
+    long ffmRegisterNativesVal = invokeFFMRDTSCRegisterNatives();
 
     System.out.println("                  JNI: " + nativeVal);
     System.out.println("                  FFM: " + ffmVal);
     System.out.println("       FFM (Critical): " + ffmCriticalVal);
     System.out.println("FFM (RegisterNatives): " + ffmRegisterNativesVal);
+  }
+
+  public void iterate(String benchmark){
+    Runnable runner = switch(benchmark){
+                        case "JNI" -> this::invokeJNI;
+                        case "FFM" -> this::invokeFFMRDTSC;
+                        case "FFMCritical" -> this::invokeFFMRDTSCCritical;
+                        case "RegisterNatives" -> this::invokeFFMRDTSCRegisterNatives;
+                        default -> throw new IllegalArgumentException("Unknown benchmark");
+                      };
+
+    final AtomicLong counter = new AtomicLong();
+
+    var task = new TimerTask(){
+                 @Override
+                 public void run(){
+                   System.out.printf("Interrupted: counter = %d\n", counter.get());
+                   System.exit(0);
+                 }
+               };
+    var timer = new Timer("Benchmark Finisher");
+    timer.schedule(task, 30_000);
+
+    long startTime = System.nanoTime();
+    while(true){
+      runner.run();
+      if(counter.incrementAndGet() == Long.MAX_VALUE){
+        timer.cancel();
+        long endTime = System.nanoTime();
+        long elapsedTime = endTime - startTime;
+        System.out.printf("Finished: %d ns\n", elapsedTime);
+      }
+    }
+  }
+
+  public static void main(String[] args){
+    if(args.length < 1){
+      System.err.println("You should specify the mode.");
+      System.exit(1);
+    }
+    String mode = args[0];
+
+    var inst = new FuncCallComparison();
+    inst.setup();
+
+    if(mode.equals("single")){
+      inst.singleRun();
+    }
+    else if(mode.equals("iterate")){
+      if(args.length != 2){
+        System.err.println("You should specify the benchmark.");
+        System.exit(2);
+      }
+      inst.iterate(args[1]);
+    }
+    else{
+      System.err.println("Unknown mode.");
+      System.exit(3);
+    }
   }
 
 }

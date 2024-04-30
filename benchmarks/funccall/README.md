@@ -14,22 +14,52 @@ This benchmark runs RDTSC instruction. JNI function is written in assembly code 
 
 # How to build
 
-```sh
-$ cd /path/to/ffasm
-$ mvn install
-$ cd benchmark/funccall
-$ mvn package
+```
+cd /path/to/ffasm
+mvn install
+cd benchmark/funccall
+mvn package
 ```
 
 # Check result from RDTSC
 
-```sh
-$ mvn exec:exec@single-run
+```
+mvn exec:exec@single-run
 ```
 
 # Run benchmark
 
-```sh
-$ cd target
-$ $JAVA_HOME/bin/java -jar ffmasm-benchmark-funccall-1.0.3.jar
 ```
+cd target
+$JAVA_HOME/bin/java -jar ffmasm-benchmark-funccall-1.0.3.jar
+```
+
+JIT log ( `-Xlog:jit+compilation=debug,jit+inlining=debug` ) would be collected into `target` dir with PID.
+
+# Run single benchmark
+
+You can use [measure-single-benchmark.sh](measure-single-benchmark.sh) to run single benchmark.  
+Benchmark should be set from following list:
+
+* FFM
+* FFMCritical
+* RegisterNatives
+* JNI
+
+JIT log ( `-Xlog:jit+compilation=debug,jit+inlining=debug` ) would be collected into `target` dir with benchmark name.
+
+## Measures iterations or execution time
+
+```
+./measure-single-benchmark.sh run [benchmark]
+```
+
+## Measure iterations or execution time with `perf`
+
+You have to install perf tool before running.
+
+```
+./measure-single-benchmark.sh perf [benchmark]
+```
+
+`perf.data` would be stored into working directory.
