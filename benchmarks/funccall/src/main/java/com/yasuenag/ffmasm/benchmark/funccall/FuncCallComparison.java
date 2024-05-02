@@ -2,6 +2,7 @@ package com.yasuenag.ffmasm.benchmark.funccall;
 
 import java.lang.foreign.*;
 import java.lang.invoke.*;
+import java.lang.ref.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -19,17 +20,20 @@ import org.openjdk.jmh.annotations.*;
 @Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 public class FuncCallComparison{
 
-  private CodeSegment seg;
+  private static final CodeSegment seg;
 
-  private MethodHandle ffmRDTSC;
-  private MethodHandle ffmRDTSCCritical;
+  private static final MethodHandle ffmRDTSC;
+  private static final MethodHandle ffmRDTSCCritical;
 
-  @Setup
-  public void setup(){
+  static{
     System.loadLibrary("rdtsc");
 
     try{
       seg = new CodeSegment();
+      var action = new CodeSegment.CleanerAction(seg);
+      Cleaner.create()
+             .register(FuncCallComparison.class, action);
+
       var desc = FunctionDescriptor.of(ValueLayout.JAVA_LONG);
       var mem = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
            /* push %rbp      */ .push(Register.RBP)
@@ -44,8 +48,8 @@ public class FuncCallComparison{
       ffmRDTSC = Linker.nativeLinker().downcallHandle(mem, desc);
       ffmRDTSCCritical = Linker.nativeLinker().downcallHandle(mem, desc, Linker.Option.critical(false));
 
-      var register = NativeRegister.create(this.getClass());
-      register.registerNatives(Map.of(this.getClass().getMethod("invokeFFMRDTSCRegisterNatives"), mem));
+      var register = NativeRegister.create(FuncCallComparison.class);
+      register.registerNatives(Map.of(FuncCallComparison.class.getMethod("invokeFFMRDTSCRegisterNatives"), mem));
     }
     catch(Throwable t){
       throw new RuntimeException(t);
@@ -77,16 +81,6 @@ public class FuncCallComparison{
 
   @Benchmark
   public native long invokeFFMRDTSCRegisterNatives();
-
-  @TearDown
-  public void tearDown(){
-    try{
-      seg.close();
-    }
-    catch(Exception e){
-      throw new RuntimeException(e);
-    }
-  }
 
   public void singleRun(){
     long nativeVal = invokeJNI();
@@ -141,7 +135,6 @@ public class FuncCallComparison{
     String mode = args[0];
 
     var inst = new FuncCallComparison();
-    inst.setup();
 
     if(mode.equals("single")){
       inst.singleRun();

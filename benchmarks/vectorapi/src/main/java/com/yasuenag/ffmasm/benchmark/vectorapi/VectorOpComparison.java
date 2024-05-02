@@ -2,6 +2,7 @@ package com.yasuenag.ffmasm.benchmark.vector;
 
 import java.lang.foreign.*;
 import java.lang.invoke.*;
+import java.lang.ref.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -23,22 +24,25 @@ public class VectorOpComparison{
   private static int[] randArray;
   private static int[] result;
 
-  private CodeSegment seg;
-  private MethodHandle ffm;
-  private MemorySegment srcSeg;
-  private MemorySegment destSeg;
+  private static final CodeSegment seg;
+  private static final MethodHandle ffm;
+  private static final MemorySegment srcSeg;
+  private static final MemorySegment destSeg;
   private MemorySegment heapSrcSeg;
   private MemorySegment heapDestSeg;
-  private MethodHandle ffmHeap;
+  private static final MethodHandle ffmHeap;
 
   private IntVector vectorSrc;
   private IntVector vectorDest;
 
-  @Setup(Level.Trial)
-  public void setup(){
+  static{
 
     try{
       seg = new CodeSegment();
+      var action = new CodeSegment.CleanerAction(seg);
+      Cleaner.create()
+             .register(VectorOpComparison.class, action);
+
       var desc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS);
       var ffmSeg = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
 /* push %rbp                   */ .push(Register.RBP)
@@ -115,16 +119,6 @@ public class VectorOpComparison{
   public int[] invokeVector(){
     vectorDest.add(vectorSrc).intoArray(result, 0);
     return result;
-  }
-
-  @TearDown
-  public void tearDown(){
-    try{
-      seg.close();
-    }
-    catch(Exception e){
-      throw new RuntimeException(e);
-    }
   }
 
 }
