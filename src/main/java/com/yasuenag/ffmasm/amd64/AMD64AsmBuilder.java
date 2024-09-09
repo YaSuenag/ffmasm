@@ -970,8 +970,24 @@ public class AMD64AsmBuilder{
    * @throws IllegalStateException when label(s) are not defined even if they are used
    */
   public MethodHandle build(Linker.Option... options){
+    return build("<unnamed>", options);
+  }
+
+  /**
+   * Build as a MethodHandle
+   *
+   * @param options Linker options to pass to downcallHandle().
+   * @return MethodHandle for this assembly
+   * @throws IllegalStateException when label(s) are not defined even if they are used
+   */
+  public MethodHandle build(String name, Linker.Option... options){
     updateTail();
-    return Linker.nativeLinker().downcallHandle(mem, desc, options);
+    var top = mem.address();
+    var size = byteBuf.position();
+    var mh = Linker.nativeLinker().downcallHandle(mem, desc, options);
+
+    seg.addMethodInfo(mh, name, top, size);
+    return mh;
   }
 
   /**

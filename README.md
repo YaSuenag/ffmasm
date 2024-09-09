@@ -126,6 +126,26 @@ try(var seg = new CodeSegment()){
 }
 ```
 
+# Play with perf tool
+
+You can record both function name and entry point address as a perf map file.
+
+## Record function
+
+You can pass function name into `build()` method:
+
+```java
+.build("GeneratedFunc", Linker.Option.critical(true));
+```
+
+Function name would be set to `<unnamed>` if you do not pass function name (includes calling `build(Linker.Option)`).
+
+## Write to map file
+
+perf map file would be written at [shutdown hook](https://docs.oracle.com/en/java/javase/22/docs/api/java.base/java/lang/Runtime.html#addShutdownHook(java.lang.Thread)) when `CodeSegment` lives. All of functions in all of `CodeSegment`s which are lives would be dumped at the time of shutdown hook.
+
+You need to enable perf map dumper via `CodeSegment::enablePerfMapDumper`. Call `CodeSegment::disablePerfMapDumper` if you want to cancel the dumper.
+
 # License
 
 The GNU Lesser General Public License, version 3.0

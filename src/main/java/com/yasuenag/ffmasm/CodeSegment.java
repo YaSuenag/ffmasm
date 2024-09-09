@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2023, Yasumasa Suenaga
+ * Copyright (C) 2022, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -18,7 +18,16 @@
  */
 package com.yasuenag.ffmasm;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 import java.lang.foreign.MemorySegment;
+import java.lang.invoke.MethodHandle;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.Set;
+import java.util.HashSet;
 
 import com.yasuenag.ffmasm.internal.ExecMemory;
 import com.yasuenag.ffmasm.internal.linux.LinuxExecMemory;
@@ -37,13 +46,27 @@ public class CodeSegment implements AutoCloseable{
    */
   public static final long DEFAULT_CODE_SEGMENT_SIZE = 4096L;
 
+  /**
+   * Holder for method information. This is used for perfmap dumping.
+   */
+  public static record MethodInfo(MethodHandle methodHandle, String name, long address, int size){
+    @Override
+    public String toString(){
+      return String.format("0x%x 0x%x %s", address, size, name);
+    }
+  }
+
   private final ExecMemory mem;
 
   private final MemorySegment addr;
 
   private final long size;
 
+  private final Set<MethodInfo> methods;
+
   private long tail;
+
+  private Thread perfMapDumper;
 
   /**
    * Allocate memory for this code segment with default size (4096 bytes).
@@ -74,7 +97,9 @@ public class CodeSegment implements AutoCloseable{
 
     this.size = size;
     this.addr = mem.allocate(size);
+    this.methods = new HashSet<>();
     this.tail = 0L;
+    this.perfMapDumper = null;
   }
 
   /**
@@ -82,6 +107,9 @@ public class CodeSegment implements AutoCloseable{
    */
   @Override
   public void close() throws Exception{
+    if(perfMapDumper != null){
+      disablePerfMapDumper();
+    }
     mem.deallocate(addr, size);
   }
 
@@ -157,6 +185,46 @@ public class CodeSegment implements AutoCloseable{
    */
   public MemorySegment getAddr(){
     return addr;
+  }
+
+  public void addMethodInfo(MethodHandle mh, String name, long address, int size){
+    if((address < addr.address()) || ((addr.address() + this.size) < (address + size))){
+      throw new IllegalArgumentException("Address is out of range from CodeSegment.");
+    }
+    methods.add(new MethodInfo(mh, name, address, size));
+  }
+
+  private void dumpPerfMap(Path path){
+    try(var writer = new PrintWriter(Files.newOutputStream(path))){
+      methods.stream()
+             .sorted(Comparator.comparing(MethodInfo::address))
+             .map(MethodInfo::toString)
+             .forEachOrdered(writer::println);
+    }
+    catch(IOException e){
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  /**
+   * Enable perf map dumper at shutdown hook for dumping all of functions in this CodeSegment.
+   * @param path Path to dumpfile
+   */
+  public synchronized void enablePerfMapDumper(Path path){
+    perfMapDumper = new Thread(() -> dumpPerfMap(path));
+    Runtime.getRuntime().addShutdownHook(perfMapDumper);
+  }
+
+  /**
+   * Disable perf map dumper
+   * @throws IllegalStateException if enablePerfMapDumper() is not called before.
+   */
+  public synchronized void disablePerfMapDumper(){
+    if(perfMapDumper == null){
+      throw new IllegalStateException("PerfMapDumper is not enabled.");
+    }
+    Runtime.getRuntime().removeShutdownHook(perfMapDumper);
+    perfMapDumper = null;
   }
 
 }
