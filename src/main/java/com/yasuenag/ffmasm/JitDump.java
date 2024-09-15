@@ -24,8 +24,19 @@ import java.nio.file.Path;
 import com.yasuenag.ffmasm.internal.linux.PerfJitDump;
 
 
+/**
+ * Interface of jitdump for perf command on Linux.
+ *
+ * @author Yasumasa Suenaga
+ */
 public interface JitDump extends AutoCloseable{
 
+  /**
+   * Get instance of JitDump.
+   *
+   * @param dir Base directory which jitdump is generated.
+   * @throws UnsupportedPlatformException if the call happens on unsupported platform.
+   */
   public static JitDump getInstance(Path dir) throws UnsupportedPlatformException, PlatformException, IOException{
     var osName = System.getProperty("os.name");
     if(osName.equals("Linux")){
@@ -35,6 +46,11 @@ public interface JitDump extends AutoCloseable{
     throw new UnsupportedPlatformException("This platform is not supported in JitDump");
   }
 
+  /**
+   * Write method info to jitdump.
+   *
+   * @param method MethodInfo should be written.
+   */
   public void writeFunction(CodeSegment.MethodInfo method);
 
 }

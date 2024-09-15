@@ -80,6 +80,11 @@ public class LinuxExecMemory implements ExecMemory{
     canonicalLayouts = nativeLinker.canonicalLayouts();
   }
 
+  /**
+   * Call mmap(2) via FFM. See manpage of mmap(2) for details.
+   *
+   * @throws PlatformException if mmap(2) or FFM call failed.
+   */
   public static MemorySegment mmap(MemorySegment addr, long length, int prot, int flags, int fd, long offset) throws PlatformException{
     if(hndMmap == null){
       var func = sym.find("mmap").get();
@@ -107,6 +112,11 @@ public class LinuxExecMemory implements ExecMemory{
     }
   }
 
+  /**
+   * Call munmap(2) via FFM. See manpage of munmap(2) for details.
+   *
+   * @throws PlatformException if munmap(2) or FFM call failed.
+   */
   public static int munmap(MemorySegment addr, long length) throws PlatformException{
     if(hndMunmap == null){
       var func = sym.find("munmap").get();

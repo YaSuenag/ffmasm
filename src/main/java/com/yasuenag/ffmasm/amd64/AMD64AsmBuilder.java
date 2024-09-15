@@ -977,6 +977,7 @@ public class AMD64AsmBuilder{
   /**
    * Build as a MethodHandle
    *
+   * @param name Method name
    * @param options Linker options to pass to downcallHandle().
    * @return MethodHandle for this assembly
    * @throws IllegalStateException when label(s) are not defined even if they are used
@@ -985,6 +986,15 @@ public class AMD64AsmBuilder{
     return build(name, null, options);
   }
 
+  /**
+   * Build as a MethodHandle
+   *
+   * @param name Method name
+   * @param jitdump JitDump instance which should be written.
+   * @param options Linker options to pass to downcallHandle().
+   * @return MethodHandle for this assembly
+   * @throws IllegalStateException when label(s) are not defined even if they are used
+   */
   public MethodHandle build(String name, JitDump jitdump, Linker.Option... options){
     updateTail();
     var top = mem.address();

@@ -43,6 +43,11 @@ import com.yasuenag.ffmasm.PlatformException;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
 
 
+/**
+ * Generate jitdump for perf tool on Linux.
+ *
+ * @author Yasumasa Suenaga
+ */
 public class PerfJitDump implements JitDump{
 
   // These constants come from tools/perf/util/jitdump.h in Linux Kernel
@@ -126,7 +131,7 @@ public class PerfJitDump implements JitDump{
   //           uint64_t timestamp;     /* timestamp */
   //           uint64_t flags;         /* flags */
   //   };
-  protected void writeHeader() throws IOException{
+  private void writeHeader() throws IOException{
     final int headerSize = 40; // sizeof(struct jitheader)
     var buf = ByteBuffer.allocate(headerSize).order(ByteOrder.nativeOrder());
 
@@ -159,6 +164,16 @@ public class PerfJitDump implements JitDump{
     ch.write(buf);
   }
 
+  /**
+   * Constructor of PerfJitDump.
+   * This constructer creates dump file named with "jit-<PID>.dump"
+   * into specified directory. Top of page (1 page: 4096 bytes)
+   * will be mapped as a executable memory - it is mandatory for
+   * recording in perf tool.
+   * And also jitdump header will be written at this time.
+   *
+   * @param dir Path to base directory to dump.
+   */
   public PerfJitDump(Path dir) throws UnsupportedPlatformException, PlatformException, IOException{
     // According to jit_detect() in tools/perf/util/jitdump.c in Linux Kernel,
     // dump file should be named "jit-<pid>.dump".
@@ -209,6 +224,9 @@ public class PerfJitDump implements JitDump{
   //           uint64_t code_size;
   //           uint64_t code_index;
   //   };
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public synchronized void writeFunction(CodeSegment.MethodInfo method){
     // sizeof(jr_code_load) == 56, null char of method name should be included.
@@ -261,6 +279,9 @@ public class PerfJitDump implements JitDump{
   //   struct jr_code_close {
   //           struct jr_prefix p;
   //   };
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public synchronized void close() throws Exception{
     final int headerSize = 16; // sizeof(jr_code_close)
