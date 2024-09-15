@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2023, Yasumasa Suenaga
+ * Copyright (C) 2022, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -49,7 +49,7 @@ public class Errno{
   public static int get() throws PlatformException{
     MemorySegment errno;
     try{
-      errno = (MemorySegment)hnd.invoke();
+      errno = ((MemorySegment)hnd.invoke()).reinterpret(4);
     }
     catch(Throwable t){
       throw new PlatformException(t);

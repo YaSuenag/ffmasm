@@ -33,6 +33,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 
 import com.yasuenag.ffmasm.CodeSegment;
+import com.yasuenag.ffmasm.JitDump;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
 
 
@@ -981,12 +982,19 @@ public class AMD64AsmBuilder{
    * @throws IllegalStateException when label(s) are not defined even if they are used
    */
   public MethodHandle build(String name, Linker.Option... options){
+    return build(name, null, options);
+  }
+
+  public MethodHandle build(String name, JitDump jitdump, Linker.Option... options){
     updateTail();
     var top = mem.address();
     var size = byteBuf.position();
     var mh = Linker.nativeLinker().downcallHandle(mem, desc, options);
 
-    seg.addMethodInfo(mh, name, top, size);
+    var methodInfo = seg.addMethodInfo(mh, name, top, size);
+    if(jitdump != null){
+      jitdump.writeFunction(methodInfo);
+    }
     return mh;
   }
 

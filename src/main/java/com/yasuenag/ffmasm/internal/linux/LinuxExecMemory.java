@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2023, Yasumasa Suenaga
+ * Copyright (C) 2022, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -45,9 +45,9 @@ public class LinuxExecMemory implements ExecMemory{
 
   private static final Map<String, MemoryLayout> canonicalLayouts;
 
-  private MethodHandle hndMmap = null;
+  private static MethodHandle hndMmap = null;
 
-  private MethodHandle hndMunmap = null;
+  private static MethodHandle hndMunmap = null;
 
   /**
    * page can be read
@@ -80,7 +80,7 @@ public class LinuxExecMemory implements ExecMemory{
     canonicalLayouts = nativeLinker.canonicalLayouts();
   }
 
-  private MemorySegment mmap(MemorySegment addr, long length, int prot, int flags, int fd, long offset) throws PlatformException{
+  public static MemorySegment mmap(MemorySegment addr, long length, int prot, int flags, int fd, long offset) throws PlatformException{
     if(hndMmap == null){
       var func = sym.find("mmap").get();
       var desc = FunctionDescriptor.of(
@@ -107,7 +107,7 @@ public class LinuxExecMemory implements ExecMemory{
     }
   }
 
-  private int munmap(MemorySegment addr, long length) throws PlatformException{
+  public static int munmap(MemorySegment addr, long length) throws PlatformException{
     if(hndMunmap == null){
       var func = sym.find("munmap").get();
       var desc = FunctionDescriptor.of(

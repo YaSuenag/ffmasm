@@ -187,11 +187,13 @@ public class CodeSegment implements AutoCloseable{
     return addr;
   }
 
-  public void addMethodInfo(MethodHandle mh, String name, long address, int size){
+  public MethodInfo addMethodInfo(MethodHandle mh, String name, long address, int size){
     if((address < addr.address()) || ((addr.address() + this.size) < (address + size))){
       throw new IllegalArgumentException("Address is out of range from CodeSegment.");
     }
-    methods.add(new MethodInfo(mh, name, address, size));
+    var methodInfo = new MethodInfo(mh, name, address, size);
+    methods.add(methodInfo);
+    return methodInfo;
   }
 
   private void dumpPerfMap(Path path){
