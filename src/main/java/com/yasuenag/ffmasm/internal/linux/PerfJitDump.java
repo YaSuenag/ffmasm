@@ -20,11 +20,15 @@ package com.yasuenag.ffmasm.internal.linux;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
+import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.StructLayout;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
@@ -39,28 +43,25 @@ import com.yasuenag.ffmasm.PlatformException;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
 
 
-public abstract class PerfJitDump implements JitDump{
+public class PerfJitDump implements JitDump{
 
   // These constants come from tools/perf/util/jitdump.h in Linux Kernel
-
   private static final int JITHEADER_MAGIC = 0x4A695444;
   private static final int JITHEADER_VERSION = 1;
-
-  // enum jitdump_flags_bits {
-  //         JITDUMP_FLAGS_ARCH_TIMESTAMP_BIT,
-  //         JITDUMP_FLAGS_MAX_BIT,
-  // };
-  //
-  // #define JITDUMP_FLAGS_ARCH_TIMESTAMP    (1ULL << JITDUMP_FLAGS_ARCH_TIMESTAMP_BIT)
-  public static final long JITDUMP_FLAGS_ARCH_TIMESTAMP = 1;
-
   private static final int JIT_CODE_LOAD = 0;
   private static final int JIT_CODE_CLOSE = 3;
+
+  // from bits/time.h
+  private static final int CLOCK_MONOTONIC = 1;
 
   private static final long PAGE_SIZE = 4096;
 
 
   private static final MethodHandle mhGetTid;
+  private static final StructLayout structTimespec;
+  private static final VarHandle hndSec;
+  private static final VarHandle hndNSec;
+  private static final MethodHandle mhClockGettime;
 
 
   private final FileChannel ch;
@@ -71,20 +72,43 @@ public abstract class PerfJitDump implements JitDump{
 
   private long codeIndex;
 
-  protected abstract long getHeaderFlags();
-
-  protected abstract long getTimestamp();
-
 
   static{
-    var desc = FunctionDescriptor.of(ValueLayout.JAVA_INT);
     var linker = Linker.nativeLinker();
-    mhGetTid = linker.downcallHandle(linker.defaultLookup().find("gettid").get(), desc);
+    var lookup = linker.defaultLookup();
+    FunctionDescriptor desc;
+
+    desc = FunctionDescriptor.of(ValueLayout.JAVA_INT);
+    mhGetTid = linker.downcallHandle(lookup.find("gettid").get(), desc);
+
+    structTimespec = MemoryLayout.structLayout(
+                       ValueLayout.JAVA_LONG.withName("tv_sec"),
+                       ValueLayout.JAVA_LONG.withName("tv_nsec")
+                     );
+    hndSec = structTimespec.varHandle(MemoryLayout.PathElement.groupElement("tv_sec"));
+    hndNSec = structTimespec.varHandle(MemoryLayout.PathElement.groupElement("tv_nsec"));
+    // __CLOCKID_T_TYPE is defined as __S32_TYPE in bits/typesizes.h
+    desc = FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                                 ValueLayout.JAVA_INT,
+                                 ValueLayout.ADDRESS);
+    mhClockGettime = linker.downcallHandle(lookup.find("clock_gettime").get(), desc);
   }
 
   private static int getTid(){
     try{
       return (int)mhGetTid.invokeExact();
+    }
+    catch(Throwable t){
+      throw new RuntimeException("Exception happened at gettid() call.", t);
+    }
+  }
+
+  private static long getTimestamp(){
+    try(var arena = Arena.ofConfined()){
+      var timespec = arena.allocate(structTimespec);
+      int ret = (int)mhClockGettime.invokeExact(CLOCK_MONOTONIC, timespec);
+
+      return ((long)hndSec.get(timespec, 0L) * 1_000_000_000) + (long)hndNSec.get(timespec, 0L);
     }
     catch(Throwable t){
       throw new RuntimeException("Exception happened at gettid() call.", t);
@@ -129,7 +153,7 @@ public abstract class PerfJitDump implements JitDump{
     // timestamp
     buf.putLong(getTimestamp());
     // flags
-    buf.putLong(getHeaderFlags());
+    buf.putLong(0L);
 
     buf.flip();
     ch.write(buf);
@@ -187,7 +211,8 @@ public abstract class PerfJitDump implements JitDump{
   //   };
   @Override
   public synchronized void writeFunction(CodeSegment.MethodInfo method){
-    final int totalSize = 56 + method.name().length() + method.size(); // sizeof(jr_code_load) == 56
+    // sizeof(jr_code_load) == 56, null char of method name should be included.
+    final int totalSize = 56 + method.name().length() + 1 + method.size();
     var buf = ByteBuffer.allocate(totalSize).order(ByteOrder.nativeOrder());
 
     // id
@@ -211,6 +236,7 @@ public abstract class PerfJitDump implements JitDump{
 
     // method name
     buf.put(method.name().getBytes());
+    buf.put((byte)0); // NUL
 
     // code
     var seg = MemorySegment.ofAddress(method.address()).reinterpret(method.size());

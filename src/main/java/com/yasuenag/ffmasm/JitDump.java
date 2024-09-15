@@ -21,18 +21,15 @@ package com.yasuenag.ffmasm;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import com.yasuenag.ffmasm.internal.linux.amd64.AMD64PerfJitDump;
+import com.yasuenag.ffmasm.internal.linux.PerfJitDump;
 
 
 public interface JitDump extends AutoCloseable{
 
   public static JitDump getInstance(Path dir) throws UnsupportedPlatformException, PlatformException, IOException{
     var osName = System.getProperty("os.name");
-    if(!osName.equals("Linux")){
-      throw new UnsupportedPlatformException(osName + " is unsupported.");
-    }
-    if(System.getProperty("os.arch").equals("amd64")){
-      return new AMD64PerfJitDump(dir);
+    if(osName.equals("Linux")){
+      return new PerfJitDump(dir);
     }
 
     throw new UnsupportedPlatformException("This platform is not supported in JitDump");
