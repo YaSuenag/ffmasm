@@ -111,7 +111,7 @@ public class PerfJitDump implements JitDump{
   private static long getTimestamp(){
     try(var arena = Arena.ofConfined()){
       var timespec = arena.allocate(structTimespec);
-      int ret = (int)mhClockGettime.invokeExact(CLOCK_MONOTONIC, timespec);
+      int _ = (int)mhClockGettime.invokeExact(CLOCK_MONOTONIC, timespec);
 
       return ((long)hndSec.get(timespec, 0L) * 1_000_000_000) + (long)hndNSec.get(timespec, 0L);
     }
@@ -136,9 +136,9 @@ public class PerfJitDump implements JitDump{
     var buf = ByteBuffer.allocate(headerSize).order(ByteOrder.nativeOrder());
 
     short elfMach = -1;
-    try(var ch = FileChannel.open(Path.of("/proc/self/exe"), StandardOpenOption.READ)){
+    try(var chExe = FileChannel.open(Path.of("/proc/self/exe"), StandardOpenOption.READ)){
       var buf2 = ByteBuffer.allocate(2).order(ByteOrder.nativeOrder());
-      ch.read(buf2, 18); // id (16 bytes) + e_type (2 bytes)
+      chExe.read(buf2, 18); // id (16 bytes) + e_type (2 bytes)
       buf2.flip();
       elfMach = buf2.getShort();
     }
