@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -35,6 +35,12 @@ public class CodeSegmentTest{
     catch(Throwable t){
       Assertions.fail(t);
     }
+  }
+
+  @Test
+  public void testMethodInfoString(){
+    var info = new CodeSegment.MethodInfo(null, "func", 0x1234, 0xff);
+    Assertions.assertEquals("0x1234 0xff func", info.toString());
   }
 
 }
