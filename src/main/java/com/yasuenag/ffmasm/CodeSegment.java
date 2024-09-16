@@ -188,18 +188,21 @@ public class CodeSegment implements AutoCloseable{
   }
 
   /**
-   * Add method info to the list which should be dumped as perf map.
-   *
-   * @param mh MethodHandle should be recorded
-   * @param name method name
-   * @param address top address of the method
-   * @param size method size
+   * Add method info. It will be dumped to perf map as related method of this CodeSegment.
+   * @param mh MethodHandle of the method
+   * @param name Method name
+   * @param address Address of the method
+   * @param size Size of the method (machine code)
+   * @return MethodInfo of the method info.
+   * @throws IllegalArgumentException if the address is out of range from this CodeSegment.
    */
-  public void addMethodInfo(MethodHandle mh, String name, long address, int size){
+  public MethodInfo addMethodInfo(MethodHandle mh, String name, long address, int size){
     if((address < addr.address()) || ((addr.address() + this.size) < (address + size))){
       throw new IllegalArgumentException("Address is out of range from CodeSegment.");
     }
-    methods.add(new MethodInfo(mh, name, address, size));
+    var methodInfo = new MethodInfo(mh, name, address, size);
+    methods.add(methodInfo);
+    return methodInfo;
   }
 
   private void dumpPerfMap(Path path){
