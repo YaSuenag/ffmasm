@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2023, Yasumasa Suenaga
+ * Copyright (C) 2022, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -18,6 +18,7 @@
  */
 package com.yasuenag.ffmasm.internal.windows;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
 import java.lang.foreign.MemoryLayout;
@@ -25,6 +26,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
 import java.util.Map;
 
 import com.yasuenag.ffmasm.internal.ExecMemory;
@@ -45,9 +47,15 @@ public class WindowsExecMemory implements ExecMemory{
 
   private static final Map<String, MemoryLayout> canonicalLayouts;
 
+  private static final Linker.Option getLastErrorState;
+
+  private static final MemorySegment getLastErrorSeg;
+
   private MethodHandle hndVirtualAlloc = null;
 
   private MethodHandle hndVirtualFree = null;
+
+  private VarHandle hndGetLastError = null;
 
   public static final int MEM_COMMIT = 0x00001000;
 
@@ -62,6 +70,8 @@ public class WindowsExecMemory implements ExecMemory{
     sym = SymbolLookup.loaderLookup();
     nativeLinker = Linker.nativeLinker();
     canonicalLayouts = nativeLinker.canonicalLayouts();
+    getLastErrorState = Linker.Option.captureCallState("GetLastError");
+    getLastErrorSeg = Arena.global().allocate(Linker.Option.captureStateLayout());
   }
 
   private MemorySegment virtualAlloc(long lpAddress, long dwSize, int flAllocationType, int flProtect) throws PlatformException{
@@ -74,16 +84,20 @@ public class WindowsExecMemory implements ExecMemory{
                    ValueLayout.JAVA_INT, // flAllocationType
                    ValueLayout.JAVA_INT // flProtect
                  );
-      hndVirtualAlloc = nativeLinker.downcallHandle(func, desc, Linker.Option.critical(false));
+      hndVirtualAlloc = nativeLinker.downcallHandle(func, desc, getLastErrorState);
     }
 
     try{
-      MemorySegment mem = (MemorySegment)hndVirtualAlloc.invoke(lpAddress,
+      MemorySegment mem = (MemorySegment)hndVirtualAlloc.invoke(getLastErrorSeg,
+                                                                lpAddress,
                                                                 (int)dwSize, // "long" is 32bit in LLP64
                                                                 flAllocationType,
                                                                 flProtect);
       if(mem.equals(MemorySegment.NULL)){
-        throw new PlatformException("VirtualAlloc() failed", GetLastError.get());
+        if(hndGetLastError == null){
+          hndGetLastError = Linker.Option.captureStateLayout().varHandle(MemoryLayout.PathElement.groupElement("GetLastError"));
+        }
+        throw new PlatformException("VirtualAlloc() failed", (int)hndGetLastError.get(getLastErrorSeg, 0L));
       }
       return mem.reinterpret(dwSize);
     }
@@ -105,15 +119,19 @@ public class WindowsExecMemory implements ExecMemory{
                    canonicalLayouts.get("long"), // dwSize
                    ValueLayout.JAVA_INT // dwFreeType
                  );
-      hndVirtualFree = nativeLinker.downcallHandle(func, desc, Linker.Option.critical(false));
+      hndVirtualFree = nativeLinker.downcallHandle(func, desc, getLastErrorState);
     }
 
     try{
-      int result = (int)hndVirtualFree.invoke(lpAddress,
+      int result = (int)hndVirtualFree.invoke(getLastErrorSeg,
+                                              lpAddress,
                                               (int)dwSize, // "long" is 32bit in LLP64
                                               dwFreeType);
       if(result == 0){
-        throw new PlatformException("VirtualFree() failed", GetLastError.get());
+        if(hndGetLastError == null){
+          hndGetLastError = Linker.Option.captureStateLayout().varHandle(MemoryLayout.PathElement.groupElement("GetLastError"));
+        }
+        throw new PlatformException("VirtualFree() failed", (int)hndGetLastError.get(getLastErrorSeg, 0L));
       }
       return result; // it should be true
     }
