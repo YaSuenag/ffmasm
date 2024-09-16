@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2023, Yasumasa Suenaga
+ * Copyright (C) 2022, 2024, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -18,6 +18,7 @@
  */
 package com.yasuenag.ffmasm.internal.linux;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
 import java.lang.foreign.MemoryLayout;
@@ -25,6 +26,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
 import java.util.Map;
 
 import com.yasuenag.ffmasm.internal.ExecMemory;
@@ -45,9 +47,15 @@ public class LinuxExecMemory implements ExecMemory{
 
   private static final Map<String, MemoryLayout> canonicalLayouts;
 
+  private static final Linker.Option errnoState;
+
+  private static final MemorySegment errnoSeg;
+
   private MethodHandle hndMmap = null;
 
   private MethodHandle hndMunmap = null;
+
+  private VarHandle hndErrno = null;
 
   /**
    * page can be read
@@ -78,6 +86,8 @@ public class LinuxExecMemory implements ExecMemory{
     nativeLinker = Linker.nativeLinker();
     sym = nativeLinker.defaultLookup();
     canonicalLayouts = nativeLinker.canonicalLayouts();
+    errnoState = Linker.Option.captureCallState("errno");
+    errnoSeg = Arena.global().allocate(Linker.Option.captureStateLayout());
   }
 
   private MemorySegment mmap(MemorySegment addr, long length, int prot, int flags, int fd, long offset) throws PlatformException{
@@ -92,13 +102,16 @@ public class LinuxExecMemory implements ExecMemory{
                    ValueLayout.JAVA_INT, // fd
                    ValueLayout.JAVA_LONG // offset
                  );
-      hndMmap = nativeLinker.downcallHandle(func, desc, Linker.Option.critical(false));
+      hndMmap = nativeLinker.downcallHandle(func, desc, errnoState);
     }
 
     try{
-      MemorySegment mem = (MemorySegment)hndMmap.invoke(addr, length, prot, flags, fd, offset);
+      MemorySegment mem = (MemorySegment)hndMmap.invoke(errnoSeg, addr, length, prot, flags, fd, offset);
       if(mem.address() == -1L){ // MAP_FAILED
-        throw new PlatformException("mmap() failed", Errno.get());
+        if(hndErrno == null){
+          hndErrno = Linker.Option.captureStateLayout().varHandle(MemoryLayout.PathElement.groupElement("errno"));
+        }
+        throw new PlatformException("mmap() failed", (int)hndErrno.get(errnoSeg, 0L));
       }
       return mem.reinterpret(length);
     }
@@ -121,7 +134,10 @@ public class LinuxExecMemory implements ExecMemory{
     try{
       int retval = (int)hndMunmap.invoke(addr, length);
       if(retval == -1){
-        throw new PlatformException("munmap() failed", Errno.get());
+        if(hndErrno == null){
+          hndErrno = Linker.Option.captureStateLayout().varHandle(MemoryLayout.PathElement.groupElement("errno"));
+        }
+        throw new PlatformException("munmap() failed", (int)hndErrno.get(errnoSeg, 0L));
       }
       return retval; // it should be 0
     }
