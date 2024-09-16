@@ -148,7 +148,7 @@ You need to enable perf map dumper via `CodeSegment::enablePerfMapDumper`. Call 
 
 ## Generate jitdump
 
-perf tool on Linux supports JIT-generated code. ffmasm can dump generated code as a jitdump.
+perf tool on Linux supports JIT-generated code. ffmasm can dump generated code as a jitdump. See an [example](examples/perf) for details.
 
 ### Record assembled code as a JIT'ed code
 
