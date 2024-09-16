@@ -1,1 +1,4 @@
 target/
+jit-*.dump
+jitted-*.so
+perf.*data*
