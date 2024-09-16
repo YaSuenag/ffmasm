@@ -51,11 +51,11 @@ public class LinuxExecMemory implements ExecMemory{
 
   private static final MemorySegment errnoSeg;
 
-  private MethodHandle hndMmap = null;
+  private static MethodHandle hndMmap = null;
 
-  private MethodHandle hndMunmap = null;
+  private static MethodHandle hndMunmap = null;
 
-  private VarHandle hndErrno = null;
+  private static VarHandle hndErrno = null;
 
   /**
    * page can be read
@@ -90,7 +90,12 @@ public class LinuxExecMemory implements ExecMemory{
     errnoSeg = Arena.global().allocate(Linker.Option.captureStateLayout());
   }
 
-  private MemorySegment mmap(MemorySegment addr, long length, int prot, int flags, int fd, long offset) throws PlatformException{
+  /**
+   * Call mmap(2) via FFM. See manpage of mmap(2) for details.
+   *
+   * @throws PlatformException if mmap(2) or FFM call failed.
+   */
+  public static MemorySegment mmap(MemorySegment addr, long length, int prot, int flags, int fd, long offset) throws PlatformException{
     if(hndMmap == null){
       var func = sym.find("mmap").get();
       var desc = FunctionDescriptor.of(
@@ -120,7 +125,12 @@ public class LinuxExecMemory implements ExecMemory{
     }
   }
 
-  private int munmap(MemorySegment addr, long length) throws PlatformException{
+  /**
+   * Call munmap(2) via FFM. See manpage of munmap(2) for details.
+   *
+   * @throws PlatformException if munmap(2) or FFM call failed.
+   */
+  public static int munmap(MemorySegment addr, long length) throws PlatformException{
     if(hndMunmap == null){
       var func = sym.find("munmap").get();
       var desc = FunctionDescriptor.of(
