@@ -290,7 +290,7 @@ public class PerfJitDump implements JitDump{
     // id
     buf.putInt(JIT_CODE_CLOSE);
     // total_size
-    buf.putInt(16); // sizeof(jr_code_close)
+    buf.putInt(headerSize);
     // timestamp
     buf.putLong(getTimestamp());
 
