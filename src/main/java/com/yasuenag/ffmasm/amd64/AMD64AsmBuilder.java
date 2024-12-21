@@ -986,6 +986,15 @@ public class AMD64AsmBuilder{
     return build(name, null, options);
   }
 
+  private void storeMethodInfo(String name, JitDump jitdump){
+    var top = mem.address();
+    var size = byteBuf.position();
+    var methodInfo = seg.addMethodInfo(name, top, size);
+    if(jitdump != null){
+      jitdump.writeFunction(methodInfo);
+    }
+  }
+
   /**
    * Build as a MethodHandle
    *
@@ -997,24 +1006,42 @@ public class AMD64AsmBuilder{
    */
   public MethodHandle build(String name, JitDump jitdump, Linker.Option... options){
     updateTail();
-    var top = mem.address();
-    var size = byteBuf.position();
-    var mh = Linker.nativeLinker().downcallHandle(mem, desc, options);
-
-    var methodInfo = seg.addMethodInfo(mh, name, top, size);
-    if(jitdump != null){
-      jitdump.writeFunction(methodInfo);
-    }
-    return mh;
+    storeMethodInfo(name, jitdump);
+    return Linker.nativeLinker().downcallHandle(mem, desc, options);
   }
 
   /**
    * Get MemorySegment which is associated with this builder.
    *
    * @return MemorySegment of this builder
+   * @throws IllegalStateException when label(s) are not defined even if they are used
    */
   public MemorySegment getMemorySegment(){
+    return getMemorySegment("<unnamed>");
+  }
+
+  /**
+   * Get MemorySegment which is associated with this builder.
+   *
+   * @param name Method name
+   * @return MemorySegment of this builder
+   * @throws IllegalStateException when label(s) are not defined even if they are used
+   */
+  public MemorySegment getMemorySegment(String name){
+    return getMemorySegment(name, null);
+  }
+
+  /**
+   * Get MemorySegment which is associated with this builder.
+   *
+   * @param name Method name
+   * @param jitdump JitDump instance which should be written.
+   * @return MemorySegment of this builder
+   * @throws IllegalStateException when label(s) are not defined even if they are used
+   */
+  public MemorySegment getMemorySegment(String name, JitDump jitdump){
     updateTail();
+    storeMethodInfo(name, jitdump);
     return mem;
   }
 

@@ -144,7 +144,7 @@ public class JitDumpTest{
   @EnabledOnOs(OS.LINUX)
   public void testJitDumpFunctionEntry(){
     var dumpfile = getDumpFileInstance();
-    var info = new CodeSegment.MethodInfo(null, "func", 0x1234, 0);
+    var info = new CodeSegment.MethodInfo("func", 0x1234, 0);
 
     try(var jitdump = JitDump.getInstance(Path.of("/tmp"))){
       jitdump.writeFunction(info);

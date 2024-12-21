@@ -49,7 +49,7 @@ public class CodeSegment implements AutoCloseable{
   /**
    * Holder for method information. This is used for perfmap dumping.
    */
-  public static record MethodInfo(MethodHandle methodHandle, String name, long address, int size){
+  public static record MethodInfo(String name, long address, int size){
     @Override
     public String toString(){
       return String.format("0x%x 0x%x %s", address, size, name);
@@ -189,18 +189,17 @@ public class CodeSegment implements AutoCloseable{
 
   /**
    * Add method info. It will be dumped to perf map as related method of this CodeSegment.
-   * @param mh MethodHandle of the method
    * @param name Method name
    * @param address Address of the method
    * @param size Size of the method (machine code)
    * @return MethodInfo of the method info.
    * @throws IllegalArgumentException if the address is out of range from this CodeSegment.
    */
-  public MethodInfo addMethodInfo(MethodHandle mh, String name, long address, int size){
+  public MethodInfo addMethodInfo(String name, long address, int size){
     if((address < addr.address()) || ((addr.address() + this.size) < (address + size))){
       throw new IllegalArgumentException("Address is out of range from CodeSegment.");
     }
-    var methodInfo = new MethodInfo(mh, name, address, size);
+    var methodInfo = new MethodInfo(name, address, size);
     methods.add(methodInfo);
     return methodInfo;
   }
