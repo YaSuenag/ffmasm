@@ -39,7 +39,7 @@ public class CodeSegmentTest{
 
   @Test
   public void testMethodInfoString(){
-    var info = new CodeSegment.MethodInfo(null, "func", 0x1234, 0xff);
+    var info = new CodeSegment.MethodInfo("func", 0x1234, 0xff);
     Assertions.assertEquals("0x1234 0xff func", info.toString());
   }
 
