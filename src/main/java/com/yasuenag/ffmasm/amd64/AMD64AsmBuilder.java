@@ -79,7 +79,23 @@ public class AMD64AsmBuilder{
 
   /**
    * Create builder instance.
+   * Note that FunctionDescriptor will set to null - it means Exception will be
+   * thrown when build() is called.
    *
+   * @param clazz Class to use.
+   * @param seg code segment to use in this builder.
+   * @return Builder instance
+   * @throws UnsupportedPlatformException thrown when AMD64AsmBuilder is
+   *          attempted to instantiate on unsupported platform.
+   */
+  public static <T extends AMD64AsmBuilder> T create(Class<T> clazz, CodeSegment seg) throws UnsupportedPlatformException{
+    return create(clazz, seg, null);
+  }
+
+  /**
+   * Create builder instance.
+   *
+   * @param clazz Class to use.
    * @param seg code segment to use in this builder.
    * @param desc function descriptor
    * @return Builder instance
