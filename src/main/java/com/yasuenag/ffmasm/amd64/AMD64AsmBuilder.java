@@ -202,7 +202,7 @@ public class AMD64AsmBuilder{
     return mode;
   }
 
-  private void emitDisp(byte mode, OptionalInt disp, Register m){
+  protected void emitDisp(byte mode, OptionalInt disp, Register m){
     if((mode != 0b11) && (m == Register.RSP)){
       // We should add SIB byte.
       //
@@ -255,7 +255,7 @@ public class AMD64AsmBuilder{
     return this;
   }
 
-  private void emitREXOp(Register r, Register m){
+  protected void emitREXOp(Register r, Register m){
     if(r.width() == 16){
       // Ops for 16 bits operands (66H)
       byteBuf.put((byte)0x66);
