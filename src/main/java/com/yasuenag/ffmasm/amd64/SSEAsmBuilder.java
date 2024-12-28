@@ -121,9 +121,17 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
     return movdq(r, m, disp, (byte)0xf3, (byte)0x7f);
   }
 
-  private SSEAsmBuilder movDorQ(Register r, Register m, OptionalInt disp, byte secondOpcode){
+  private SSEAsmBuilder movDInternal(Register r, Register m, OptionalInt disp, byte secondOpcode){
+    return movDorQ(r, m, disp, secondOpcode, false);
+  }
+
+  private SSEAsmBuilder movQInternal(Register r, Register m, OptionalInt disp, byte secondOpcode){
+    return movDorQ(r, m, disp, secondOpcode, true);
+  }
+
+  private SSEAsmBuilder movDorQ(Register r, Register m, OptionalInt disp, byte secondOpcode, boolean isQWORD){
     byteBuf.put((byte)0x66); // prefix
-    emitREXOp(r, m);
+    emitREXOp(r, m, isQWORD);
     byteBuf.put((byte)0x0f); // escape opcode
     byteBuf.put(secondOpcode);
     var mode = emitModRM(r, m, disp);
@@ -144,7 +152,7 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
    * @return This instance
    */
   public SSEAsmBuilder movdRM(Register r, Register m, OptionalInt disp){
-    return movDorQ(r, m, disp, (byte)0x6e);
+    return movDInternal(r, m, disp, (byte)0x6e);
   }
 
   /**
@@ -159,7 +167,37 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
    * @return This instance
    */
   public SSEAsmBuilder movdMR(Register r, Register m, OptionalInt disp){
-    return movDorQ(r, m, disp, (byte)0x7e);
+    return movDInternal(r, m, disp, (byte)0x7e);
+  }
+
+  /**
+   * Move quadword from r/m64 to xmm.
+   *   Opcode: 66 REX.W 0F 6E /r
+   *   Instruction: MOVQ xmm, r/m64
+   *   Op/En: A
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public SSEAsmBuilder movqRM(Register r, Register m, OptionalInt disp){
+    return movQInternal(r, m, disp, (byte)0x6e);
+  }
+
+  /**
+   * Move quadword from xmm register to r/m64.
+   *   Opcode: 66 REX.W 0F 7E /r
+   *   Instruction: MOVQ r/m64, xmm
+   *   Op/En: B
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public SSEAsmBuilder movqMR(Register r, Register m, OptionalInt disp){
+    return movQInternal(r, m, disp, (byte)0x7e);
   }
 
 }

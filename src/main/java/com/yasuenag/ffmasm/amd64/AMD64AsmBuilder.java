@@ -256,12 +256,16 @@ public class AMD64AsmBuilder{
   }
 
   protected void emitREXOp(Register r, Register m){
+    emitREXOp(r, m, false);
+  }
+
+  protected void emitREXOp(Register r, Register m, boolean forceREXW){
     if(r.width() == 16){
       // Ops for 16 bits operands (66H)
       byteBuf.put((byte)0x66);
     }
     else{
-      byte rexw = (r.width() == 64) ? (byte)0b1000 : (byte)0;
+      byte rexw = ((r.width() == 64) || forceREXW) ? (byte)0b1000 : (byte)0;
       byte rexr = (byte)(((r.encoding() >> 3) << 2) & 0b0100);
       byte rexb = (byte)((m.encoding() >> 3) & 0b0001);
       byte rex = (byte)(rexw | rexr | rexb);

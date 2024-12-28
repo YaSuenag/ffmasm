@@ -182,4 +182,75 @@ public class SSEAsmTest extends TestBase{
     }
   }
 
+  /**
+   * Tests MOVQ A
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testMOVQ_A(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_DOUBLE, // return value
+                   ValueLayout.ADDRESS      // 1st argument
+                 );
+      var method = AMD64AsmBuilder.create(SSEAsmBuilder.class, seg, desc)
+      /* push %rbp             */ .push(Register.RBP)
+      /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+                                  .cast(SSEAsmBuilder.class)
+      /* movq (arg1), %xmm0    */ .movqRM(Register.XMM0, argReg.arg1(), OptionalInt.of(0))
+      /* leave                 */ .leave()
+      /* ret                   */ .ret()
+                                  .build();
+
+      double expected = 1.1d;
+      var arena = Arena.ofAuto();
+      MemorySegment src = arena.allocate(ValueLayout.JAVA_DOUBLE);
+      src.set(ValueLayout.JAVA_DOUBLE, 0, expected);
+
+      double actual = (double)method.invoke(src);
+
+      Assertions.assertEquals(expected, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests MOVQ B
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testMOVQ_B(){
+    try(var seg = new CodeSegment()){
+      var arena = Arena.ofAuto();
+      MemorySegment dest = arena.allocate(ValueLayout.JAVA_DOUBLE);
+
+      var desc = FunctionDescriptor.ofVoid(
+                   ValueLayout.JAVA_DOUBLE // 1st argument
+                 );
+      var method = AMD64AsmBuilder.create(SSEAsmBuilder.class, seg, desc)
+      /* push %rbp             */ .push(Register.RBP)
+      /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+      // Mixed argument order (int, fp) is different between Windows and Linux.
+      // Thus address is loaded from immediate value.
+      /* mov addr, %rax        */ .movImm(Register.RAX, dest.address())
+                                  .cast(SSEAsmBuilder.class)
+      /* movq %xmm0, (%rax)    */ .movqMR(Register.XMM0, Register.RAX, OptionalInt.of(0))
+      /* leave                 */ .leave()
+      /* ret                   */ .ret()
+                                  .build();
+
+      double expected = 1.1d;
+
+      method.invoke(expected);
+      double actual = dest.get(ValueLayout.JAVA_DOUBLE, 0);
+
+      Assertions.assertEquals(expected, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }
