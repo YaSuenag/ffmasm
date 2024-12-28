@@ -111,4 +111,75 @@ public class SSEAsmTest extends TestBase{
     }
   }
 
+  /**
+   * Tests MOVD A
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testMOVD_A(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_FLOAT, // return value
+                   ValueLayout.ADDRESS     // 1st argument
+                 );
+      var method = AMD64AsmBuilder.create(SSEAsmBuilder.class, seg, desc)
+      /* push %rbp             */ .push(Register.RBP)
+      /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+                                  .cast(SSEAsmBuilder.class)
+      /* movd (arg1), %xmm0    */ .movdRM(Register.XMM0, argReg.arg1(), OptionalInt.of(0))
+      /* leave                 */ .leave()
+      /* ret                   */ .ret()
+                                  .build();
+
+      float expected = 1.1f;
+      var arena = Arena.ofAuto();
+      MemorySegment src = arena.allocate(ValueLayout.JAVA_FLOAT);
+      src.set(ValueLayout.JAVA_FLOAT, 0, expected);
+
+      float actual = (float)method.invoke(src);
+
+      Assertions.assertEquals(expected, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests MOVD B
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testMOVD_B(){
+    try(var seg = new CodeSegment()){
+      var arena = Arena.ofAuto();
+      MemorySegment dest = arena.allocate(ValueLayout.JAVA_FLOAT);
+
+      var desc = FunctionDescriptor.ofVoid(
+                   ValueLayout.JAVA_FLOAT // 1st argument
+                 );
+      var method = AMD64AsmBuilder.create(SSEAsmBuilder.class, seg, desc)
+      /* push %rbp             */ .push(Register.RBP)
+      /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+      // Mixed argument order (int, fp) is different between Windows and Linux.
+      // Thus address is loaded from immediate value.
+      /* mov addr, %rax        */ .movImm(Register.RAX, dest.address())
+                                  .cast(SSEAsmBuilder.class)
+      /* movd %xmm0, (%rax)    */ .movdMR(Register.XMM0, Register.RAX, OptionalInt.of(0))
+      /* leave                 */ .leave()
+      /* ret                   */ .ret()
+                                  .build();
+
+      float expected = 1.1f;
+
+      method.invoke(expected);
+      float actual = dest.get(ValueLayout.JAVA_FLOAT, 0);
+
+      Assertions.assertEquals(expected, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }

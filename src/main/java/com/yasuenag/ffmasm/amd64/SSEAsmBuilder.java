@@ -121,4 +121,45 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
     return movdq(r, m, disp, (byte)0xf3, (byte)0x7f);
   }
 
+  private SSEAsmBuilder movDorQ(Register r, Register m, OptionalInt disp, byte secondOpcode){
+    byteBuf.put((byte)0x66); // prefix
+    emitREXOp(r, m);
+    byteBuf.put((byte)0x0f); // escape opcode
+    byteBuf.put(secondOpcode);
+    var mode = emitModRM(r, m, disp);
+    emitDisp(mode, disp, m);
+
+    return this;
+  }
+
+  /**
+   * Move doubleword from r/m32 to xmm.
+   *   Opcode: 66 0F 6E /r
+   *   Instruction: MOVD xmm, r/m32
+   *   Op/En: A
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public SSEAsmBuilder movdRM(Register r, Register m, OptionalInt disp){
+    return movDorQ(r, m, disp, (byte)0x6e);
+  }
+
+  /**
+   * Move doubleword from xmm register to r/m32.
+   *   Opcode: 66 0F 7E /r
+   *   Instruction: MOVD r/m32, xmm
+   *   Op/En: B
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public SSEAsmBuilder movdMR(Register r, Register m, OptionalInt disp){
+    return movDorQ(r, m, disp, (byte)0x7e);
+  }
+
 }
