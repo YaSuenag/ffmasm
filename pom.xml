@@ -54,7 +54,6 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
                     <compilerArgs>
                         <arg>-Xlint:all</arg>
                     </compilerArgs>
-                    <enablePreview>true</enablePreview>
                     <debug>true</debug>
                 </configuration>
             </plugin>
