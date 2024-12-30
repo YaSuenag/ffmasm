@@ -29,6 +29,12 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
 
     <name>ffmasm</name>
 
+    <scm>
+        <connection>scm:git:git://github.com/YaSuenag/ffmasm.git</connection>
+        <developerConnection>scm:git:ssh://github.com:YaSuenag/ffmasm.git</developerConnection>
+        <url>https://github.com/YaSuenag/ffmasm</url>
+    </scm>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>22</maven.compiler.source>
