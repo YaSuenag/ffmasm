@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2024, Yasumasa Suenaga
+ * Copyright (C) 2022, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -66,8 +66,7 @@ public class WindowsExecMemory implements ExecMemory{
   public static final int PAGE_EXECUTE_READWRITE = 0x40;
   
   static{
-    System.loadLibrary("Kernel32");
-    sym = SymbolLookup.loaderLookup();
+    sym = SymbolLookup.libraryLookup("Kernel32", Arena.global());
     nativeLinker = Linker.nativeLinker();
     canonicalLayouts = nativeLinker.canonicalLayouts();
     getLastErrorState = Linker.Option.captureCallState("GetLastError");
