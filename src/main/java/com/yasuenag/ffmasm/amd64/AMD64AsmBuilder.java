@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2024, Yasumasa Suenaga
+ * Copyright (C) 2022, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -187,7 +187,7 @@ public class AMD64AsmBuilder{
       if(dispAsInt == 0){
         mode = (m == Register.RBP.encoding()) ? (byte)0b01 : (byte)0b00;
       }
-      else if(dispAsInt <= 0xff){
+      else if(dispAsInt <= Byte.MAX_VALUE){
         mode = (byte)0b01; // disp8
       }
       else{
