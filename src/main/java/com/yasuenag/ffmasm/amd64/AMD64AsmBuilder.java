@@ -1062,7 +1062,8 @@ public class AMD64AsmBuilder{
   public MemorySegment getMemorySegment(String name, JitDump jitdump){
     updateTail();
     storeMethodInfo(name, jitdump);
-    return mem;
+    long length = byteBuf.position();
+    return mem.reinterpret(length);
   }
 
 }
