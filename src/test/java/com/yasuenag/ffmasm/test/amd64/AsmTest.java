@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2023, Yasumasa Suenaga
+ * Copyright (C) 2022, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -854,6 +854,32 @@ public class AsmTest extends TestBase{
                          .jl("SilverBullet")
                          .build();
       });
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Test near JMP with absolute address
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX})
+  public void testJMP(){
+    try(var arena = Arena.ofConfined();
+        var seg = new CodeSegment();){
+      var getpid = Linker.nativeLinker().defaultLookup().find("getpid").get();
+      var desc = FunctionDescriptor.of(ValueLayout.JAVA_INT);
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+             /* mov %r10, addr */ .movImm(Register.R10, getpid.address())
+             /* jmp %r10       */ .jmp(Register.R10)
+                                  .build();
+
+      //showDebugMessage(seg);
+
+      long expect = ProcessHandle.current().pid();
+      long actual = (int)method.invoke();
+      Assertions.assertEquals(expect, actual);
     }
     catch(Throwable t){
       Assertions.fail(t);
