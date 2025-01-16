@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2023, Yasumasa Suenaga
+ * Copyright (C) 2022, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -237,6 +237,41 @@ public class AVXAsmTest extends TestBase{
 
       Assertions.assertEquals(0, (int)method.invoke(zeroSeg, 0, 1), "Should return zero");
       Assertions.assertEquals(1, (int)method.invoke(zeroSeg, 1, 1), "Should return 1");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests VZEROUPPER
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testVZEROUPPER(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
+      var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
+  /* push %rbp                 */ .push(Register.RBP)
+  /* mov %rsp, %rbp            */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+                                  .cast(AVXAsmBuilder.class)
+  /* vmovdqa (arg1), %ymm0     */ .vmovdqaMR(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+  /* vzeroupper                */ .vzeroupper()
+  /* vmovdqa %ymm0, (arg1)     */ .vmovdqaRM(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+  /* leave                     */ .leave()
+  /* ret                       */ .ret()
+                                  .build();
+
+      var arena = Arena.ofAuto();
+      var mem = arena.allocate(32, 32);
+      mem.fill((byte)0xff);
+
+      //showDebugMessage(seg);
+      method.invoke(mem);
+      var actual = mem.toArray(ValueLayout.JAVA_LONG);
+      var expected = new long[]{0xffffffffffffffffL, 0xffffffffffffffffL, 0L, 0L};
+
+      Assertions.assertArrayEquals(expected, actual);
     }
     catch(Throwable t){
       Assertions.fail(t);

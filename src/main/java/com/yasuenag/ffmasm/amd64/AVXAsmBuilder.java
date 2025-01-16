@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2024, Yasumasa Suenaga
+ * Copyright (C) 2022, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -77,12 +77,16 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
 
   private void emit2ByteVEXPrefix(Register src1, PP simdPrefix){
     byte VEXvvvv = (byte)((~src1.encoding()) & 0b1111);
+    emit2ByteVEXPrefixWithVVVV(VEXvvvv, src1.width() == 256, simdPrefix);
+  }
+
+  private void emit2ByteVEXPrefixWithVVVV(byte VEXvvvv, boolean is256bit, PP simdPrefix){
     byte rexr = (byte)((VEXvvvv >> 3) & 1);
-    byte is256Bit = (src1.width() == 256) ? (byte)1 : (byte)0;
+    byte vecLength = is256bit ? (byte)1 : (byte)0;
     byteBuf.put((byte)0xC5); // 2-byte VEX
     byteBuf.put((byte)(       (rexr << 7) | // REX.R
                            (VEXvvvv << 3) | // VEX.vvvv
-                          (is256Bit << 2) | // Vector Length
+                         (vecLength << 2) | // Vector Length
                       simdPrefix.prefix()   // opcode extension (SIMD prefix)
                ));
   }
@@ -302,6 +306,20 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
       byteBuf.putInt(disp.getAsInt());
     }
 
+    return this;
+  }
+
+  /**
+   * Zero bits in positions 128 and higher of some YMM and ZMM registers.
+   *   Opcode: VEX.128.0F.WIG 77
+   *   Instruction: VZEROUPPER
+   *   Op/En: ZO
+   *
+   * @return This instance
+   */
+  public AVXAsmBuilder vzeroupper(){
+    emit2ByteVEXPrefixWithVVVV((byte)0b1111, false, PP.None);
+    byteBuf.put((byte)0x77); // VZEROUPPER
     return this;
   }
 
