@@ -28,15 +28,13 @@ import java.lang.invoke.MethodHandle;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
-import com.yasuenag.ffmasm.UnsupportedPlatformException;
-
 
 public class Disassembler{
 
   private static final MethodHandle decode_instructions_virtual;
   private static final MemorySegment disasOptions;
 
-  private static Path getHSDISPath() throws UnsupportedPlatformException{
+  private static Path getHSDISPath(){
     var prop = System.getProperty("hsdis");
     if(prop != null){
       return Path.of(prop);
@@ -51,7 +49,7 @@ public class Disassembler{
       libName += ".dll";
     }
     else{
-      throw new UnsupportedPlatformException(osName);
+      throw new RuntimeException(osName);
     }
 
     var javaHome = Path.of(System.getProperty("java.home"));
@@ -84,30 +82,25 @@ public class Disassembler{
   }
 
   static{
-    try{
-      var hsdisPath = getHSDISPath();
-      var sym = SymbolLookup.libraryLookup(hsdisPath, Arena.ofAuto());
-      var disas = sym.find("decode_instructions_virtual").get();
-      var desc = FunctionDescriptor.of(ValueLayout.ADDRESS,   // return value
-                                       ValueLayout.ADDRESS,   // start_va
-                                       ValueLayout.ADDRESS,   // end_va
-                                       ValueLayout.ADDRESS,   // buffer
-                                       ValueLayout.JAVA_LONG, // length
-                                       ValueLayout.ADDRESS,   // event_callback
-                                       ValueLayout.ADDRESS,   // event_stream
-                                       ValueLayout.ADDRESS,   // printf_callback
-                                       ValueLayout.ADDRESS,   // printf_stream
-                                       ValueLayout.ADDRESS,   // options
-                                       ValueLayout.JAVA_INT   // newline
-                                      );
-      decode_instructions_virtual = Linker.nativeLinker()
-                                          .downcallHandle(disas, desc);
-      disasOptions = Arena.ofAuto()
-                          .allocateFrom("");
-    }
-    catch(UnsupportedPlatformException e){
-      throw new RuntimeException(e);
-    }
+    var hsdisPath = getHSDISPath();
+    var sym = SymbolLookup.libraryLookup(hsdisPath, Arena.ofAuto());
+    var disas = sym.find("decode_instructions_virtual").get();
+    var desc = FunctionDescriptor.of(ValueLayout.ADDRESS,   // return value
+                                     ValueLayout.ADDRESS,   // start_va
+                                     ValueLayout.ADDRESS,   // end_va
+                                     ValueLayout.ADDRESS,   // buffer
+                                     ValueLayout.JAVA_LONG, // length
+                                     ValueLayout.ADDRESS,   // event_callback
+                                     ValueLayout.ADDRESS,   // event_stream
+                                     ValueLayout.ADDRESS,   // printf_callback
+                                     ValueLayout.ADDRESS,   // printf_stream
+                                     ValueLayout.ADDRESS,   // options
+                                     ValueLayout.JAVA_INT   // newline
+                                    );
+    decode_instructions_virtual = Linker.nativeLinker()
+                                        .downcallHandle(disas, desc);
+    disasOptions = Arena.ofAuto()
+                        .allocateFrom("");
   }
 
   public static void dumpToStdout(MemorySegment code){

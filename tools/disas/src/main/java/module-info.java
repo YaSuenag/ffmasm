@@ -17,6 +17,5 @@
  * along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
  */
 module com.yasuenag.ffmasmtools.disas {
-  requires com.yasuenag.ffmasm;
   exports com.yasuenag.ffmasmtools.disas;
 }
