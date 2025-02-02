@@ -145,7 +145,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    *             a memory operand..
    * @return This instance
    */
-  public AVXAsmBuilder vmovdqaMR(Register r, Register m, OptionalInt disp){
+  public AVXAsmBuilder vmovdqaRM(Register r, Register m, OptionalInt disp){
     return vmovdq(r, m, disp, PP.H66, (byte)0x6f);
   }
 
@@ -164,7 +164,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    *             a memory operand..
    * @return This instance
    */
-  public AVXAsmBuilder vmovdqaRM(Register r, Register m, OptionalInt disp){
+  public AVXAsmBuilder vmovdqaMR(Register r, Register m, OptionalInt disp){
     return vmovdq(r, m, disp, PP.H66, (byte)0x7f);
   }
 
@@ -183,7 +183,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    *             a memory operand..
    * @return This instance
    */
-  public AVXAsmBuilder vmovdquMR(Register r, Register m, OptionalInt disp){
+  public AVXAsmBuilder vmovdquRM(Register r, Register m, OptionalInt disp){
     return vmovdq(r, m, disp, PP.HF3, (byte)0x6f);
   }
 
@@ -202,7 +202,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    *             a memory operand..
    * @return This instance
    */
-  public AVXAsmBuilder vmovdquRM(Register r, Register m, OptionalInt disp){
+  public AVXAsmBuilder vmovdquMR(Register r, Register m, OptionalInt disp){
     return vmovdq(r, m, disp, PP.HF3, (byte)0x7f);
   }
 

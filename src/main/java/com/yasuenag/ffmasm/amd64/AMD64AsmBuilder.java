@@ -125,7 +125,7 @@ public class AMD64AsmBuilder{
    * <pre>{@code
    * AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
                     .movMR(Register.RAX, Register.RBX)
-                    .vmovdqaMR(Register.YMM0, Register.RAX); // ERROR!
+                    .vmovdqaRM(Register.YMM0, Register.RAX, OptionalInt.of(0)); // ERROR!
    * }</pre>
    *
    * In following code, it will not be reported error from javac
@@ -134,7 +134,7 @@ public class AMD64AsmBuilder{
    * AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
                     .movMR(Register.RAX, Register.RBX)
                     .cast(AVXAsmBuilder.class)
-                    .vmovdqaMR(Register.YMM0, Register.RAX);
+                    .vmovdqaRM(Register.YMM0, Register.RAX, OptionalInt.of(0));
    * }</pre>
    *
    * @param clazz The class which will be casted.
