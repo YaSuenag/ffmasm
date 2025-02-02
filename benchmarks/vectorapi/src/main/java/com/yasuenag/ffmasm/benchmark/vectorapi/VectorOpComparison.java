@@ -48,9 +48,9 @@ public class VectorOpComparison{
 /* push %rbp                   */ .push(Register.RBP)
 /* mov %rsp, %rbp              */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
                                   .cast(AVXAsmBuilder.class)
-/* vmovdqu (%rdi), %ymm0       */ .vmovdquMR(Register.YMM0, Register.RDI, OptionalInt.of(0))
+/* vmovdqu (%rdi), %ymm0       */ .vmovdquRM(Register.YMM0, Register.RDI, OptionalInt.of(0))
 /* vpaddd (%rsi), %ymm0, %ymm0 */ .vpaddd(Register.YMM0, Register.RSI, Register.YMM0, OptionalInt.of(0))
-/* vmovdqu %ymm0, (%rdi)       */ .vmovdquRM(Register.YMM0, Register.RDI, OptionalInt.of(0))
+/* vmovdqu %ymm0, (%rdi)       */ .vmovdquMR(Register.YMM0, Register.RDI, OptionalInt.of(0))
 /* leave                       */ .leave()
 /* ret                         */ .ret()
                                   .getMemorySegment();
