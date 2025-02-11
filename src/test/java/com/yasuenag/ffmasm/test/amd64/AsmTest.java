@@ -887,6 +887,33 @@ public class AsmTest extends TestBase{
   }
 
   /**
+   * Test near JMP with absolute address memory operand
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX})
+  public void testJMPWithMemory(){
+    try(var arena = Arena.ofConfined();
+        var seg = new CodeSegment();){
+      var getpid = Linker.nativeLinker().defaultLookup().find("getpid").get();
+      var ptrGetPID = arena.allocateFrom(ValueLayout.ADDRESS, getpid);
+      var desc = FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                                       ValueLayout.ADDRESS);
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+                 /* jmp (arg1) */ .jmp(argReg.arg1(), OptionalInt.of(0))
+                                  .build();
+
+      //showDebugMessage(seg);
+
+      long expect = ProcessHandle.current().pid();
+      long actual = (int)method.invoke(ptrGetPID);
+      Assertions.assertEquals(expect, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Test RDRAND
    */
   @Test

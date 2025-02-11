@@ -842,6 +842,21 @@ public class AMD64AsmBuilder{
    * @return This instance
    */
   public AMD64AsmBuilder jmp(Register m){
+    return jmp(m, OptionalInt.empty());
+  }
+
+  /**
+   * Jump near, absolute indirect, RIP = 64-Bit
+   * offset from register or memory.
+   *   Opcode: FF /4
+   *   Instruction: JMP r/m64
+   *   Op/En: M
+   *
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg.
+   * @return This instance
+   */
+  public AMD64AsmBuilder jmp(Register m, OptionalInt disp){
     // Emit REX prefix for REX.B if it's needed.
     // We can ignore REX.W because this JMP op is on 64bit mode only.
     byte rexb = (byte)((m.encoding() >> 3) & 0b0001);
@@ -850,7 +865,7 @@ public class AMD64AsmBuilder{
     }
 
     byteBuf.put((byte)0xff); // JMP
-    emitModRM(m, 4, OptionalInt.empty());
+    emitModRM(m, 4, disp);
     return this;
   }
 
