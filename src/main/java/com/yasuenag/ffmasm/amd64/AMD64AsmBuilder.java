@@ -865,7 +865,8 @@ public class AMD64AsmBuilder{
     }
 
     byteBuf.put((byte)0xff); // JMP
-    emitModRM(m, 4, disp);
+    byte mode = emitModRM(m, 4, disp);
+    emitDisp(mode, disp, m);
     return this;
   }
 
