@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2023, Yasumasa Suenaga
+ * Copyright (C) 2022, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -76,10 +76,12 @@ public class Main{
       String model = mem.getString(0L);
       System.out.println(model);
 
-      System.out.println();
-      System.out.print("Press any key to exit...");
-      System.out.flush();
-      System.in.read();
+      if((args.length > 0) && args[0].equals("--stop")){
+        System.out.println();
+        System.out.print("Press any key to exit...");
+        System.out.flush();
+        System.in.read();
+      }
     }
 
   }

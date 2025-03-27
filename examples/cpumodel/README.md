@@ -5,7 +5,7 @@ This is an example of ffmasm to obtain CPU model from `CPUID` instruction in AMD
 
 # Requirements
 
-* Java 22
+* Java 24
 * AMD64 Linux or Windows
 * Maven
 
@@ -30,13 +30,11 @@ $ mvn clean package
 $ mvn exec:java
 ```
 
-Press enter to exit.
-
 ## 4. [EXTRA] check assembly in GDB
 
 Run GDB if you want to check assembled code.
 
-You can see PID and address of `CodeSegment` on the console when you run `mvn exec:exec` in below.
+You can see PID and address of `CodeSegment` on the console when you run `java -jar cpumodel-0.1.3.jar --stop` in below.
 
 ```
 PID: 928
@@ -102,4 +100,34 @@ pop %rbx
 # Epilogue
 leave
 ret
+```
+
+# Play with AOT
+
+Java 24 introduced [JEP 483: Ahead-of-Time Class Loading & Linking](https://openjdk.org/jeps/483). It can cache InvokeDynamic link, so first call in FFM could be faster.
+
+[pom.xml](pom.xml) generates AOT cache in `package` phase, so you can feel acceralation with AOT as following. Note that you have to move `target` directory because AOT identifies class path.
+
+```
+$ cd target
+
+
+$ time $JAVA_HOME/bin/java -jar cpumodel-0.1.3.jar
+PID: 3147
+Addr: 0x7f8d1fc37000
+AMD Ryzen 3 3300X 4-Core Processor
+
+real    0m0.140s
+user    0m0.196s
+sys     0m0.049s
+
+
+$ time $JAVA_HOME/bin/java -XX:AOTCache=ffmasm-cpumodel.aot -jar cpumodel-0.1.3.jar
+PID: 3167
+Addr: 0x7f9000001000
+AMD Ryzen 3 3300X 4-Core Processor
+
+real    0m0.095s
+user    0m0.121s
+sys     0m0.041s
 ```
