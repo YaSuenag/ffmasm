@@ -70,7 +70,8 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
                     </archive>
                 </configuration>
             </plugin>
-            <plugin>                                                                                                  <artifactId>maven-shade-plugin</artifactId>
+            <plugin>
+                <artifactId>maven-shade-plugin</artifactId>
                 <version>3.6.0</version>
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
