@@ -114,13 +114,6 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
                             </arguments>
                         </configuration>
                     </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.5.0</version>
-                <executions>
                     <execution>
                         <id>aot-create</id>
                         <phase>package</phase>
