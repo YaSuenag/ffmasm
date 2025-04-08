@@ -19,6 +19,7 @@
 package com.yasuenag.ffmasm.test.amd64;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -1247,6 +1248,45 @@ public class AsmTest extends TestBase{
              /* ret            */ .ret()
                                   .build();
       //showDebugMessage(seg);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Test CLFLUSHOPT
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testCLFLUSHOPT(){
+    try(var seg = new CodeSegment()){
+      var cpuidDesc = FunctionDescriptor.of(ValueLayout.JAVA_INT);
+      var cpuid = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, cpuidDesc)
+           /* push %rbp       */ .push(Register.RBP)
+           /* mov %rsp, %rbp  */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+           /* mov $0x07, %rax */ .movImm(Register.RAX, 0x07L)
+           /* xor %rcx, %rcx  */ .xorMR(Register.RCX, Register.RCX, OptionalInt.empty())
+           /* cpuid           */ .cpuid()
+           /* mov %ebx, %eax  */ .movRM(Register.EAX, Register.EBX, OptionalInt.empty())
+           /* leave           */ .leave()
+           /* ret             */ .ret()
+                                 .build();
+      var ebx = (int)cpuid.invokeExact();
+      Assumptions.assumeTrue(((ebx >>> 23) & 0x1) == 1, "Test platform does not support CLFLUSHOPT");
+
+      var desc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+          /* push %rbp         */ .push(Register.RBP)
+          /* mov %rsp, %rbp    */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+          /* mov arg1, %r11    */ .movRM(Register.R11, argReg.arg1(), OptionalInt.empty())
+          /* clflushopt (arg1) */ .clflushopt(argReg.arg1(), 0)
+          /* clflushopt (%r11) */ .clflushopt(Register.R11, 0)
+          /* leave             */ .leave()
+          /* ret               */ .ret()
+                                  .build();
+      //showDebugMessage(seg);
+      method.invoke(seg.getAddr());
     }
     catch(Throwable t){
       Assertions.fail(t);

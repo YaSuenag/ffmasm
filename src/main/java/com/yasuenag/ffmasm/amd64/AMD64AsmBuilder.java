@@ -1030,6 +1030,35 @@ public class AMD64AsmBuilder{
     return this;
   }
 
+  /**
+   * Flushes cache line containing m8.<br>
+   *   Opcode: NFx 66 0F AE /7<br>
+   *   Instruction: CLFLUSHOPT m8<br>
+   *   Op/En: M
+   *
+   * @param m "r/m" register
+   * @param disp Displacement
+   * @return This instance
+   * @throws IllegalArgumentException thrown when argument
+   *         (memory operand) is not 64 bit register.
+   */
+  public AMD64AsmBuilder clflushopt(Register m, int disp){
+    if(m.width() != 64){
+      throw new IllegalArgumentException("Operand should be 64 bit register for storing memory");
+    }
+
+    byteBuf.put((byte)0x66);
+    if(m.encoding() >= Register.R8.encoding()){
+      emitREXOp(Register.RAX /* dummy */, m);
+    }
+    byteBuf.put((byte)0x0f);
+    byteBuf.put((byte)0xae);
+    var d = OptionalInt.of(disp);
+    byte mode = emitModRM(m, 7, d);
+    emitDisp(mode, d, m);
+    return this;
+  }
+
   private void updateTail(){
     if(!pendingLabelMap.isEmpty()){
       throw new IllegalStateException("Label is not defined: " + pendingLabelMap.keySet().toString());
