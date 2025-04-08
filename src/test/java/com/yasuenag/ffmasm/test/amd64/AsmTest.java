@@ -1248,6 +1248,7 @@ public class AsmTest extends TestBase{
              /* ret            */ .ret()
                                   .build();
       //showDebugMessage(seg);
+      method.invokeExact();
     }
     catch(Throwable t){
       Assertions.fail(t);
