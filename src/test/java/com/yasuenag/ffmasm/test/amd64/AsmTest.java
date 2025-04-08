@@ -395,7 +395,7 @@ public class AsmTest extends TestBase{
    * Tests ADDs
    */
   @Test
-  @EnabledOnOs(OS.LINUX)
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testADDs(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -405,7 +405,7 @@ public class AsmTest extends TestBase{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
              /* push %rbp      */ .push(Register.RBP)
              /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
+             /* mov arg1, %rax */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
              /* add $1, %al    */ .add(Register.AL, 1, OptionalInt.empty())
              /* add $2, %ax    */ .add(Register.AX, 2, OptionalInt.empty())
              /* add $3, %eax   */ .add(Register.EAX, 3, OptionalInt.empty())
@@ -426,7 +426,7 @@ public class AsmTest extends TestBase{
    * Tests SUBs
    */
   @Test
-  @EnabledOnOs(OS.LINUX)
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testSUBs(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -436,7 +436,7 @@ public class AsmTest extends TestBase{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
              /* push %rbp      */ .push(Register.RBP)
              /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
+             /* mov arg1, %rax */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
              /* sub $1, %al    */ .sub(Register.AL, 1, OptionalInt.empty())
              /* sub $2, %ax    */ .sub(Register.AX, 2, OptionalInt.empty())
              /* sub $3, %eax   */ .sub(Register.EAX, 3, OptionalInt.empty())
@@ -457,7 +457,7 @@ public class AsmTest extends TestBase{
    * Tests SHLs
    */
   @Test
-  @EnabledOnOs(OS.LINUX)
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testSHLs(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
@@ -467,7 +467,7 @@ public class AsmTest extends TestBase{
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
              /* push %rbp      */ .push(Register.RBP)
              /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov %rdi, %rax */ .movMR(Register.RDI, Register.RAX, OptionalInt.empty())
+             /* mov arg1, %rax */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
              /* shl $1, %al    */ .shl(Register.AL, (byte)1, OptionalInt.empty())
              /* shl $2, %ax    */ .shl(Register.AX, (byte)2, OptionalInt.empty())
              /* shl $3, %eax   */ .shl(Register.EAX, (byte)3, OptionalInt.empty())
@@ -1261,21 +1261,8 @@ public class AsmTest extends TestBase{
   @Test
   @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testCLFLUSHOPT(){
+    Assumptions.assumeTrue(supportCLFLUSHOPT(), "Test platform does not support CLFLUSHOPT");
     try(var seg = new CodeSegment()){
-      var cpuidDesc = FunctionDescriptor.of(ValueLayout.JAVA_INT);
-      var cpuid = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, cpuidDesc)
-           /* push %rbp       */ .push(Register.RBP)
-           /* mov %rsp, %rbp  */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
-           /* mov $0x07, %rax */ .movImm(Register.RAX, 0x07L)
-           /* xor %rcx, %rcx  */ .xorMR(Register.RCX, Register.RCX, OptionalInt.empty())
-           /* cpuid           */ .cpuid()
-           /* mov %ebx, %eax  */ .movRM(Register.EAX, Register.EBX, OptionalInt.empty())
-           /* leave           */ .leave()
-           /* ret             */ .ret()
-                                 .build();
-      var ebx = (int)cpuid.invokeExact();
-      Assumptions.assumeTrue(((ebx >>> 23) & 0x1) == 1, "Test platform does not support CLFLUSHOPT");
-
       var desc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
       var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
           /* push %rbp         */ .push(Register.RBP)

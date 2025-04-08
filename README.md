@@ -32,12 +32,6 @@ $ mvn package
 $ mvn test
 ```
 
-If you want to run tests for AVX, set `true` to `avxtest` system property.
-
-```bash
-$ mvn -Davxtest=true test
-```
-
 # How to use
 
 See [Javadoc](https://yasuenag.github.io/ffmasm/) and [cpumodel](examples/cpumodel) examples.
