@@ -19,8 +19,8 @@
 package com.yasuenag.ffmasm.test.amd64;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
@@ -38,7 +38,6 @@ import com.yasuenag.ffmasm.amd64.AVXAsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
 
 
-@EnabledIfSystemProperty(named = "avxtest", matches = "true")
 public class AVXAsmTest extends TestBase{
 
   /**
@@ -47,6 +46,7 @@ public class AVXAsmTest extends TestBase{
   @Test
   @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testMOVDQA(){
+    Assumptions.assumeTrue(supportAVX(), "Test platform does not support AVX");
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
                    ValueLayout.ADDRESS, // 1st argument
@@ -84,6 +84,7 @@ public class AVXAsmTest extends TestBase{
   @Test
   @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testMOVDQU(){
+    Assumptions.assumeTrue(supportAVX(), "Test platform does not support AVX");
     try(var arena = Arena.ofConfined();
         var seg = new CodeSegment();){
       var desc = FunctionDescriptor.ofVoid(
@@ -121,6 +122,7 @@ public class AVXAsmTest extends TestBase{
   @Test
   @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testPXOR(){
+    Assumptions.assumeTrue(supportAVX(), "Test platform does not support AVX");
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
                    ValueLayout.ADDRESS, // 1st argument
@@ -160,6 +162,7 @@ public class AVXAsmTest extends TestBase{
   @Test
   @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testPADDD(){
+    Assumptions.assumeTrue(supportAVX(), "Test platform does not support AVX");
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
                    ValueLayout.ADDRESS, // 1st argument
@@ -204,6 +207,7 @@ public class AVXAsmTest extends TestBase{
   @Test
   @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testPTEST(){
+    Assumptions.assumeTrue(supportAVX(), "Test platform does not support AVX");
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT, // return value
@@ -249,6 +253,7 @@ public class AVXAsmTest extends TestBase{
   @Test
   @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testVZEROUPPER(){
+    Assumptions.assumeTrue(supportAVX(), "Test platform does not support AVX");
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
       var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
