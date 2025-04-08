@@ -1036,7 +1036,7 @@ public class AMD64AsmBuilder{
    *   Instruction: CLFLUSHOPT m8<br>
    *   Op/En: M
    *
-   * @param m "r/m" register
+   * @param m register which contains memory address to flush
    * @param disp Displacement
    * @return This instance
    * @throws IllegalArgumentException thrown when argument
@@ -1047,12 +1047,16 @@ public class AMD64AsmBuilder{
       throw new IllegalArgumentException("Operand should be 64 bit register for storing memory");
     }
 
-    byteBuf.put((byte)0x66);
-    if(m.encoding() >= Register.R8.encoding()){
-      emitREXOp(Register.RAX /* dummy */, m);
+    byteBuf.put((byte)0x66); // CLFLUSHOPT (1)
+    // Emit REX prefix for REX.B if it's needed.
+    // We can ignore REX.W because CLFLUSHOPT has memory operand.
+    byte rexb = (byte)((m.encoding() >> 3) & 0b0001);
+    if(rexb != 0){
+      byteBuf.put((byte)(0b01000000 | rexb));
     }
-    byteBuf.put((byte)0x0f);
-    byteBuf.put((byte)0xae);
+    byteBuf.put((byte)0x0f); // CLFLUSHOPT (2)
+    byteBuf.put((byte)0xae); // CLFLUSHOPT (3)
+
     var d = OptionalInt.of(disp);
     byte mode = emitModRM(m, 7, d);
     emitDisp(mode, d, m);
