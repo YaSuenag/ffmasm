@@ -1015,6 +1015,21 @@ public class AMD64AsmBuilder{
     return this;
   }
 
+  /**
+   * Serializes store operations.<br>
+   *   Opcode: NP 0F AE F8<br>
+   *   Instruction: SFENCE<br>
+   *   Op/En: ZO
+   *
+   * @return This instance
+   */
+  public AMD64AsmBuilder sfence(){
+    byteBuf.put((byte)0x0f);
+    byteBuf.put((byte)0xae);
+    byteBuf.put((byte)0xf8);
+    return this;
+  }
+
   private void updateTail(){
     if(!pendingLabelMap.isEmpty()){
       throw new IllegalStateException("Label is not defined: " + pendingLabelMap.keySet().toString());
