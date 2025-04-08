@@ -1231,4 +1231,26 @@ public class AsmTest extends TestBase{
 
   }
 
+  /**
+   * Test SFENCE
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testSFENCE(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.ofVoid();
+      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
+             /* push %rbp      */ .push(Register.RBP)
+             /* mov %rsp, %rbp */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+             /* sfence         */ .sfence()
+             /* leave          */ .leave()
+             /* ret            */ .ret()
+                                  .build();
+      //showDebugMessage(seg);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }
