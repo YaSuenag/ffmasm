@@ -27,17 +27,5 @@ jobs:
           java-version: 22
           cache: maven
 
-      - name: Check CPU features for Maven tests
-        id: cpufeat-for-test
-        run: |
-          java -XX:+PrintFlagsFinal --version |
-              Where-Object { $_ -match 'UseAVX\s*=\s*(\d+)\s+' } |
-              Select-Object -First 1
-          $avx = $Matches.1
-          Write-Host "AVX = $avx"
-          $testopt = $avx -gt 0 ? "-Davxtest=true" : ""
-          "SYSPROPS=$testopt" >> $env:GITHUB_OUTPUT
-        shell: pwsh
-
       - name: 'Run Maven'
-        run: mvn ${{ steps.cpufeat-for-test.outputs.SYSPROPS }} -B test
+        run: mvn -B test
