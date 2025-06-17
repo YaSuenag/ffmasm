@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Yasumasa Suenaga
+ * Copyright (C) 2024, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -56,18 +56,9 @@ public class PerfJitDump implements JitDump{
   private static final int JIT_CODE_LOAD = 0;
   private static final int JIT_CODE_CLOSE = 3;
 
-  // from bits/time.h
-  private static final int CLOCK_MONOTONIC = 1;
-
   private static final long PAGE_SIZE = 4096;
 
-
   private static final MethodHandle mhGetTid;
-  private static final StructLayout structTimespec;
-  private static final VarHandle hndSec;
-  private static final VarHandle hndNSec;
-  private static final MethodHandle mhClockGettime;
-
 
   private final FileChannel ch;
 
@@ -85,35 +76,11 @@ public class PerfJitDump implements JitDump{
 
     desc = FunctionDescriptor.of(ValueLayout.JAVA_INT);
     mhGetTid = linker.downcallHandle(lookup.find("gettid").get(), desc);
-
-    structTimespec = MemoryLayout.structLayout(
-                       ValueLayout.JAVA_LONG.withName("tv_sec"),
-                       ValueLayout.JAVA_LONG.withName("tv_nsec")
-                     );
-    hndSec = structTimespec.varHandle(MemoryLayout.PathElement.groupElement("tv_sec"));
-    hndNSec = structTimespec.varHandle(MemoryLayout.PathElement.groupElement("tv_nsec"));
-    // __CLOCKID_T_TYPE is defined as __S32_TYPE in bits/typesizes.h
-    desc = FunctionDescriptor.of(ValueLayout.JAVA_INT,
-                                 ValueLayout.JAVA_INT,
-                                 ValueLayout.ADDRESS);
-    mhClockGettime = linker.downcallHandle(lookup.find("clock_gettime").get(), desc);
   }
 
   private static int getTid(){
     try{
       return (int)mhGetTid.invokeExact();
-    }
-    catch(Throwable t){
-      throw new RuntimeException("Exception happened at gettid() call.", t);
-    }
-  }
-
-  private static long getTimestamp(){
-    try(var arena = Arena.ofConfined()){
-      var timespec = arena.allocate(structTimespec);
-      int _ = (int)mhClockGettime.invokeExact(CLOCK_MONOTONIC, timespec);
-
-      return ((long)hndSec.get(timespec, 0L) * 1_000_000_000) + (long)hndNSec.get(timespec, 0L);
     }
     catch(Throwable t){
       throw new RuntimeException("Exception happened at gettid() call.", t);
@@ -156,7 +123,7 @@ public class PerfJitDump implements JitDump{
     // pid
     buf.putInt((int)ProcessHandle.current().pid());
     // timestamp
-    buf.putLong(getTimestamp());
+    buf.putLong(System.nanoTime());
     // flags
     buf.putLong(0L);
 
@@ -238,7 +205,7 @@ public class PerfJitDump implements JitDump{
     // total_size
     buf.putInt(totalSize);
     // timestamp
-    buf.putLong(getTimestamp());
+    buf.putLong(System.nanoTime());
     // pid
     buf.putInt((int)ProcessHandle.current().pid());
     // tid
@@ -292,7 +259,7 @@ public class PerfJitDump implements JitDump{
     // total_size
     buf.putInt(headerSize);
     // timestamp
-    buf.putLong(getTimestamp());
+    buf.putLong(System.nanoTime());
 
     buf.flip();
     ch.write(buf);
