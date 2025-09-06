@@ -19,6 +19,7 @@ Java 22
 
 * Linux AMD64
 * Windows AMD64
+* Linux AArch64
 
 # How to build
 
@@ -47,7 +48,9 @@ try(var seg = new CodeSegment()){
 }
 ```
 
-## 2. Create `MethodHandle` via `AMD64AsmBuilder`
+## 2. Create `MethodHandle`
+
+### AMD64
 
 You can assemble the code via `AMD64AsmBuilder`. It would be instanciated via `create()`, and it should be passed both `CodeSegment` and [FunctionDescriptor](https://docs.oracle.com/en/java/javase/22/docs/api/java.base/java/lang/foreign/FunctionDescriptor.html).
 
@@ -72,6 +75,29 @@ var method = AMD64AsmBuilder.create(seg, desc)
 ```
 
 NOTE: [Linker.Option.critical()](https://docs.oracle.com/en/java/javase/22/docs/api/java.base/java/lang/foreign/Linker.Option.html#critical(boolean)) is recommended to pass `build()` method due to performance, but it might be cause of some issues in JVM (time to synchronize safepoint, memory corruption, etc). See Javadoc of `critical()`.
+
+### AArch64
+
+You can assemble the code via `AArch64AsmBuilder`. It should be passed both `CodeSegment` and `FunctionDescriptor`.
+
+In following example, the method is defined as `(I)I` (JNI signature) in `FunctionDescriptor`.  
+`AArch64AsmBuilder` is builder pattern like `AMD64AsmBuilder` in same way, so you can add instruction in below. Following example shows method argument (`int`) would be returned straightly.
+
+You can get `MethodHandle` in result of `build()`.
+
+```java
+var desc = FunctionDescriptor.of(
+             ValueLayout.JAVA_INT, // return value
+             ValueLayout.JAVA_INT // 1st argument
+           );
+
+var method = new AArch64AsmBuilder(codeSegment, desc)
+/* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
+/* mov x29,  sp              */ .mov(Register.X29, Register.SP)
+/* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
+/* ret                       */ .ret(Optional.empty())
+                                .build();
+```
 
 ## 3. Method call
 
@@ -118,6 +144,9 @@ Disassembler.dumpToStdout(rdtsc); // Dump assembly code of `rdtsc` to stdout
 ```
 
 # Play with JNI
+
+> [!IMPORTANT]
+> JNI binding is for AMD64 only.
 
 You can bind native method to `MemorySegment` of ffmasm code dynamically.
 

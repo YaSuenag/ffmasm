@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2025, Yasumasa Suenaga
+ * Copyright (C) 2025 Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -16,12 +16,6 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-/**
- * Core module of ffmasm.
- */
-module com.yasuenag.ffmasm {
-  exports com.yasuenag.ffmasm;
-  exports com.yasuenag.ffmasm.amd64;
-  exports com.yasuenag.ffmasm.aarch64;
+module com.yasuenag.ffmasm.examples.aarch64 {
+  requires com.yasuenag.ffmasm;
 }

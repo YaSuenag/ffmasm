@@ -38,6 +38,7 @@ import com.yasuenag.ffmasm.amd64.AVXAsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
 
 
+@EnabledOnOs(architectures = {"amd64"})
 public class AVXAsmTest extends TestBase{
 
   /**
