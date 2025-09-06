@@ -35,6 +35,7 @@ import com.yasuenag.ffmasm.amd64.Register;
 import com.yasuenag.ffmasm.amd64.SSEAsmBuilder;
 
 
+@EnabledOnOs(architectures = {"amd64"})
 public class SSEAsmTest extends TestBase{
 
   /**

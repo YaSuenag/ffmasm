@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2025, Yasumasa Suenaga
+ * Copyright (C) 2025 Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -16,12 +16,30 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
  */
+package com.yasuenag.ffmasm.aarch64;
+
 
 /**
- * Core module of ffmasm.
+ * Enum for AArch64 Index Class
+ *
+ * @author Yasumasa Suenaga
  */
-module com.yasuenag.ffmasm {
-  exports com.yasuenag.ffmasm;
-  exports com.yasuenag.ffmasm.amd64;
-  exports com.yasuenag.ffmasm.aarch64;
+public enum IndexClass{
+  PostIndex((byte)0b0001),
+  PreIndex((byte)0b0011),
+  SignedOffset((byte)0b0010);
+
+  private final byte vr;
+
+  private IndexClass(byte vr){
+    this.vr = vr;
+  }
+
+  /**
+   * Index class
+   * @return value of this class
+   */
+  public byte vr(){
+    return vr;
+  }
 }

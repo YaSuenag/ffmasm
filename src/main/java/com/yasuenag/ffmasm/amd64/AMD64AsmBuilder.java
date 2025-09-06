@@ -103,6 +103,10 @@ public class AMD64AsmBuilder{
    *          attempted to instantiate on unsupported platform.
    */
   public static <T extends AMD64AsmBuilder> T create(Class<T> clazz, CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
+    if(!System.getProperty("os.arch").equals("amd64")){
+      throw new UnsupportedPlatformException("Platform is not AMD64.");
+    }
+
     int bits = Integer.valueOf(System.getProperty("sun.arch.data.model"));
     if(bits != 64){
       throw new UnsupportedPlatformException("AMD64AsmBuilder supports 64 bit only.");
