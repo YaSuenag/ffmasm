@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Optional;
 
+import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.JitDump;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
@@ -38,18 +39,7 @@ import com.yasuenag.ffmasm.aarch64.Register;
  *
  * @author Yasumasa Suenaga
  */
-public class AArch64AsmBuilder{
-
-  private final CodeSegment seg;
-
-  private final MemorySegment mem;
-
-  /**
-   * ByteBuffer which includes code content.
-   */
-  protected final ByteBuffer byteBuf;
-
-  private final FunctionDescriptor desc;
+public class AArch64AsmBuilder extends AsmBuilder<AArch64AsmBuilder>{
 
   /**
    * Constructor.
@@ -58,6 +48,8 @@ public class AArch64AsmBuilder{
    * @param desc FunctionDescriptor for this builder. It will be used by build().
    */
   public AArch64AsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
+    super(seg, desc);
+
     if(!System.getProperty("os.arch").equals("aarch64")){
       throw new UnsupportedPlatformException("Platform is not AArch64.");
     }
@@ -66,11 +58,6 @@ public class AArch64AsmBuilder{
     if(bits != 64){
       throw new UnsupportedPlatformException("AArch64AsmBuilder supports 64 bit only.");
     }
-
-    this.seg = seg;
-    this.mem = seg.getTailOfMemorySegment();
-    this.byteBuf = mem.asByteBuffer().order(ByteOrder.nativeOrder());
-    this.desc = desc;
   }
 
   /**
@@ -169,93 +156,6 @@ public class AArch64AsmBuilder{
                   (rn.orElse(Register.X30).encoding() << 5);
     byteBuf.putInt(encoded);
     return this;
-  }
-
-  private void updateTail(){
-    seg.incTail(byteBuf.position());
-  }
-
-  /**
-   * Build as a MethodHandle
-   *
-   * @param options Linker options to pass to downcallHandle().
-   * @return MethodHandle for this assembly
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MethodHandle build(Linker.Option... options){
-    return build("<unnamed>", options);
-  }
-
-  /**
-   * Build as a MethodHandle
-   *
-   * @param name Method name
-   * @param options Linker options to pass to downcallHandle().
-   * @return MethodHandle for this assembly
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MethodHandle build(String name, Linker.Option... options){
-    return build(name, null, options);
-  }
-
-  private void storeMethodInfo(String name, JitDump jitdump){
-    var top = mem.address();
-    var size = byteBuf.position();
-    var methodInfo = seg.addMethodInfo(name, top, size);
-    if(jitdump != null){
-      jitdump.writeFunction(methodInfo);
-    }
-  }
-
-  /**
-   * Build as a MethodHandle
-   *
-   * @param name Method name
-   * @param jitdump JitDump instance which should be written.
-   * @param options Linker options to pass to downcallHandle().
-   * @return MethodHandle for this assembly
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MethodHandle build(String name, JitDump jitdump, Linker.Option... options){
-    updateTail();
-    storeMethodInfo(name, jitdump);
-    return Linker.nativeLinker().downcallHandle(mem, desc, options);
-  }
-
-  /**
-   * Get MemorySegment which is associated with this builder.
-   *
-   * @return MemorySegment of this builder
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MemorySegment getMemorySegment(){
-    return getMemorySegment("<unnamed>");
-  }
-
-  /**
-   * Get MemorySegment which is associated with this builder.
-   *
-   * @param name Method name
-   * @return MemorySegment of this builder
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MemorySegment getMemorySegment(String name){
-    return getMemorySegment(name, null);
-  }
-
-  /**
-   * Get MemorySegment which is associated with this builder.
-   *
-   * @param name Method name
-   * @param jitdump JitDump instance which should be written.
-   * @return MemorySegment of this builder
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MemorySegment getMemorySegment(String name, JitDump jitdump){
-    updateTail();
-    storeMethodInfo(name, jitdump);
-    long length = byteBuf.position();
-    return mem.reinterpret(length);
   }
 
 }

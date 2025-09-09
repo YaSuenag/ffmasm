@@ -19,20 +19,13 @@
 package com.yasuenag.ffmasm.internal.amd64;
 
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
-import java.lang.foreign.MemorySegment;
-import java.lang.invoke.MethodHandle;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.function.Consumer;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Set;
 
+import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
-import com.yasuenag.ffmasm.JitDump;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
 import com.yasuenag.ffmasm.amd64.Register;
 
@@ -42,25 +35,7 @@ import com.yasuenag.ffmasm.amd64.Register;
  *
  * @author Yasumasa Suenaga
  */
-public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>>{
-
-  private final CodeSegment seg;
-
-  private final MemorySegment mem;
-
-  /**
-   * ByteBuffer which includes code content.
-   */
-  protected final ByteBuffer byteBuf;
-
-  private final FunctionDescriptor desc;
-
-  // Key: label, Value: position
-  private final Map<String, Integer> labelMap;
-
-  // Key: label, Value: jump data
-  private static record PendingJump(Consumer<Integer> emitOp, int position){}
-  private final Map<String, Set<PendingJump>> pendingLabelMap;
+public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>{
 
   /**
    * Constructor.
@@ -71,6 +46,8 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>>{
    *         attempted to instantiate on unsupported platform.
    */
   public AMD64AsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
+    super(seg, desc);
+
     if(!System.getProperty("os.arch").equals("amd64")){
       throw new UnsupportedPlatformException("Platform is not AMD64.");
     }
@@ -79,25 +56,6 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>>{
     if(bits != 64){
       throw new UnsupportedPlatformException("AMD64AsmBuilder supports 64 bit only.");
     }
-
-    seg.alignTo16Bytes();
-
-    this.seg = seg;
-    this.mem = seg.getTailOfMemorySegment();
-    this.byteBuf = mem.asByteBuffer().order(ByteOrder.nativeOrder());
-    this.desc = desc;
-    this.labelMap = new HashMap<>();
-    this.pendingLabelMap = new HashMap<>();
-  }
-
-  /**
-   * Cast "this" to "T" without unchecked warning.
-   *
-   * @returns "this" casted to "T"
-   */
-  @SuppressWarnings("unchecked")
-  protected T castToT(){
-    return (T)this;
   }
 
   /**
@@ -610,7 +568,7 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>>{
     labelMap.put(name, labelPosition);
 
     if(pendingLabelMap.containsKey(name)){
-      Set<PendingJump> jumps = pendingLabelMap.remove(name);
+      Set<AsmBuilder.PendingJump> jumps = pendingLabelMap.remove(name);
       for(var jumpData : jumps){
         byteBuf.position(jumpData.position());
         int offset = labelPosition - jumpData.position();
@@ -652,8 +610,8 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>>{
     Integer labelPosition = labelMap.get(label);
     if(labelPosition == null){
       /* forward jump - pending until label is set */
-      Set<PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
-      jumps.add(new PendingJump(emitOp, position));
+      Set<AsmBuilder.PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
+      jumps.add(new AsmBuilder.PendingJump(emitOp, position));
 
       // Fill with NOP in 6 bytes (max 2 opcodes + rel32) temporally.
       for(int i = 0; i < 6; i++){
@@ -771,8 +729,8 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>>{
     Integer labelPosition = labelMap.get(label);
     if(labelPosition == null){
       /* forward jump - pending until label is set */
-      Set<PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
-      jumps.add(new PendingJump(emitOp, position));
+      Set<AsmBuilder.PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
+      jumps.add(new AsmBuilder.PendingJump(emitOp, position));
 
       // Fill with NOP in 5 bytes (max 1 opcodes + rel32) temporally.
       for(int i = 0; i < 5; i++){
@@ -1017,96 +975,6 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>>{
     byte mode = emitModRM(m, 7, d);
     emitDisp(mode, d, m);
     return castToT();
-  }
-
-  private void updateTail(){
-    if(!pendingLabelMap.isEmpty()){
-      throw new IllegalStateException("Label is not defined: " + pendingLabelMap.keySet().toString());
-    }
-    seg.incTail(byteBuf.position());
-  }
-
-  /**
-   * Build as a MethodHandle
-   *
-   * @param options Linker options to pass to downcallHandle().
-   * @return MethodHandle for this assembly
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MethodHandle build(Linker.Option... options){
-    return build("<unnamed>", options);
-  }
-
-  /**
-   * Build as a MethodHandle
-   *
-   * @param name Method name
-   * @param options Linker options to pass to downcallHandle().
-   * @return MethodHandle for this assembly
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MethodHandle build(String name, Linker.Option... options){
-    return build(name, null, options);
-  }
-
-  private void storeMethodInfo(String name, JitDump jitdump){
-    var top = mem.address();
-    var size = byteBuf.position();
-    var methodInfo = seg.addMethodInfo(name, top, size);
-    if(jitdump != null){
-      jitdump.writeFunction(methodInfo);
-    }
-  }
-
-  /**
-   * Build as a MethodHandle
-   *
-   * @param name Method name
-   * @param jitdump JitDump instance which should be written.
-   * @param options Linker options to pass to downcallHandle().
-   * @return MethodHandle for this assembly
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MethodHandle build(String name, JitDump jitdump, Linker.Option... options){
-    updateTail();
-    storeMethodInfo(name, jitdump);
-    return Linker.nativeLinker().downcallHandle(mem, desc, options);
-  }
-
-  /**
-   * Get MemorySegment which is associated with this builder.
-   *
-   * @return MemorySegment of this builder
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MemorySegment getMemorySegment(){
-    return getMemorySegment("<unnamed>");
-  }
-
-  /**
-   * Get MemorySegment which is associated with this builder.
-   *
-   * @param name Method name
-   * @return MemorySegment of this builder
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MemorySegment getMemorySegment(String name){
-    return getMemorySegment(name, null);
-  }
-
-  /**
-   * Get MemorySegment which is associated with this builder.
-   *
-   * @param name Method name
-   * @param jitdump JitDump instance which should be written.
-   * @return MemorySegment of this builder
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MemorySegment getMemorySegment(String name, JitDump jitdump){
-    updateTail();
-    storeMethodInfo(name, jitdump);
-    long length = byteBuf.position();
-    return mem.reinterpret(length);
   }
 
 }
