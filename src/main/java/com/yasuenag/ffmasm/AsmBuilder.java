@@ -49,36 +49,60 @@ public class AsmBuilder<T extends AsmBuilder>{
    * Builder class for AMD64
    */
   public static final class AMD64 extends AMD64AsmBuilder<AMD64>{
+
+    public AMD64(CodeSegment seg) throws UnsupportedPlatformException{
+      this(seg, null);
+    }
+
     public AMD64(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
       super(seg, desc);
     }
+
   }
 
   /**
    * Builder class for SSE
    */
   public static final class SSE extends SSEAsmBuilder<SSE>{
+
+    public SSE(CodeSegment seg) throws UnsupportedPlatformException{
+      this(seg, null);
+    }
+
     public SSE(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
       super(seg, desc);
     }
+
   }
 
   /**
    * Builder class for AVX
    */
   public static final class AVX extends AVXAsmBuilder<AVX>{
+
+    public AVX(CodeSegment seg) throws UnsupportedPlatformException{
+      this(seg, null);
+    }
+
     public AVX(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
       super(seg, desc);
     }
+
   }
 
   /**
    * Builder class for AArch64
    */
   public static final class AArch64 extends AArch64AsmBuilder<AArch64>{
+
+    public AArch64(CodeSegment seg) throws UnsupportedPlatformException{
+      this(seg, null);
+    }
+
     public AArch64(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
       super(seg, desc);
     }
+
   }
 
   private final CodeSegment seg;
