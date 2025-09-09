@@ -31,15 +31,15 @@ public class Main{
 
   public static MemorySegment createRDTSC() throws Exception{
     var seg = new CodeSegment();
-    return AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg)
-     /* push %rbp      */ .push(Register.RBP)
-     /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-     /* rdtsc          */ .rdtsc()
-     /* shl $32, %rdx  */ .shl(Register.RDX, (byte)32, OptionalInt.empty())
-     /* or %rdx, %rax  */ .orMR(Register.RDX, Register.RAX, OptionalInt.empty())
-     /* leave          */ .leave()
-     /* ret            */ .ret()
-                          .getMemorySegment();
+    return new AsmBuilder.AMD64(seg)
+    /* push %rbp      */ .push(Register.RBP)
+    /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+    /* rdtsc          */ .rdtsc()
+    /* shl $32, %rdx  */ .shl(Register.RDX, (byte)32, OptionalInt.empty())
+    /* or %rdx, %rax  */ .orMR(Register.RDX, Register.RAX, OptionalInt.empty())
+    /* leave          */ .leave()
+    /* ret            */ .ret()
+                         .getMemorySegment();
   }
 
   public static void main(String[] args) throws Exception{

@@ -53,21 +53,21 @@ public class Main{
         throw new RuntimeException("Unsupported OS: " + osName);
       }
 
-      var cpuid = AMD64AsmBuilder.create(AMD64AsmBuilder.class, codeSegment, desc)
-        /* push %rbp          */ .push(Register.RBP)
-        /* mov %rsp, %rbp     */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /* push %rbx          */ .push(Register.RBX)
-        /* mov <arg1>, %rax   */ .movMR(arg1, Register.RAX, OptionalInt.empty())
-        /* mov <arg2>, %r11   */ .movMR(arg2, Register.R11, OptionalInt.empty())
-        /* cpuid              */ .cpuid()
-        /* mov %eax,   (%r11) */ .movMR(Register.EAX, Register.R11, OptionalInt.of(0))
-        /* mov %ebx,  4(%r11) */ .movMR(Register.EBX, Register.R11, OptionalInt.of(4))
-        /* mov %ecx,  8(%r11) */ .movMR(Register.ECX, Register.R11, OptionalInt.of(8))
-        /* mov %edx, 12(%r11) */ .movMR(Register.EDX, Register.R11, OptionalInt.of(12))
-        /* pop %rbx           */ .pop(Register.RBX, OptionalInt.empty())
-        /* leave              */ .leave()
-        /* ret                */ .ret()
-                                 .build(Linker.Option.critical(false));
+      var cpuid = new AsmBuilder.AMD64(codeSegment, desc)
+       /* push %rbp          */ .push(Register.RBP)
+       /* mov %rsp, %rbp     */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+       /* push %rbx          */ .push(Register.RBX)
+       /* mov <arg1>, %rax   */ .movMR(arg1, Register.RAX, OptionalInt.empty())
+       /* mov <arg2>, %r11   */ .movMR(arg2, Register.R11, OptionalInt.empty())
+       /* cpuid              */ .cpuid()
+       /* mov %eax,   (%r11) */ .movMR(Register.EAX, Register.R11, OptionalInt.of(0))
+       /* mov %ebx,  4(%r11) */ .movMR(Register.EBX, Register.R11, OptionalInt.of(4))
+       /* mov %ecx,  8(%r11) */ .movMR(Register.ECX, Register.R11, OptionalInt.of(8))
+       /* mov %edx, 12(%r11) */ .movMR(Register.EDX, Register.R11, OptionalInt.of(12))
+       /* pop %rbx           */ .pop(Register.RBX, OptionalInt.empty())
+       /* leave              */ .leave()
+       /* ret                */ .ret()
+                                .build(Linker.Option.critical(false));
 
       cpuid.invoke(0x80000002, mem);
       cpuid.invoke(0x80000003, mem.asSlice(4 * 4));

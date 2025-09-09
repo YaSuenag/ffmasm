@@ -36,7 +36,7 @@ public class Main{
                );
     try(var codeSegment = new CodeSegment()){
       System.out.println("Addr: 0x" + Long.toHexString(codeSegment.getAddr().address()));
-      var func = new AArch64AsmBuilder(codeSegment, desc)
+      var func = new AsmBuilder.AArch64(codeSegment, desc)
 /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
 /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
 /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
