@@ -75,7 +75,7 @@ public class AsmBuilder<T extends AsmBuilder>{
   /**
    * Builder class for AArch64
    */
-  public static final class AArch64 extends AArch64AsmBuilder{
+  public static final class AArch64 extends AArch64AsmBuilder<AArch64>{
     public AArch64(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
       super(seg, desc);
     }

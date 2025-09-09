@@ -39,7 +39,7 @@ import com.yasuenag.ffmasm.aarch64.Register;
  *
  * @author Yasumasa Suenaga
  */
-public class AArch64AsmBuilder extends AsmBuilder<AArch64AsmBuilder>{
+public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilder<T>{
 
   /**
    * Constructor.
@@ -70,7 +70,7 @@ public class AArch64AsmBuilder extends AsmBuilder<AArch64AsmBuilder>{
    * @param imm7 Memory offset of rn to be loaded.
    * @return This instance
    */
-  public AArch64AsmBuilder ldp(Register rt, Register rt2, Register rn, IndexClass idxCls, int imm7){
+  public T ldp(Register rt, Register rt2, Register rn, IndexClass idxCls, int imm7){
     byte opc = rt.width() == 64 ? (byte)0b10 : (byte)0b00;
     byte imm = rn.width() == 64 ? (byte)(imm7 / 8) : (byte)(imm7 / 4);
 
@@ -84,7 +84,7 @@ public class AArch64AsmBuilder extends AsmBuilder<AArch64AsmBuilder>{
                   rt.encoding();
 
     byteBuf.putInt(encoded);
-    return this;
+    return castToT();
   }
 
   /**
@@ -97,7 +97,7 @@ public class AArch64AsmBuilder extends AsmBuilder<AArch64AsmBuilder>{
    * @param imm7 Memory offset of rn to be stored.
    * @return This instance
    */
-  public AArch64AsmBuilder stp(Register rt, Register rt2, Register rn, IndexClass idxCls, int imm7){
+  public T stp(Register rt, Register rt2, Register rn, IndexClass idxCls, int imm7){
     byte opc = rt.width() == 64 ? (byte)0b10 : (byte)0b00;
     byte imm = rn.width() == 64 ? (byte)(imm7 / 8) : (byte)(imm7 / 4);
 
@@ -111,7 +111,7 @@ public class AArch64AsmBuilder extends AsmBuilder<AArch64AsmBuilder>{
                   rt.encoding();
 
     byteBuf.putInt(encoded);
-    return this;
+    return castToT();
   }
 
   /**
@@ -121,7 +121,7 @@ public class AArch64AsmBuilder extends AsmBuilder<AArch64AsmBuilder>{
    * @param dst Destination register.
    * @return This instance
    */
-  public AArch64AsmBuilder mov(Register src, Register dst){
+  public T mov(Register src, Register dst){
     boolean is_SP = src == Register.SP || dst == Register.SP;
     byte sf = src.width() == 64 ? (byte)1 : (byte)0;
 
@@ -142,7 +142,7 @@ public class AArch64AsmBuilder extends AsmBuilder<AArch64AsmBuilder>{
 
 
     byteBuf.putInt(encoded);
-    return this;
+    return castToT();
   }
 
   /**
@@ -151,11 +151,11 @@ public class AArch64AsmBuilder extends AsmBuilder<AArch64AsmBuilder>{
    * @param rn The general-purpose register holding the address to be branched to. X30 will be set if this argument is empty.
    * @return This instance
    */
-  public AArch64AsmBuilder ret(Optional<Register> rn){
+  public T ret(Optional<Register> rn){
     int encoded = (0b1101011001011111000000 << 10) |
                   (rn.orElse(Register.X30).encoding() << 5);
     byteBuf.putInt(encoded);
-    return this;
+    return castToT();
   }
 
 }
