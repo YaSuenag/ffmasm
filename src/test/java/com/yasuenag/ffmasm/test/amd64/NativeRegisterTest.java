@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, Yasumasa Suenaga
+ * Copyright (C) 2023, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -28,9 +28,9 @@ import java.lang.foreign.ValueLayout;
 import java.util.Map;
 import java.util.OptionalInt;
 
+import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.NativeRegister;
-import com.yasuenag.ffmasm.amd64.AMD64AsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
 
 
@@ -49,13 +49,13 @@ public class NativeRegisterTest extends TestBase{
                    ValueLayout.JAVA_INT, // 2nd arg (jobject)
                    ValueLayout.JAVA_INT  // 3rd arg (arg1 of caller)
                  );
-      var stub = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-        /* push %rbp         */ .push(Register.RBP)
-        /* mov %rsp, %rbp    */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
-        /* mov %arg3, retReg */ .movMR(argReg.arg3(), argReg.returnReg(), OptionalInt.empty()) // arg1 in Java is arg3 in native
-        /* leave             */ .leave()
-        /* ret               */ .ret()
-                                .getMemorySegment();
+      var stub = new AsmBuilder.AMD64(seg, desc)
+       /* push %rbp         */ .push(Register.RBP)
+       /* mov %rsp, %rbp    */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+       /* mov %arg3, retReg */ .movMR(argReg.arg3(), argReg.returnReg(), OptionalInt.empty()) // arg1 in Java is arg3 in native
+       /* leave             */ .leave()
+       /* ret               */ .ret()
+                               .getMemorySegment();
 
       var method = this.getClass()
                        .getMethod("test", int.class);

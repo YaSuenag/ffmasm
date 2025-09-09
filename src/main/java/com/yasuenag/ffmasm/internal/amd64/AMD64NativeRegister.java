@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, 2024, Yasumasa Suenaga
+ * Copyright (C) 2023, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -28,9 +28,9 @@ import java.lang.foreign.ValueLayout;
 import java.lang.ref.Cleaner;
 import java.util.OptionalInt;
 
+import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.NativeRegister;
-import com.yasuenag.ffmasm.amd64.AMD64AsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
 import com.yasuenag.ffmasm.internal.JvmtiEnv;
 
@@ -86,40 +86,40 @@ public final class AMD64NativeRegister extends NativeRegister{
         | Return Address                                  |
          -------------------------------------------------
      */
-    registerStub = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-  // prologue
-    /* push %rbp               */ .push(Register.RBP)
-    /* mov %rsp, %rbp          */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-    /* sub $64, %rsp           */ .sub(Register.RSP, 64, OptionalInt.empty())
-    /* mov savedReg1, -8(%rbp) */ .movMR(regs.savedReg1(), Register.RBP, OptionalInt.of(-8))
-    /* mov arg1, savedReg1     */ .movMR(regs.arg1(), regs.savedReg1(), OptionalInt.empty())
+    registerStub = new AsmBuilder.AMD64(seg, desc)
+ // prologue
+   /* push %rbp               */ .push(Register.RBP)
+   /* mov %rsp, %rbp          */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+   /* sub $64, %rsp           */ .sub(Register.RSP, 64, OptionalInt.empty())
+   /* mov savedReg1, -8(%rbp) */ .movMR(regs.savedReg1(), Register.RBP, OptionalInt.of(-8))
+   /* mov arg1, savedReg1     */ .movMR(regs.arg1(), regs.savedReg1(), OptionalInt.empty())
 
-  // call GetLoadedClasses()
-    /* lea -24(%rbp), arg2     */ .lea(regs.arg2(), Register.RBP, -24) // count
-    /* lea -16(%rbp), arg3     */ .lea(regs.arg3(), Register.RBP, -16)  // classes
-    /* mov addr, arg1          */ .movImm(regs.arg1(), jvmtiEnv.getRawAddress()) // address of jvmtiEnv
-    /* mov addr, tmpReg1       */ .movImm(regs.tmpReg1(), jvmtiEnv.getLoadedClassesAddr().address()) // address of GetLoadedClasses()
-    /* call tmpReg1            */ .call(regs.tmpReg1())
+ // call GetLoadedClasses()
+   /* lea -24(%rbp), arg2     */ .lea(regs.arg2(), Register.RBP, -24) // count
+   /* lea -16(%rbp), arg3     */ .lea(regs.arg3(), Register.RBP, -16)  // classes
+   /* mov addr, arg1          */ .movImm(regs.arg1(), jvmtiEnv.getRawAddress()) // address of jvmtiEnv
+   /* mov addr, tmpReg1       */ .movImm(regs.tmpReg1(), jvmtiEnv.getLoadedClassesAddr().address()) // address of GetLoadedClasses()
+   /* call tmpReg1            */ .call(regs.tmpReg1())
 
-  // call callback(jclass *classes, jint class_count)
-    /* mov -24(%rbp), arg2     */ .movRM(regs.arg2(), Register.RBP, OptionalInt.of(-24)) // count
-    /* mov -16(%rbp), arg1     */ .movRM(regs.arg1(), Register.RBP, OptionalInt.of(-16))  // classes
-    /* mov returnReg, arg3     */ .movMR(regs.returnReg(), regs.arg3(), OptionalInt.empty()) // result of GetLoadedClasses()
-    /* mov savedReg1, arg4     */ .movMR(regs.savedReg1(), regs.arg4(), OptionalInt.empty()) // callbackParam
-    /* mov addr, tmpReg1       */ .movImm(regs.tmpReg1(), cbStub.address()) // address of callback
-    /* call tmpReg1            */ .call(regs.tmpReg1())
+ // call callback(jclass *classes, jint class_count)
+   /* mov -24(%rbp), arg2     */ .movRM(regs.arg2(), Register.RBP, OptionalInt.of(-24)) // count
+   /* mov -16(%rbp), arg1     */ .movRM(regs.arg1(), Register.RBP, OptionalInt.of(-16))  // classes
+   /* mov returnReg, arg3     */ .movMR(regs.returnReg(), regs.arg3(), OptionalInt.empty()) // result of GetLoadedClasses()
+   /* mov savedReg1, arg4     */ .movMR(regs.savedReg1(), regs.arg4(), OptionalInt.empty()) // callbackParam
+   /* mov addr, tmpReg1       */ .movImm(regs.tmpReg1(), cbStub.address()) // address of callback
+   /* call tmpReg1            */ .call(regs.tmpReg1())
 
-  // call Deallocate()
-    /* mov addr, arg1          */ .movImm(regs.arg1(), jvmtiEnv.getRawAddress()) // address of jvmtiEnv
-    /* mov -16(%rbp), arg1     */ .movRM(regs.arg1(), Register.RBP, OptionalInt.of(-16))  // classes
-    /* mov addr, tmpReg1       */ .movImm(regs.tmpReg1(), jvmtiEnv.deallocateAddr().address()) // address of Deallocate()
-    /* call tmpReg1            */ .call(regs.tmpReg1())
+ // call Deallocate()
+   /* mov addr, arg1          */ .movImm(regs.arg1(), jvmtiEnv.getRawAddress()) // address of jvmtiEnv
+   /* mov -16(%rbp), arg1     */ .movRM(regs.arg1(), Register.RBP, OptionalInt.of(-16))  // classes
+   /* mov addr, tmpReg1       */ .movImm(regs.tmpReg1(), jvmtiEnv.deallocateAddr().address()) // address of Deallocate()
+   /* call tmpReg1            */ .call(regs.tmpReg1())
 
-  // epilogue
-    /* mov -8(%rbp), savedReg1 */ .movRM(regs.savedReg1(), Register.RBP, OptionalInt.of(-8))
-    /* leave                   */ .leave()
-    /* ret                     */ .ret()
-                                  .build();
+ // epilogue
+   /* mov -8(%rbp), savedReg1 */ .movRM(regs.savedReg1(), Register.RBP, OptionalInt.of(-8))
+   /* leave                   */ .leave()
+   /* ret                     */ .ret()
+                                 .build();
   }
 
   static{

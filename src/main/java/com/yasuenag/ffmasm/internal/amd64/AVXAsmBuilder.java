@@ -16,13 +16,14 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.yasuenag.ffmasm.amd64;
+package com.yasuenag.ffmasm.internal.amd64;
 
 import java.lang.foreign.FunctionDescriptor;
 import java.util.OptionalInt;
 
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
+import com.yasuenag.ffmasm.amd64.Register;
 
 
 /**
@@ -30,7 +31,7 @@ import com.yasuenag.ffmasm.UnsupportedPlatformException;
  *
  * @author Yasumasa Suenaga
  */
-public class AVXAsmBuilder extends SSEAsmBuilder{
+public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
 
   /**
    * Constructor.
@@ -38,7 +39,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    * @param seg CodeSegment which is used by this builder.
    * @param desc FunctionDescriptor for this builder. It will be used by build().
    */
-  protected AVXAsmBuilder(CodeSegment seg, FunctionDescriptor desc){
+  public AVXAsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
     super(seg, desc);
   }
 
@@ -109,7 +110,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
                ));
   }
 
-  private AVXAsmBuilder vmovdq(Register r, Register m, OptionalInt disp, PP pp, byte opcode){
+  private T vmovdq(Register r, Register m, OptionalInt disp, PP pp, byte opcode){
     if(m.encoding() > 7){
       emit3ByteVEXPrefix(Register.YMM0 /* unused */, m, pp, LeadingBytes.H0F);
     }
@@ -127,7 +128,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
       byteBuf.putInt(disp.getAsInt());
     }
 
-    return this;
+    return castToT();
   }
 
   /**
@@ -145,7 +146,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    *             a memory operand..
    * @return This instance
    */
-  public AVXAsmBuilder vmovdqaRM(Register r, Register m, OptionalInt disp){
+  public T vmovdqaRM(Register r, Register m, OptionalInt disp){
     return vmovdq(r, m, disp, PP.H66, (byte)0x6f);
   }
 
@@ -164,7 +165,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    *             a memory operand..
    * @return This instance
    */
-  public AVXAsmBuilder vmovdqaMR(Register r, Register m, OptionalInt disp){
+  public T vmovdqaMR(Register r, Register m, OptionalInt disp){
     return vmovdq(r, m, disp, PP.H66, (byte)0x7f);
   }
 
@@ -183,7 +184,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    *             a memory operand..
    * @return This instance
    */
-  public AVXAsmBuilder vmovdquRM(Register r, Register m, OptionalInt disp){
+  public T vmovdquRM(Register r, Register m, OptionalInt disp){
     return vmovdq(r, m, disp, PP.HF3, (byte)0x6f);
   }
 
@@ -202,7 +203,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    *             a memory operand..
    * @return This instance
    */
-  public AVXAsmBuilder vmovdquMR(Register r, Register m, OptionalInt disp){
+  public T vmovdquMR(Register r, Register m, OptionalInt disp){
     return vmovdq(r, m, disp, PP.HF3, (byte)0x7f);
   }
 
@@ -222,7 +223,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    *             a memory operand.
    * @return This instance
    */
-  public AVXAsmBuilder vpxor(Register r, Register m, Register dest, OptionalInt disp){
+  public T vpxor(Register r, Register m, Register dest, OptionalInt disp){
     if(m.encoding() > 7){
       emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F);
     }
@@ -240,7 +241,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
       byteBuf.putInt(disp.getAsInt());
     }
 
-    return this;
+    return castToT();
   }
 
   /**
@@ -259,7 +260,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    *             a memory operand.
    * @return This instance
    */
-  public AVXAsmBuilder vpaddd(Register r, Register m, Register dest, OptionalInt disp){
+  public T vpaddd(Register r, Register m, Register dest, OptionalInt disp){
     if(m.encoding() > 7){
       emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F);
     }
@@ -277,7 +278,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
       byteBuf.putInt(disp.getAsInt());
     }
 
-    return this;
+    return castToT();
   }
 
   /**
@@ -295,7 +296,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    *             a memory operand.
    * @return This instance
    */
-  public AVXAsmBuilder vptest(Register r, Register m, OptionalInt disp){
+  public T vptest(Register r, Register m, OptionalInt disp){
     emit3ByteVEXPrefix(Register.YMM0 /* unused */, m, PP.H66, LeadingBytes.H0F38);
     byteBuf.put((byte)0x17); // PTEST
     byte mode = emitModRM(r, m, disp);
@@ -306,7 +307,7 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
       byteBuf.putInt(disp.getAsInt());
     }
 
-    return this;
+    return castToT();
   }
 
   /**
@@ -317,10 +318,10 @@ public class AVXAsmBuilder extends SSEAsmBuilder{
    *
    * @return This instance
    */
-  public AVXAsmBuilder vzeroupper(){
+  public T vzeroupper(){
     emit2ByteVEXPrefixWithVVVV((byte)0b1111, false, PP.None);
     byteBuf.put((byte)0x77); // VZEROUPPER
-    return this;
+    return castToT();
   }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2024, Yasumasa Suenaga
+ * Copyright (C) 2022, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -16,13 +16,14 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.yasuenag.ffmasm.amd64;
+package com.yasuenag.ffmasm.internal.amd64;
 
 import java.lang.foreign.FunctionDescriptor;
 import java.util.OptionalInt;
 
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
+import com.yasuenag.ffmasm.amd64.Register;
 
 
 /**
@@ -30,7 +31,7 @@ import com.yasuenag.ffmasm.UnsupportedPlatformException;
  *
  * @author Yasumasa Suenaga
  */
-public class SSEAsmBuilder extends AMD64AsmBuilder{
+public class SSEAsmBuilder<T extends SSEAsmBuilder<T>> extends AMD64AsmBuilder<T>{
 
   /**
    * Constructor.
@@ -38,11 +39,11 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
    * @param seg CodeSegment which is used by this builder.
    * @param desc FunctionDescriptor for this builder. It will be used by build().
    */
-  protected SSEAsmBuilder(CodeSegment seg, FunctionDescriptor desc){
+  public SSEAsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
     super(seg, desc);
   }
 
-  private SSEAsmBuilder movdq(Register r, Register m, OptionalInt disp, byte prefix, byte secondOpcode){
+  private T movdq(Register r, Register m, OptionalInt disp, byte prefix, byte secondOpcode){
     byteBuf.put(prefix);
     emitREXOp(r, m);
     byteBuf.put((byte)0x0f); // escape opcode
@@ -50,7 +51,7 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
     var mode = emitModRM(r, m, disp);
     emitDisp(mode, disp, m);
 
-    return this;
+    return castToT();
   }
 
   /**
@@ -66,7 +67,7 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
    *             Otherwise it has to be 64 bit GPR because it have to be   *             a memory operand.
    * @return This instance
    */
-  public SSEAsmBuilder movdqaRM(Register r, Register m, OptionalInt disp){
+  public T movdqaRM(Register r, Register m, OptionalInt disp){
     return movdq(r, m, disp, (byte)0x66, (byte)0x6f);
   }
 
@@ -83,7 +84,7 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
    *             Otherwise it has to be 64 bit GPR because it have to be   *             a memory operand.
    * @return This instance
    */
-  public SSEAsmBuilder movdqaMR(Register r, Register m, OptionalInt disp){
+  public T movdqaMR(Register r, Register m, OptionalInt disp){
     return movdq(r, m, disp, (byte)0x66, (byte)0x7f);
   }
 
@@ -100,7 +101,7 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
    *             Otherwise it has to be 64 bit GPR because it have to be   *             a memory operand.
    * @return This instance
    */
-  public SSEAsmBuilder movdquRM(Register r, Register m, OptionalInt disp){
+  public T movdquRM(Register r, Register m, OptionalInt disp){
     return movdq(r, m, disp, (byte)0xf3, (byte)0x6f);
   }
 
@@ -117,19 +118,19 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
    *             Otherwise it has to be 64 bit GPR because it have to be   *             a memory operand.
    * @return This instance
    */
-  public SSEAsmBuilder movdquMR(Register r, Register m, OptionalInt disp){
+  public T movdquMR(Register r, Register m, OptionalInt disp){
     return movdq(r, m, disp, (byte)0xf3, (byte)0x7f);
   }
 
-  private SSEAsmBuilder movDInternal(Register r, Register m, OptionalInt disp, byte secondOpcode){
+  private T movDInternal(Register r, Register m, OptionalInt disp, byte secondOpcode){
     return movDorQ(r, m, disp, secondOpcode, false);
   }
 
-  private SSEAsmBuilder movQInternal(Register r, Register m, OptionalInt disp, byte secondOpcode){
+  private T movQInternal(Register r, Register m, OptionalInt disp, byte secondOpcode){
     return movDorQ(r, m, disp, secondOpcode, true);
   }
 
-  private SSEAsmBuilder movDorQ(Register r, Register m, OptionalInt disp, byte secondOpcode, boolean isQWORD){
+  private T movDorQ(Register r, Register m, OptionalInt disp, byte secondOpcode, boolean isQWORD){
     byteBuf.put((byte)0x66); // prefix
     emitREXOp(r, m, isQWORD);
     byteBuf.put((byte)0x0f); // escape opcode
@@ -137,7 +138,7 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
     var mode = emitModRM(r, m, disp);
     emitDisp(mode, disp, m);
 
-    return this;
+    return castToT();
   }
 
   /**
@@ -151,7 +152,7 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public SSEAsmBuilder movdRM(Register r, Register m, OptionalInt disp){
+  public T movdRM(Register r, Register m, OptionalInt disp){
     return movDInternal(r, m, disp, (byte)0x6e);
   }
 
@@ -166,7 +167,7 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public SSEAsmBuilder movdMR(Register r, Register m, OptionalInt disp){
+  public T movdMR(Register r, Register m, OptionalInt disp){
     return movDInternal(r, m, disp, (byte)0x7e);
   }
 
@@ -181,7 +182,7 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public SSEAsmBuilder movqRM(Register r, Register m, OptionalInt disp){
+  public T movqRM(Register r, Register m, OptionalInt disp){
     return movQInternal(r, m, disp, (byte)0x6e);
   }
 
@@ -196,7 +197,7 @@ public class SSEAsmBuilder extends AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public SSEAsmBuilder movqMR(Register r, Register m, OptionalInt disp){
+  public T movqMR(Register r, Register m, OptionalInt disp){
     return movQInternal(r, m, disp, (byte)0x7e);
   }
 

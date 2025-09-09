@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.yasuenag.ffmasm.aarch64;
+package com.yasuenag.ffmasm.internal.aarch64;
 
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
@@ -29,6 +29,8 @@ import java.util.Optional;
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.JitDump;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
+import com.yasuenag.ffmasm.aarch64.IndexClass;
+import com.yasuenag.ffmasm.aarch64.Register;
 
 
 /**

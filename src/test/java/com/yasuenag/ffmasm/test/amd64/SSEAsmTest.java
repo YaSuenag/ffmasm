@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024, Yasumasa Suenaga
+ * Copyright (C) 2024, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -29,10 +29,9 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.OptionalInt;
 
+import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
-import com.yasuenag.ffmasm.amd64.AMD64AsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
-import com.yasuenag.ffmasm.amd64.SSEAsmBuilder;
 
 
 @EnabledOnOs(architectures = {"amd64"})
@@ -49,10 +48,9 @@ public class SSEAsmTest extends TestBase{
                    ValueLayout.ADDRESS, // 1st argument
                    ValueLayout.ADDRESS  // 2nd argument
                  );
-      var method = AMD64AsmBuilder.create(SSEAsmBuilder.class, seg, desc)
+      var method = new AsmBuilder.SSE(seg, desc)
       /* push %rbp            */ .push(Register.RBP)
       /* mov %rsp, %rbp       */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                                 .cast(SSEAsmBuilder.class)
       /* movdqa (arg1), %xmm0 */ .movdqaRM(Register.XMM0, argReg.arg1(), OptionalInt.of(0))
       /* movdqa %xmm0, (arg2) */ .movdqaMR(Register.XMM0, argReg.arg2(), OptionalInt.of(0))
       /* leave                */ .leave()
@@ -86,10 +84,9 @@ public class SSEAsmTest extends TestBase{
                    ValueLayout.ADDRESS, // 1st argument
                    ValueLayout.ADDRESS  // 2nd argument
                  );
-      var method = AMD64AsmBuilder.create(SSEAsmBuilder.class, seg, desc)
+      var method = new AsmBuilder.SSE(seg, desc)
       /* push %rbp            */ .push(Register.RBP)
       /* mov %rsp, %rbp       */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                                 .cast(SSEAsmBuilder.class)
       /* movdqu (arg1), %xmm0 */ .movdquRM(Register.XMM0, argReg.arg1(), OptionalInt.of(0))
       /* movdqu %xmm0, (arg2) */ .movdquMR(Register.XMM0, argReg.arg2(), OptionalInt.of(0))
       /* leave                */ .leave()
@@ -123,14 +120,13 @@ public class SSEAsmTest extends TestBase{
                    ValueLayout.JAVA_FLOAT, // return value
                    ValueLayout.ADDRESS     // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(SSEAsmBuilder.class, seg, desc)
-      /* push %rbp             */ .push(Register.RBP)
-      /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                                  .cast(SSEAsmBuilder.class)
-      /* movd (arg1), %xmm0    */ .movdRM(Register.XMM0, argReg.arg1(), OptionalInt.of(0))
-      /* leave                 */ .leave()
-      /* ret                   */ .ret()
-                                  .build();
+      var method = new AsmBuilder.SSE(seg, desc)
+     /* push %rbp             */ .push(Register.RBP)
+     /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+     /* movd (arg1), %xmm0    */ .movdRM(Register.XMM0, argReg.arg1(), OptionalInt.of(0))
+     /* leave                 */ .leave()
+     /* ret                   */ .ret()
+                                 .build();
 
       float expected = 1.1f;
       var arena = Arena.ofAuto();
@@ -159,17 +155,16 @@ public class SSEAsmTest extends TestBase{
       var desc = FunctionDescriptor.ofVoid(
                    ValueLayout.JAVA_FLOAT // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(SSEAsmBuilder.class, seg, desc)
-      /* push %rbp             */ .push(Register.RBP)
-      /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-      // Mixed argument order (int, fp) is different between Windows and Linux.
-      // Thus address is loaded from immediate value.
-      /* mov addr, %rax        */ .movImm(Register.RAX, dest.address())
-                                  .cast(SSEAsmBuilder.class)
-      /* movd %xmm0, (%rax)    */ .movdMR(Register.XMM0, Register.RAX, OptionalInt.of(0))
-      /* leave                 */ .leave()
-      /* ret                   */ .ret()
-                                  .build();
+      var method = new AsmBuilder.SSE(seg, desc)
+     /* push %rbp             */ .push(Register.RBP)
+     /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+   // Mixed argument order (int, fp) is different between Windows and Linux.
+   // Thus address is loaded from immediate value.
+     /* mov addr, %rax        */ .movImm(Register.RAX, dest.address())
+     /* movd %xmm0, (%rax)    */ .movdMR(Register.XMM0, Register.RAX, OptionalInt.of(0))
+     /* leave                 */ .leave()
+     /* ret                   */ .ret()
+                                 .build();
 
       float expected = 1.1f;
 
@@ -194,14 +189,13 @@ public class SSEAsmTest extends TestBase{
                    ValueLayout.JAVA_DOUBLE, // return value
                    ValueLayout.ADDRESS      // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(SSEAsmBuilder.class, seg, desc)
-      /* push %rbp             */ .push(Register.RBP)
-      /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                                  .cast(SSEAsmBuilder.class)
-      /* movq (arg1), %xmm0    */ .movqRM(Register.XMM0, argReg.arg1(), OptionalInt.of(0))
-      /* leave                 */ .leave()
-      /* ret                   */ .ret()
-                                  .build();
+      var method = new AsmBuilder.SSE(seg, desc)
+     /* push %rbp             */ .push(Register.RBP)
+     /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+     /* movq (arg1), %xmm0    */ .movqRM(Register.XMM0, argReg.arg1(), OptionalInt.of(0))
+     /* leave                 */ .leave()
+     /* ret                   */ .ret()
+                                 .build();
 
       double expected = 1.1d;
       var arena = Arena.ofAuto();
@@ -230,17 +224,16 @@ public class SSEAsmTest extends TestBase{
       var desc = FunctionDescriptor.ofVoid(
                    ValueLayout.JAVA_DOUBLE // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(SSEAsmBuilder.class, seg, desc)
-      /* push %rbp             */ .push(Register.RBP)
-      /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-      // Mixed argument order (int, fp) is different between Windows and Linux.
-      // Thus address is loaded from immediate value.
-      /* mov addr, %rax        */ .movImm(Register.RAX, dest.address())
-                                  .cast(SSEAsmBuilder.class)
-      /* movq %xmm0, (%rax)    */ .movqMR(Register.XMM0, Register.RAX, OptionalInt.of(0))
-      /* leave                 */ .leave()
-      /* ret                   */ .ret()
-                                  .build();
+      var method = new AsmBuilder.SSE(seg, desc)
+     /* push %rbp             */ .push(Register.RBP)
+     /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+   // Mixed argument order (int, fp) is different between Windows and Linux.
+   // Thus address is loaded from immediate value.
+     /* mov addr, %rax        */ .movImm(Register.RAX, dest.address())
+     /* movq %xmm0, (%rax)    */ .movqMR(Register.XMM0, Register.RAX, OptionalInt.of(0))
+     /* leave                 */ .leave()
+     /* ret                   */ .ret()
+                                 .build();
 
       double expected = 1.1d;
 
