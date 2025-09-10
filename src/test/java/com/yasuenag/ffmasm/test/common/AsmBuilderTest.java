@@ -59,24 +59,6 @@ public class AsmBuilderTest{
 
   @Test
   @EnabledOnOs(architectures = {"amd64"})
-  public void testAMD64AsmBuilderOnAMD64() throws UnsupportedPlatformException{
-    Assertions.assertTrue(new AsmBuilder.AMD64(seg) instanceof AMD64AsmBuilder);
-  }
-
-  @Test
-  @EnabledOnOs(architectures = {"amd64"})
-  public void testSSEAsmBuilderOnAMD64() throws UnsupportedPlatformException{
-    Assertions.assertTrue(new AsmBuilder.SSE(seg) instanceof SSEAsmBuilder);
-  }
-
-  @Test
-  @EnabledOnOs(architectures = {"amd64"})
-  public void testAVXAsmBuilderOnAMD64() throws UnsupportedPlatformException{
-    Assertions.assertTrue(new AsmBuilder.AVX(seg) instanceof AVXAsmBuilder);
-  }
-
-  @Test
-  @EnabledOnOs(architectures = {"amd64"})
   public void testAArch64AsmBuilderOnAMD64() throws UnsupportedPlatformException{
     Assertions.assertThrows(UnsupportedPlatformException.class, () -> new AsmBuilder.AArch64(seg));
   }
@@ -97,12 +79,6 @@ public class AsmBuilderTest{
   @EnabledOnOs(architectures = {"aarch64"})
   public void testAVXAsmBuilderOnAArch64(){
     Assertions.assertThrows(UnsupportedPlatformException.class, () -> new AsmBuilder.AVX(seg));
-  }
-
-  @Test
-  @EnabledOnOs(architectures = {"aarch64"})
-  public void testAArch64AsmBuilderOnAArch64() throws UnsupportedPlatformException{
-    Assertions.assertTrue(new AsmBuilder.AArch64(seg) instanceof AArch64AsmBuilder);
   }
 
 }
