@@ -39,7 +39,7 @@ public class SSEAsmBuilder<T extends SSEAsmBuilder<T>> extends AMD64AsmBuilder<T
    * @param seg CodeSegment which is used by this builder.
    * @param desc FunctionDescriptor for this builder. It will be used by build().
    */
-  public SSEAsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
+  protected SSEAsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
     super(seg, desc);
   }
 

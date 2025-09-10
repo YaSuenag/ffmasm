@@ -47,7 +47,7 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
    * @param seg CodeSegment which is used by this builder.
    * @param desc FunctionDescriptor for this builder. It will be used by build().
    */
-  public AArch64AsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
+  protected AArch64AsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
     super(seg, desc);
 
     if(!System.getProperty("os.arch").equals("aarch64")){

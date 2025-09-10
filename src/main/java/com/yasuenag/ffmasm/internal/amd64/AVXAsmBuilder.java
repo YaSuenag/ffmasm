@@ -39,7 +39,7 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
    * @param seg CodeSegment which is used by this builder.
    * @param desc FunctionDescriptor for this builder. It will be used by build().
    */
-  public AVXAsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
+  protected AVXAsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
     super(seg, desc);
   }
 

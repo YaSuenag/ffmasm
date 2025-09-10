@@ -45,7 +45,7 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
    * @throws UnsupportedPlatformException thrown when AMD64AsmBuilder is
    *         attempted to instantiate on unsupported platform.
    */
-  public AMD64AsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
+  protected AMD64AsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
     super(seg, desc);
 
     if(!System.getProperty("os.arch").equals("amd64")){
