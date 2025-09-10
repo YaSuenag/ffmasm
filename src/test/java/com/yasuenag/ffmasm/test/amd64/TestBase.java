@@ -27,9 +27,9 @@ import java.util.OptionalInt;
 
 import org.junit.jupiter.api.BeforeAll;
 
+import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
-import com.yasuenag.ffmasm.amd64.AMD64AsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
 
 
@@ -54,22 +54,22 @@ public class TestBase{
                                          ValueLayout.JAVA_INT, /* ecx    */
                                          ValueLayout.ADDRESS   /* result */
                                         );
-    return AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-  /* push %rbp         */ .push(Register.RBP)
-  /* mov %rsp, %rbp    */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
-  /* push %rbx         */ .push(Register.RBX)
-  /* mov arg1, %rax    */ .movRM(Register.RAX, argReg.arg1(), OptionalInt.empty())
-  /* mov arg2, %rcx    */ .movRM(Register.RCX, argReg.arg2(), OptionalInt.empty())
-  /* mov arg3, %r11    */ .movRM(Register.R11, argReg.arg3(), OptionalInt.empty())
-  /* cpuid             */ .cpuid()
-  /* mov %eax, (r11)   */ .movMR(Register.EAX, Register.R11, OptionalInt.of(0))
-  /* mov %ebx, 4(r11)  */ .movMR(Register.EBX, Register.R11, OptionalInt.of(4))
-  /* mov %ecx, 8(r11)  */ .movMR(Register.ECX, Register.R11, OptionalInt.of(8))
-  /* mov %ecx, 12(r11) */ .movMR(Register.EDX, Register.R11, OptionalInt.of(12))
-  /* pop %rbx          */ .pop(Register.RBX, OptionalInt.empty())
-  /* leave             */ .leave()
-  /* ret               */ .ret()
-                          .build();
+    return new AsmBuilder.AMD64(seg, desc)
+ /* push %rbp         */ .push(Register.RBP)
+ /* mov %rsp, %rbp    */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+ /* push %rbx         */ .push(Register.RBX)
+ /* mov arg1, %rax    */ .movRM(Register.RAX, argReg.arg1(), OptionalInt.empty())
+ /* mov arg2, %rcx    */ .movRM(Register.RCX, argReg.arg2(), OptionalInt.empty())
+ /* mov arg3, %r11    */ .movRM(Register.R11, argReg.arg3(), OptionalInt.empty())
+ /* cpuid             */ .cpuid()
+ /* mov %eax, (r11)   */ .movMR(Register.EAX, Register.R11, OptionalInt.of(0))
+ /* mov %ebx, 4(r11)  */ .movMR(Register.EBX, Register.R11, OptionalInt.of(4))
+ /* mov %ecx, 8(r11)  */ .movMR(Register.ECX, Register.R11, OptionalInt.of(8))
+ /* mov %ecx, 12(r11) */ .movMR(Register.EDX, Register.R11, OptionalInt.of(12))
+ /* pop %rbx          */ .pop(Register.RBX, OptionalInt.empty())
+ /* leave             */ .leave()
+ /* ret               */ .ret()
+                         .build();
   }
 
   @BeforeAll

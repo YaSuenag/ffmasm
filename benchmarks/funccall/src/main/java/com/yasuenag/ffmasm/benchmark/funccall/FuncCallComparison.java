@@ -35,15 +35,15 @@ public class FuncCallComparison{
              .register(FuncCallComparison.class, action);
 
       var desc = FunctionDescriptor.of(ValueLayout.JAVA_LONG);
-      var mem = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-           /* push %rbp      */ .push(Register.RBP)
-           /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-           /* rdtsc          */ .rdtsc()
-           /* shl $32, %rdx  */ .shl(Register.RDX, (byte)32, OptionalInt.empty())
-           /* or %rdx, %rax  */ .orMR(Register.RDX, Register.RAX, OptionalInt.empty())
-           /* leave          */ .leave()
-           /* ret            */ .ret()
-                                .getMemorySegment();
+      var mem = new AsmBuilder.AMD64(seg, desc)
+         /* push %rbp      */ .push(Register.RBP)
+         /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /* rdtsc          */ .rdtsc()
+         /* shl $32, %rdx  */ .shl(Register.RDX, (byte)32, OptionalInt.empty())
+         /* or %rdx, %rax  */ .orMR(Register.RDX, Register.RAX, OptionalInt.empty())
+         /* leave          */ .leave()
+         /* ret            */ .ret()
+                              .getMemorySegment();
 
       ffmRDTSC = Linker.nativeLinker().downcallHandle(mem, desc);
       ffmRDTSCCritical = Linker.nativeLinker().downcallHandle(mem, desc, Linker.Option.critical(false));

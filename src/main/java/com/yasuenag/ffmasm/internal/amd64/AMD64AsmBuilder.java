@@ -16,25 +16,18 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.yasuenag.ffmasm.amd64;
+package com.yasuenag.ffmasm.internal.amd64;
 
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
-import java.lang.foreign.MemorySegment;
-import java.lang.invoke.MethodHandle;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.function.Consumer;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Set;
 
+import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
-import com.yasuenag.ffmasm.JitDump;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
+import com.yasuenag.ffmasm.amd64.Register;
 
 
 /**
@@ -42,67 +35,19 @@ import com.yasuenag.ffmasm.UnsupportedPlatformException;
  *
  * @author Yasumasa Suenaga
  */
-public class AMD64AsmBuilder{
-
-  private final CodeSegment seg;
-
-  private final MemorySegment mem;
-
-  /**
-   * ByteBuffer which includes code content.
-   */
-  protected final ByteBuffer byteBuf;
-
-  private final FunctionDescriptor desc;
-
-  // Key: label, Value: position
-  private final Map<String, Integer> labelMap;
-
-  // Key: label, Value: jump data
-  private static record PendingJump(Consumer<Integer> emitOp, int position){}
-  private final Map<String, Set<PendingJump>> pendingLabelMap;
+public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>{
 
   /**
    * Constructor.
    *
    * @param seg CodeSegment which is used by this builder.
    * @param desc FunctionDescriptor for this builder. It will be used by build().
-   */
-  protected AMD64AsmBuilder(CodeSegment seg, FunctionDescriptor desc){
-    this.seg = seg;
-    this.mem = seg.getTailOfMemorySegment();
-    this.byteBuf = mem.asByteBuffer().order(ByteOrder.nativeOrder());
-    this.desc = desc;
-    this.labelMap = new HashMap<>();
-    this.pendingLabelMap = new HashMap<>();
-  }
-
-  /**
-   * Create builder instance.
-   * Note that FunctionDescriptor will set to null - it means Exception will be
-   * thrown when build() is called.
-   *
-   * @param clazz Class to use.
-   * @param seg code segment to use in this builder.
-   * @return Builder instance
    * @throws UnsupportedPlatformException thrown when AMD64AsmBuilder is
-   *          attempted to instantiate on unsupported platform.
+   *         attempted to instantiate on unsupported platform.
    */
-  public static <T extends AMD64AsmBuilder> T create(Class<T> clazz, CodeSegment seg) throws UnsupportedPlatformException{
-    return create(clazz, seg, null);
-  }
+  protected AMD64AsmBuilder(CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
+    super(seg, desc);
 
-  /**
-   * Create builder instance.
-   *
-   * @param clazz Class to use.
-   * @param seg code segment to use in this builder.
-   * @param desc function descriptor
-   * @return Builder instance
-   * @throws UnsupportedPlatformException thrown when AMD64AsmBuilder is
-   *          attempted to instantiate on unsupported platform.
-   */
-  public static <T extends AMD64AsmBuilder> T create(Class<T> clazz, CodeSegment seg, FunctionDescriptor desc) throws UnsupportedPlatformException{
     if(!System.getProperty("os.arch").equals("amd64")){
       throw new UnsupportedPlatformException("Platform is not AMD64.");
     }
@@ -111,41 +56,6 @@ public class AMD64AsmBuilder{
     if(bits != 64){
       throw new UnsupportedPlatformException("AMD64AsmBuilder supports 64 bit only.");
     }
-
-    seg.alignTo16Bytes();
-    try{
-      return clazz.getDeclaredConstructor(CodeSegment.class, FunctionDescriptor.class)
-                  .newInstance(seg, desc);
-    }
-    catch(NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e){
-      throw new RuntimeException("Unexpected", e);
-    }
-  }
-
-  /**
-   * Cast this instance to clazz.
-   * This method is useful in following case because movMR() returns
-   * AMD64AsmBuilder, not AVXAsmBuilder.
-   * <pre>{@code
-   * AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
-                    .movMR(Register.RAX, Register.RBX)
-                    .vmovdqaRM(Register.YMM0, Register.RAX, OptionalInt.of(0)); // ERROR!
-   * }</pre>
-   *
-   * In following code, it will not be reported error from javac
-   * because cast() returns AVXAsmBuilder instance which is casted.
-   * <pre>{@code
-   * AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
-                    .movMR(Register.RAX, Register.RBX)
-                    .cast(AVXAsmBuilder.class)
-                    .vmovdqaRM(Register.YMM0, Register.RAX, OptionalInt.of(0));
-   * }</pre>
-   *
-   * @param clazz The class which will be casted.
-   * @return Casted this instance.
-   */
-  public <T extends AMD64AsmBuilder> T cast(Class<T> clazz){
-    return clazz.cast(this);
   }
 
   /**
@@ -158,7 +68,7 @@ public class AMD64AsmBuilder{
    * @param reg Register to push to the stack.
    * @return This instance
    */
-  public AMD64AsmBuilder push(Register reg){
+  public T push(Register reg){
     if(reg.width() == 16){
       // Ops for 16 bits operands (66H)
       byteBuf.put((byte)0x66);
@@ -173,7 +83,7 @@ public class AMD64AsmBuilder{
     }
 
     byteBuf.put((byte)(0x50 | (reg.encoding() & 0x7)));
-    return this;
+    return castToT();
   }
 
   protected byte emitModRM(Register r, Register m, OptionalInt disp){
@@ -239,7 +149,7 @@ public class AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public AMD64AsmBuilder pop(Register reg, OptionalInt disp){
+  public T pop(Register reg, OptionalInt disp){
     if(reg.width() == 16){
       // Ops for 16 bits operands (66H)
       byteBuf.put((byte)0x66);
@@ -256,7 +166,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)0x8f); // POP
     byte mode = emitModRM(reg, 0, disp);
     emitDisp(mode, disp, reg);
-    return this;
+    return castToT();
   }
 
   protected void emitREXOp(Register r, Register m){
@@ -297,13 +207,13 @@ public class AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public AMD64AsmBuilder movMR(Register r, Register m, OptionalInt disp){
+  public T movMR(Register r, Register m, OptionalInt disp){
     emitREXOp(r, m);
     byte opcode = (r.width() == 8) ? (byte)0x88 : (byte)0x89;
     byteBuf.put(opcode); // MOV
     byte mode = emitModRM(r, m, disp);
     emitDisp(mode, disp, m);
-    return this;
+    return castToT();
   }
 
   /**
@@ -323,13 +233,13 @@ public class AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public AMD64AsmBuilder movRM(Register r, Register m, OptionalInt disp){
+  public T movRM(Register r, Register m, OptionalInt disp){
     emitREXOp(r, m);
     byte opcode = (r.width() == 8) ? (byte)0x8A : (byte)0x8B;
     byteBuf.put(opcode); // MOV
     byte mode = emitModRM(r, m, disp);
     emitDisp(mode, disp, m);
-    return this;
+    return castToT();
   }
 
   /**
@@ -342,11 +252,11 @@ public class AMD64AsmBuilder{
    * @param imm immediate value
    * @return This instance
    */
-  public AMD64AsmBuilder movImm(Register reg, long imm){
+  public T movImm(Register reg, long imm){
     emitREXOp(Register.RAX /* dummy */, reg);
     byteBuf.put((byte)(0xB8 | (reg.encoding() & 0x7)));
     byteBuf.putLong(imm);
-    return this;
+    return castToT();
   }
 
   /**
@@ -364,12 +274,12 @@ public class AMD64AsmBuilder{
    * @param disp Displacement.
    * @return This instance
    */
-  public AMD64AsmBuilder lea(Register r, Register m, int disp){
+  public T lea(Register r, Register m, int disp){
     emitREXOp(r, m);
     byteBuf.put((byte)0x8D); // MOV
     byte mode = emitModRM(r, m, OptionalInt.of(disp));
     emitDisp(mode, OptionalInt.of(disp), m);
-    return this;
+    return castToT();
   }
 
   /**
@@ -386,13 +296,13 @@ public class AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public AMD64AsmBuilder andMR(Register r, Register m, OptionalInt disp){
+  public T andMR(Register r, Register m, OptionalInt disp){
     emitREXOp(r, m);
     byte opcode = (r.width() == 8) ? (byte)0x20 : (byte)0x21;
     byteBuf.put(opcode); // AND
     byte mode = emitModRM(r, m, disp);
     emitDisp(mode, disp, m);
-    return this;
+    return castToT();
   }
 
   /**
@@ -409,13 +319,13 @@ public class AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public AMD64AsmBuilder orMR(Register r, Register m, OptionalInt disp){
+  public T orMR(Register r, Register m, OptionalInt disp){
     emitREXOp(r, m);
     byte opcode = (r.width() == 8) ? (byte)0x08 : (byte)0x09;
     byteBuf.put(opcode); // OR
     byte mode = emitModRM(r, m, disp);
     emitDisp(mode, disp, m);
-    return this;
+    return castToT();
   }
 
   /**
@@ -432,13 +342,13 @@ public class AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public AMD64AsmBuilder xorMR(Register r, Register m, OptionalInt disp){
+  public T xorMR(Register r, Register m, OptionalInt disp){
     emitREXOp(r, m);
     byte opcode = (r.width() == 8) ? (byte)0x30 : (byte)0x31;
     byteBuf.put(opcode); // OR
     byte mode = emitModRM(r, m, disp);
     emitDisp(mode, disp, m);
-    return this;
+    return castToT();
   }
 
   /**
@@ -451,10 +361,10 @@ public class AMD64AsmBuilder{
    *
    * @return This instance
    */
-  public AMD64AsmBuilder cpuid(){
+  public T cpuid(){
     byteBuf.put((byte)(0x0f));
     byteBuf.put((byte)(0xa2));
-    return this;
+    return castToT();
   }
 
   /**
@@ -465,9 +375,9 @@ public class AMD64AsmBuilder{
    *
    * @return This instance
    */
-  public AMD64AsmBuilder leave(){
+  public T leave(){
     byteBuf.put((byte)(0xc9));
-    return this;
+    return castToT();
   }
 
   /**
@@ -478,9 +388,9 @@ public class AMD64AsmBuilder{
    *
    * @return This instance
    */
-  public AMD64AsmBuilder ret(){
+  public T ret(){
     byteBuf.put((byte)(0xc3));
-    return this;
+    return castToT();
   }
 
   /**
@@ -500,7 +410,7 @@ public class AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public AMD64AsmBuilder cmp(Register m, int imm, OptionalInt disp){
+  public T cmp(Register m, int imm, OptionalInt disp){
     Register dummy = switch(m.width()){
       case  8 -> Register.AL;
       case 16 -> Register.AX;
@@ -523,7 +433,7 @@ public class AMD64AsmBuilder{
       byteBuf.putInt(imm); // imm32
     }
 
-    return this;
+    return castToT();
   }
 
   /**
@@ -543,7 +453,7 @@ public class AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public AMD64AsmBuilder add(Register m, int imm, OptionalInt disp){
+  public T add(Register m, int imm, OptionalInt disp){
     Register dummy = switch(m.width()){
       case  8 -> Register.AL;
       case 16 -> Register.AX;
@@ -566,7 +476,7 @@ public class AMD64AsmBuilder{
       byteBuf.putInt(imm); // imm32
     }
 
-    return this;
+    return castToT();
   }
 
   /**
@@ -586,7 +496,7 @@ public class AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public AMD64AsmBuilder sub(Register m, int imm, OptionalInt disp){
+  public T sub(Register m, int imm, OptionalInt disp){
     Register dummy = switch(m.width()){
       case  8 -> Register.AL;
       case 16 -> Register.AX;
@@ -609,7 +519,7 @@ public class AMD64AsmBuilder{
       byteBuf.putInt(imm); // imm32
     }
 
-    return this;
+    return castToT();
   }
 
   /**
@@ -626,7 +536,7 @@ public class AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg-reg.
    * @return This instance
    */
-  public AMD64AsmBuilder shl(Register m, byte imm, OptionalInt disp){
+  public T shl(Register m, byte imm, OptionalInt disp){
     Register dummy = switch(m.width()){
       case  8 -> Register.AL;
       case 16 -> Register.AX;
@@ -639,7 +549,7 @@ public class AMD64AsmBuilder{
     byte mode = emitModRM(m, 4, disp);
     emitDisp(mode, disp, m);
     byteBuf.put(imm); // imm8
-    return this;
+    return castToT();
   }
 
   /**
@@ -649,7 +559,7 @@ public class AMD64AsmBuilder{
    * @return This instance
    * @throws IllegalArgumentException thrown when the label already exists.
    */
-  public AMD64AsmBuilder label(String name){
+  public T label(String name){
     if(labelMap.containsKey(name)){
       throw new IllegalArgumentException("Label \"" + name + "\" already exists.");
     }
@@ -658,7 +568,7 @@ public class AMD64AsmBuilder{
     labelMap.put(name, labelPosition);
 
     if(pendingLabelMap.containsKey(name)){
-      Set<PendingJump> jumps = pendingLabelMap.remove(name);
+      Set<AsmBuilder.PendingJump> jumps = pendingLabelMap.remove(name);
       for(var jumpData : jumps){
         byteBuf.position(jumpData.position());
         int offset = labelPosition - jumpData.position();
@@ -667,7 +577,7 @@ public class AMD64AsmBuilder{
     }
 
     byteBuf.position(labelPosition);
-    return this;
+    return castToT();
   }
 
   /**
@@ -675,9 +585,9 @@ public class AMD64AsmBuilder{
    *
    * @return This instance
    */
-  public AMD64AsmBuilder nop(){
+  public T nop(){
     byteBuf.put((byte)0x90);
-    return this;
+    return castToT();
   }
 
   private void jcc(byte opcode8, byte[] opcode, String label){
@@ -700,8 +610,8 @@ public class AMD64AsmBuilder{
     Integer labelPosition = labelMap.get(label);
     if(labelPosition == null){
       /* forward jump - pending until label is set */
-      Set<PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
-      jumps.add(new PendingJump(emitOp, position));
+      Set<AsmBuilder.PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
+      jumps.add(new AsmBuilder.PendingJump(emitOp, position));
 
       // Fill with NOP in 6 bytes (max 2 opcodes + rel32) temporally.
       for(int i = 0; i < 6; i++){
@@ -724,9 +634,9 @@ public class AMD64AsmBuilder{
    * @param label the label to jump.
    * @return This instance
    */
-  public AMD64AsmBuilder je(String label){
+  public T je(String label){
     jcc((byte)0x74, new byte[]{(byte)0x0f, (byte)0x84}, label);
-    return this;
+    return castToT();
   }
 
   /**
@@ -736,7 +646,7 @@ public class AMD64AsmBuilder{
    * @param label the label to jump.
    * @return This instance
    */
-  public AMD64AsmBuilder jz(String label){
+  public T jz(String label){
     return je(label);
   }
 
@@ -750,9 +660,9 @@ public class AMD64AsmBuilder{
    * @param label the label to jump.
    * @return This instance
    */
-  public AMD64AsmBuilder jl(String label){
+  public T jl(String label){
     jcc((byte)0x7c, new byte[]{(byte)0x0f, (byte)0x8c}, label);
-    return this;
+    return castToT();
   }
 
   /**
@@ -765,9 +675,9 @@ public class AMD64AsmBuilder{
    * @param label the label to jump.
    * @return This instance
    */
-  public AMD64AsmBuilder jae(String label){
+  public T jae(String label){
     jcc((byte)0x73, new byte[]{(byte)0x0f, (byte)0x83}, label);
-    return this;
+    return castToT();
   }
 
   /**
@@ -780,9 +690,9 @@ public class AMD64AsmBuilder{
    * @param label the label to jump.
    * @return This instance
    */
-  public AMD64AsmBuilder jne(String label){
+  public T jne(String label){
     jcc((byte)0x75, new byte[]{(byte)0x0f, (byte)0x85}, label);
-    return this;
+    return castToT();
   }
 
   /**
@@ -795,7 +705,7 @@ public class AMD64AsmBuilder{
    * @param label the label to jump.
    * @return This instance
    */
-  public AMD64AsmBuilder jmp(String label){
+  public T jmp(String label){
     Consumer<Integer> emitOp = (o) -> {
       /*
        * Offset should be following JMP instruction.
@@ -819,8 +729,8 @@ public class AMD64AsmBuilder{
     Integer labelPosition = labelMap.get(label);
     if(labelPosition == null){
       /* forward jump - pending until label is set */
-      Set<PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
-      jumps.add(new PendingJump(emitOp, position));
+      Set<AsmBuilder.PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
+      jumps.add(new AsmBuilder.PendingJump(emitOp, position));
 
       // Fill with NOP in 5 bytes (max 1 opcodes + rel32) temporally.
       for(int i = 0; i < 5; i++){
@@ -832,7 +742,7 @@ public class AMD64AsmBuilder{
       emitOp.accept(offset);
     }
 
-    return this;
+    return castToT();
   }
 
   /**
@@ -845,7 +755,7 @@ public class AMD64AsmBuilder{
    * @param m "r/m" register
    * @return This instance
    */
-  public AMD64AsmBuilder jmp(Register m){
+  public T jmp(Register m){
     return jmp(m, OptionalInt.empty());
   }
 
@@ -860,7 +770,7 @@ public class AMD64AsmBuilder{
    * @param disp Displacement. Set "empty" if this operation is reg.
    * @return This instance
    */
-  public AMD64AsmBuilder jmp(Register m, OptionalInt disp){
+  public T jmp(Register m, OptionalInt disp){
     // Emit REX prefix for REX.B if it's needed.
     // We can ignore REX.W because this JMP op is on 64bit mode only.
     byte rexb = (byte)((m.encoding() >> 3) & 0b0001);
@@ -871,7 +781,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)0xff); // JMP
     byte mode = emitModRM(m, 4, disp);
     emitDisp(mode, disp, m);
-    return this;
+    return castToT();
   }
 
   /**
@@ -885,7 +795,7 @@ public class AMD64AsmBuilder{
    * @param m "r/m" register
    * @return This instance
    */
-  public AMD64AsmBuilder rdrand(Register m){
+  public T rdrand(Register m){
     if(m.width() == 16){
       // Ops for 16 bits operands (66H)
       byteBuf.put((byte)0x66);
@@ -900,7 +810,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)0x0f); // RARAND (1)
     byteBuf.put((byte)0xc7); // RARAND (2)
     emitModRM(m, 6, OptionalInt.empty());
-    return this;
+    return castToT();
   }
 
   /**
@@ -915,7 +825,7 @@ public class AMD64AsmBuilder{
    * @param m "r/m" register
    * @return This instance
    */
-  public AMD64AsmBuilder rdseed(Register m){
+  public T rdseed(Register m){
     if(m.width() == 16){
       // Ops for 16 bits operands (66H)
       byteBuf.put((byte)0x66);
@@ -930,7 +840,7 @@ public class AMD64AsmBuilder{
     byteBuf.put((byte)0x0f); // RARAND (1)
     byteBuf.put((byte)0xc7); // RARAND (2)
     emitModRM(m, 7, OptionalInt.empty());
-    return this;
+    return castToT();
   }
 
   /**
@@ -941,11 +851,11 @@ public class AMD64AsmBuilder{
    *
    * @return This instance
    */
-  public AMD64AsmBuilder rdtsc(){
+  public T rdtsc(){
     byteBuf.put((byte)0x0f); // RDTSC (1)
     byteBuf.put((byte)0x31); // RDTSC (2)
 
-    return this;
+    return castToT();
   }
 
   /**
@@ -957,7 +867,7 @@ public class AMD64AsmBuilder{
    * @param m "r/m" register
    * @return This instance
    */
-  public AMD64AsmBuilder call(Register m){
+  public T call(Register m){
     // Emit REX prefix for REX.B if it's needed.
     // We can ignore REX.W because this CALL op is on 64bit mode only.
     byte rexb = (byte)((m.encoding() >> 3) & 0b0001);
@@ -967,7 +877,7 @@ public class AMD64AsmBuilder{
 
     byteBuf.put((byte)0xff); // CALL
     emitModRM(m, 2, OptionalInt.empty());
-    return this;
+    return castToT();
   }
 
   /**
@@ -978,9 +888,9 @@ public class AMD64AsmBuilder{
    *
    * @return This instance
    */
-  public AMD64AsmBuilder syscall(){
+  public T syscall(){
     byteBuf.putShort((short)0x050f);
-    return this;
+    return castToT();
   }
 
   /**
@@ -988,7 +898,7 @@ public class AMD64AsmBuilder{
    *
    * @return This instance
    */
-  public AMD64AsmBuilder alignTo16BytesWithNOP(){
+  public T alignTo16BytesWithNOP(){
     int position = byteBuf.position();
     if((position & 0xf) > 0){ // not aligned
       int newPosition = (position + 0x10) & 0xfffffff0;
@@ -997,7 +907,7 @@ public class AMD64AsmBuilder{
         nop();
       }
     }
-    return this;
+    return castToT();
   }
 
   /**
@@ -1010,13 +920,13 @@ public class AMD64AsmBuilder{
    * @param reg Register to push to the stack.
    * @return This instance
    */
-  public AMD64AsmBuilder bswap(Register reg){
+  public T bswap(Register reg){
     if(reg.width() == 64){
       emitREXOp(Register.RAX /* dummy */, reg);
     }
     byteBuf.put((byte)0x0f);
     byteBuf.put((byte)(0xc8 | (reg.encoding() & 0x7)));
-    return this;
+    return castToT();
   }
 
   /**
@@ -1027,11 +937,11 @@ public class AMD64AsmBuilder{
    *
    * @return This instance
    */
-  public AMD64AsmBuilder sfence(){
+  public T sfence(){
     byteBuf.put((byte)0x0f);
     byteBuf.put((byte)0xae);
     byteBuf.put((byte)0xf8);
-    return this;
+    return castToT();
   }
 
   /**
@@ -1046,7 +956,7 @@ public class AMD64AsmBuilder{
    * @throws IllegalArgumentException thrown when argument
    *         (memory operand) is not 64 bit register.
    */
-  public AMD64AsmBuilder clflushopt(Register m, int disp){
+  public T clflushopt(Register m, int disp){
     if(m.width() != 64){
       throw new IllegalArgumentException("Operand should be 64 bit register for storing memory");
     }
@@ -1064,97 +974,7 @@ public class AMD64AsmBuilder{
     var d = OptionalInt.of(disp);
     byte mode = emitModRM(m, 7, d);
     emitDisp(mode, d, m);
-    return this;
-  }
-
-  private void updateTail(){
-    if(!pendingLabelMap.isEmpty()){
-      throw new IllegalStateException("Label is not defined: " + pendingLabelMap.keySet().toString());
-    }
-    seg.incTail(byteBuf.position());
-  }
-
-  /**
-   * Build as a MethodHandle
-   *
-   * @param options Linker options to pass to downcallHandle().
-   * @return MethodHandle for this assembly
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MethodHandle build(Linker.Option... options){
-    return build("<unnamed>", options);
-  }
-
-  /**
-   * Build as a MethodHandle
-   *
-   * @param name Method name
-   * @param options Linker options to pass to downcallHandle().
-   * @return MethodHandle for this assembly
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MethodHandle build(String name, Linker.Option... options){
-    return build(name, null, options);
-  }
-
-  private void storeMethodInfo(String name, JitDump jitdump){
-    var top = mem.address();
-    var size = byteBuf.position();
-    var methodInfo = seg.addMethodInfo(name, top, size);
-    if(jitdump != null){
-      jitdump.writeFunction(methodInfo);
-    }
-  }
-
-  /**
-   * Build as a MethodHandle
-   *
-   * @param name Method name
-   * @param jitdump JitDump instance which should be written.
-   * @param options Linker options to pass to downcallHandle().
-   * @return MethodHandle for this assembly
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MethodHandle build(String name, JitDump jitdump, Linker.Option... options){
-    updateTail();
-    storeMethodInfo(name, jitdump);
-    return Linker.nativeLinker().downcallHandle(mem, desc, options);
-  }
-
-  /**
-   * Get MemorySegment which is associated with this builder.
-   *
-   * @return MemorySegment of this builder
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MemorySegment getMemorySegment(){
-    return getMemorySegment("<unnamed>");
-  }
-
-  /**
-   * Get MemorySegment which is associated with this builder.
-   *
-   * @param name Method name
-   * @return MemorySegment of this builder
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MemorySegment getMemorySegment(String name){
-    return getMemorySegment(name, null);
-  }
-
-  /**
-   * Get MemorySegment which is associated with this builder.
-   *
-   * @param name Method name
-   * @param jitdump JitDump instance which should be written.
-   * @return MemorySegment of this builder
-   * @throws IllegalStateException when label(s) are not defined even if they are used
-   */
-  public MemorySegment getMemorySegment(String name, JitDump jitdump){
-    updateTail();
-    storeMethodInfo(name, jitdump);
-    long length = byteBuf.position();
-    return mem.reinterpret(length);
+    return castToT();
   }
 
 }

@@ -27,8 +27,8 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.ValueLayout;
 import java.util.Optional;
 
+import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
-import com.yasuenag.ffmasm.aarch64.AArch64AsmBuilder;
 import com.yasuenag.ffmasm.aarch64.IndexClass;
 import com.yasuenag.ffmasm.aarch64.Register;
 
@@ -47,12 +47,12 @@ public class AsmTest{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT // 1st argument
                  );
-      var method = new AArch64AsmBuilder(seg, desc)
-/* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
-/* mov x29,  sp              */ .mov(Register.X29, Register.SP)
-/* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
-/* ret                       */ .ret(Optional.empty())
-                                .build();
+      var method = new AsmBuilder.AArch64(seg, desc)
+ /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
+ /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
+ /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
+ /* ret                       */ .ret(Optional.empty())
+                                 .build();
 
       final int expected = 100;
       int actual = (int)method.invoke(expected);

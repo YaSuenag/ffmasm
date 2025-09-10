@@ -32,9 +32,8 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.OptionalInt;
 
+import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
-import com.yasuenag.ffmasm.amd64.AMD64AsmBuilder;
-import com.yasuenag.ffmasm.amd64.AVXAsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
 
 
@@ -53,15 +52,14 @@ public class AVXAsmTest extends TestBase{
                    ValueLayout.ADDRESS, // 1st argument
                    ValueLayout.ADDRESS  // 2nd argument
                  );
-      var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
-      /* push %rbp             */ .push(Register.RBP)
-      /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                                  .cast(AVXAsmBuilder.class)
-      /* vmovdqa (arg1), %ymm0 */ .vmovdqaRM(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
-      /* vmovdqa %ymm0, (arg2) */ .vmovdqaMR(Register.YMM0, argReg.arg2(), OptionalInt.of(0))
-      /* leave                 */ .leave()
-      /* ret                   */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AVX(seg, desc)
+     /* push %rbp             */ .push(Register.RBP)
+     /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+     /* vmovdqa (arg1), %ymm0 */ .vmovdqaRM(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+     /* vmovdqa %ymm0, (arg2) */ .vmovdqaMR(Register.YMM0, argReg.arg2(), OptionalInt.of(0))
+     /* leave                 */ .leave()
+     /* ret                   */ .ret()
+                                 .build();
 
       long[] expected = new long[]{1, 2, 3, 4}; // 64 * 4 = 256 bit
       var arena = Arena.ofAuto();
@@ -92,15 +90,14 @@ public class AVXAsmTest extends TestBase{
                    ValueLayout.ADDRESS, // 1st argument
                    ValueLayout.ADDRESS  // 2nd argument
                  );
-      var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
-      /* push %rbp             */ .push(Register.RBP)
-      /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                                  .cast(AVXAsmBuilder.class)
-      /* vmovdqu (arg1), %ymm0 */ .vmovdquRM(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
-      /* vmovdqu %ymm0, (arg2) */ .vmovdquMR(Register.YMM0, argReg.arg2(), OptionalInt.of(0))
-      /* leave                 */ .leave()
-      /* ret                   */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AVX(seg, desc)
+     /* push %rbp             */ .push(Register.RBP)
+     /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+     /* vmovdqu (arg1), %ymm0 */ .vmovdquRM(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+     /* vmovdqu %ymm0, (arg2) */ .vmovdquMR(Register.YMM0, argReg.arg2(), OptionalInt.of(0))
+     /* leave                 */ .leave()
+     /* ret                   */ .ret()
+                                 .build();
 
       long[] expected = new long[]{1, 2, 3, 4}; // 64 * 4 = 256 bit
       MemorySegment src = arena.allocate(32, 8);  // 256 bit (unaligned)
@@ -129,16 +126,15 @@ public class AVXAsmTest extends TestBase{
                    ValueLayout.ADDRESS, // 1st argument
                    ValueLayout.ADDRESS  // 2nd argument
                  );
-      var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
-  /* push %rbp                 */ .push(Register.RBP)
-  /* mov %rsp, %rbp            */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                                  .cast(AVXAsmBuilder.class)
-  /* vmovdqa (arg1), %ymm0     */ .vmovdqaRM(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
-  /* vpxor %ymm0, %ymm0, %ymm1 */ .vpxor(Register.YMM0, Register.YMM0, Register.YMM1, OptionalInt.empty())
-  /* vmovdqa %ymm1, (arg2)     */ .vmovdqaMR(Register.YMM1, argReg.arg2(), OptionalInt.of(0))
-  /* leave                     */ .leave()
-  /* ret                       */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AVX(seg, desc)
+ /* push %rbp                 */ .push(Register.RBP)
+ /* mov %rsp, %rbp            */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+ /* vmovdqa (arg1), %ymm0     */ .vmovdqaRM(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+ /* vpxor %ymm0, %ymm0, %ymm1 */ .vpxor(Register.YMM0, Register.YMM0, Register.YMM1, OptionalInt.empty())
+ /* vmovdqa %ymm1, (arg2)     */ .vmovdqaMR(Register.YMM1, argReg.arg2(), OptionalInt.of(0))
+ /* leave                     */ .leave()
+ /* ret                       */ .ret()
+                                 .build();
 
       int[]      src = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
       int[] expected = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
@@ -170,15 +166,14 @@ public class AVXAsmTest extends TestBase{
                    ValueLayout.ADDRESS, // 2nd argument
                    ValueLayout.ADDRESS  // 3rd argument
                  );
-      var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
+      var method = new AsmBuilder.AVX(seg, desc)
 /* push %rbp                   */ .push(Register.RBP)
 /* mov %rsp, %rbp              */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                                  .cast(AVXAsmBuilder.class)
 /* vmovdqu (arg1), %ymm0       */ .vmovdquRM(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
 /* vpaddd (arg2), %ymm0, %ymm1 */ .vpaddd(Register.YMM0, argReg.arg2(), Register.YMM1, OptionalInt.of(0))
 /* vmovdqu %ymm1, (arg3)       */ .vmovdquMR(Register.YMM1, argReg.arg3(), OptionalInt.of(0))
-      /* leave                 */ .leave()
-      /* ret                   */ .ret()
+/* leave                       */ .leave()
+/* ret                         */ .ret()
                                   .build(Linker.Option.critical(true));
 
       int[]     src1 = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
@@ -216,21 +211,20 @@ public class AVXAsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 2nd argument (success)
                    ValueLayout.JAVA_INT  // 3rd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
-  /* push %rbp                 */ .push(Register.RBP)
-  /* mov %rsp, %rbp            */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                                  .cast(AVXAsmBuilder.class)
-  /* vpxor %ymm0, %ymm0, %ymm0 */ .vpxor(Register.YMM0, Register.YMM0, Register.YMM0, OptionalInt.empty())
-  /* vptest (arg1), %ymm0      */ .vptest(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
-  /* jz success                */ .jz("success")
-  /* mov arg3, retReg          */ .movMR(argReg.arg3(), argReg.returnReg(), OptionalInt.empty())
-  /* leave                     */ .leave()
-  /* ret                       */ .ret()
-  /* success:                  */ .label("success")
-  /*   mov arg2, retReg        */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty())
-  /*   leave                   */ .leave()
-  /*   ret                     */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AVX(seg, desc)
+ /* push %rbp                 */ .push(Register.RBP)
+ /* mov %rsp, %rbp            */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+ /* vpxor %ymm0, %ymm0, %ymm0 */ .vpxor(Register.YMM0, Register.YMM0, Register.YMM0, OptionalInt.empty())
+ /* vptest (arg1), %ymm0      */ .vptest(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+ /* jz success                */ .jz("success")
+ /* mov arg3, retReg          */ .movMR(argReg.arg3(), argReg.returnReg(), OptionalInt.empty())
+ /* leave                     */ .leave()
+ /* ret                       */ .ret()
+ /* success:                  */ .label("success")
+ /*   mov arg2, retReg        */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty())
+ /*   leave                   */ .leave()
+ /*   ret                     */ .ret()
+                                 .build();
 
       int[]    zero = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
       int[] nonzero = new int[]{1, 1, 1, 1, 1, 1, 1, 1};
@@ -257,16 +251,15 @@ public class AVXAsmTest extends TestBase{
     Assumptions.assumeTrue(supportAVX(), "Test platform does not support AVX");
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
-      var method = AMD64AsmBuilder.create(AVXAsmBuilder.class, seg, desc)
-  /* push %rbp                 */ .push(Register.RBP)
-  /* mov %rsp, %rbp            */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-                                  .cast(AVXAsmBuilder.class)
-  /* vmovdqa (arg1), %ymm0     */ .vmovdqaRM(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
-  /* vzeroupper                */ .vzeroupper()
-  /* vmovdqa %ymm0, (arg1)     */ .vmovdqaMR(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
-  /* leave                     */ .leave()
-  /* ret                       */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AVX(seg, desc)
+ /* push %rbp                 */ .push(Register.RBP)
+ /* mov %rsp, %rbp            */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+ /* vmovdqa (arg1), %ymm0     */ .vmovdqaRM(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+ /* vzeroupper                */ .vzeroupper()
+ /* vmovdqa %ymm0, (arg1)     */ .vmovdqaMR(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+ /* leave                     */ .leave()
+ /* ret                       */ .ret()
+                                 .build();
 
       var arena = Arena.ofAuto();
       var mem = arena.allocate(32, 32);

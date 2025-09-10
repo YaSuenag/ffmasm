@@ -32,8 +32,8 @@ import java.lang.foreign.ValueLayout;
 import java.nio.ByteOrder;
 import java.util.OptionalInt;
 
+import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
-import com.yasuenag.ffmasm.amd64.AMD64AsmBuilder;
 import com.yasuenag.ffmasm.amd64.Register;
 
 
@@ -51,13 +51,13 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-          /* push %rbp         */ .push(Register.RBP)
-          /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-          /* mov arg1, %rax    */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
-          /* leave             */ .leave()
-          /* ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+         /* push %rbp         */ .push(Register.RBP)
+         /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /* mov arg1, %rax    */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+         /* leave             */ .leave()
+         /* ret               */ .ret()
+                                 .build();
 
       final int expected = 100;
       int actual = (int)method.invoke(expected);
@@ -80,21 +80,21 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_SHORT, // 2nd Argument
                    ValueLayout.ADDRESS     // 3rd Argument
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-          /* push %rbp         */ .push(Register.RBP)
-          /* mov  %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-          /* mov  %rdi, %r10   */ .movMR(Register.RDI, Register.R10, OptionalInt.empty())
-          /* push %rdi         */ .push(Register.RDI)
-          /* push %si          */ .push(Register.SI)
-          /* push %r10         */ .push(Register.R10)
-          /* pop  %r11         */ .pop(Register.R11, OptionalInt.empty())
-          /* mov %r11, (%rdx)  */ .movMR(Register.R11, Register.RDX, OptionalInt.of(0))
-          /* pop  %ax          */ .pop(Register.AX, OptionalInt.empty())
-          /* mov  %ax, 8(%rdx) */ .movMR(Register.AX, Register.RDX, OptionalInt.of(8))
-          /* pop  16(%rdx)     */ .pop(Register.RDX, OptionalInt.of(16))
-          /* leave             */ .leave()
-          /* ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+         /* push %rbp         */ .push(Register.RBP)
+         /* mov  %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /* mov  %rdi, %r10   */ .movMR(Register.RDI, Register.R10, OptionalInt.empty())
+         /* push %rdi         */ .push(Register.RDI)
+         /* push %si          */ .push(Register.SI)
+         /* push %r10         */ .push(Register.R10)
+         /* pop  %r11         */ .pop(Register.R11, OptionalInt.empty())
+         /* mov %r11, (%rdx)  */ .movMR(Register.R11, Register.RDX, OptionalInt.of(0))
+         /* pop  %ax          */ .pop(Register.AX, OptionalInt.empty())
+         /* mov  %ax, 8(%rdx) */ .movMR(Register.AX, Register.RDX, OptionalInt.of(8))
+         /* pop  16(%rdx)     */ .pop(Register.RDX, OptionalInt.of(16))
+         /* leave             */ .leave()
+         /* ret               */ .ret()
+                                 .build();
 
       //showDebugMessage(seg);
       try(var arena = Arena.ofConfined()){
@@ -122,13 +122,13 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT  // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-        /* push %rbp           */ .push(Register.RBP)
-        /* mov %rsp,    %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /* lea 8(arg1), retReg */ .lea(argReg.returnReg(), argReg.arg1(), 8)
-        /* leave               */ .leave()
-        /* ret                 */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+       /* push %rbp           */ .push(Register.RBP)
+       /* mov %rsp,    %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+       /* lea 8(arg1), retReg */ .lea(argReg.returnReg(), argReg.arg1(), 8)
+       /* leave               */ .leave()
+       /* ret                 */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(100);
       Assertions.assertEquals(108, actual);
@@ -150,14 +150,14 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 1st argument
                    ValueLayout.JAVA_INT  // 2nd argument
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-           /* push %rbp        */ .push(Register.RBP)
-           /* mov %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-           /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
-           /* and arg2, retReg */ .andMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty())
-           /* leave            */ .leave()
-           /* ret              */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+          /* push %rbp        */ .push(Register.RBP)
+          /* mov %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+          /* and arg2, retReg */ .andMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty())
+          /* leave            */ .leave()
+          /* ret              */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(0b1001, 0b1100);
       Assertions.assertEquals(0b1000, actual);
@@ -179,14 +179,14 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 1st argument
                    ValueLayout.JAVA_INT  // 2nd argument
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-           /* push %rbp        */ .push(Register.RBP)
-           /* mov %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-           /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
-           /* or  arg2, retReg */ .orMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty())
-           /* leave            */ .leave()
-           /* ret              */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+          /* push %rbp        */ .push(Register.RBP)
+          /* mov %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+          /* or  arg2, retReg */ .orMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty())
+          /* leave            */ .leave()
+          /* ret              */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(1, 2);
       Assertions.assertEquals(3, actual);
@@ -207,14 +207,14 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT  // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-         /* push %rbp          */ .push(Register.RBP)
-         /* mov %rsp, %rbp     */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /* mov arg1, retReg   */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
-         /* xor retReg, retReg */ .xorMR(argReg.returnReg(), argReg.returnReg(), OptionalInt.empty())
-         /* leave              */ .leave()
-         /* ret                */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+        /* push %rbp          */ .push(Register.RBP)
+        /* mov %rsp, %rbp     */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+        /* mov arg1, retReg   */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+        /* xor retReg, retReg */ .xorMR(argReg.returnReg(), argReg.returnReg(), OptionalInt.empty())
+        /* leave              */ .leave()
+        /* ret                */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(100);
       Assertions.assertEquals(0, actual);
@@ -235,15 +235,15 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-          /* push %rbp         */ .push(Register.RBP)
-          /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-          /* mov arg1, %rax    */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
-          /* cpuid             */ .cpuid()
-          /* mov %edx, %eax    */ .movMR(Register.EDX, Register.EAX, OptionalInt.empty())
-          /* leave             */ .leave()
-          /* ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+         /* push %rbp         */ .push(Register.RBP)
+         /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /* mov arg1, %rax    */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
+         /* cpuid             */ .cpuid()
+         /* mov %edx, %eax    */ .movMR(Register.EDX, Register.EAX, OptionalInt.empty())
+         /* leave             */ .leave()
+         /* ret               */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(0x1); // EAX = 01H
       int SSE2flag = (actual >>> 26) & 0x1;
@@ -265,15 +265,15 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-          /* push %rbp         */ .push(Register.RBP)
-          /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-          /* nop               */ .nop()
-          /* mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
-          /* nop               */ .nop()
-          /* leave             */ .leave()
-          /* ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+         /* push %rbp         */ .push(Register.RBP)
+         /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /* nop               */ .nop()
+         /* mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+         /* nop               */ .nop()
+         /* leave             */ .leave()
+         /* ret               */ .ret()
+                                 .build();
 
       final int expected = 100;
       int actual = (int)method.invoke(expected);
@@ -296,19 +296,19 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-        /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
-        /*   jl success        */ .jl("success")
-        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-        /* success:            */ .label("success")
-        /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+       /*   push %rbp         */ .push(Register.RBP)
+       /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+       /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
+       /*   jl success        */ .jl("success")
+       /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+       /* success:            */ .label("success")
+       /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(0, 10);
       Assertions.assertEquals(0, actual, "Seems not to jump at JL.");
@@ -330,20 +330,20 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_SHORT, // 1st argument (success)
                    ValueLayout.JAVA_SHORT  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-        /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   xor %rax, %rax    */ .xorMR(Register.RAX, Register.RAX, OptionalInt.empty())
-        /*   cmp   $1, %di     */ .cmp(Register.DI, 1, OptionalInt.empty())
-        /*   jl success        */ .jl("success")
-        /*   mov %si, %ax      */ .movMR(Register.SI, Register.AX, OptionalInt.empty()) // failure
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-        /* success:            */ .label("success")
-        /*   mov %di, %ax      */ .movMR(Register.DI, Register.AX, OptionalInt.empty()) // success
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+       /*   push %rbp         */ .push(Register.RBP)
+       /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+       /*   xor %rax, %rax    */ .xorMR(Register.RAX, Register.RAX, OptionalInt.empty())
+       /*   cmp   $1, %di     */ .cmp(Register.DI, 1, OptionalInt.empty())
+       /*   jl success        */ .jl("success")
+       /*   mov %si, %ax      */ .movMR(Register.SI, Register.AX, OptionalInt.empty()) // failure
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+       /* success:            */ .label("success")
+       /*   mov %di, %ax      */ .movMR(Register.DI, Register.AX, OptionalInt.empty()) // success
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+                                 .build();
 
       //showDebugMessage(seg);
       int actual = (int)method.invoke((short)0, (short)10);
@@ -366,22 +366,22 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_BYTE, // 1st argument (success)
                    ValueLayout.JAVA_BYTE  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-        /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   xor %rax, %rax    */ .xorMR(Register.RAX, Register.RAX, OptionalInt.empty())
-        /*   mov %rdi, %rcx    */ .movMR(Register.RDI, Register.RCX, OptionalInt.empty())
-        /*   mov %rsi, %rcx    */ .movMR(Register.RSI, Register.RDX, OptionalInt.empty())
-        /*   cmp   $1, %cl     */ .cmp(Register.CL, 1, OptionalInt.empty())
-        /*   jl success        */ .jl("success")
-        /*   mov %dl, %al      */ .movMR(Register.DL, Register.AL, OptionalInt.empty()) // failure
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-        /* success:            */ .label("success")
-        /*   mov %cl, %al      */ .movMR(Register.CL, Register.AL, OptionalInt.empty()) // success
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+       /*   push %rbp         */ .push(Register.RBP)
+       /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+       /*   xor %rax, %rax    */ .xorMR(Register.RAX, Register.RAX, OptionalInt.empty())
+       /*   mov %rdi, %rcx    */ .movMR(Register.RDI, Register.RCX, OptionalInt.empty())
+       /*   mov %rsi, %rcx    */ .movMR(Register.RSI, Register.RDX, OptionalInt.empty())
+       /*   cmp   $1, %cl     */ .cmp(Register.CL, 1, OptionalInt.empty())
+       /*   jl success        */ .jl("success")
+       /*   mov %dl, %al      */ .movMR(Register.DL, Register.AL, OptionalInt.empty()) // failure
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+       /* success:            */ .label("success")
+       /*   mov %cl, %al      */ .movMR(Register.CL, Register.AL, OptionalInt.empty()) // success
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke((byte)0, (byte)10);
       Assertions.assertEquals(0, actual, "8 bit CMP test failed.");
@@ -402,17 +402,17 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT  // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-             /* push %rbp      */ .push(Register.RBP)
-             /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov arg1, %rax */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
-             /* add $1, %al    */ .add(Register.AL, 1, OptionalInt.empty())
-             /* add $2, %ax    */ .add(Register.AX, 2, OptionalInt.empty())
-             /* add $3, %eax   */ .add(Register.EAX, 3, OptionalInt.empty())
-             /* add $4, %rax   */ .add(Register.RAX, 4, OptionalInt.empty())
-             /* leave          */ .leave()
-             /* ret            */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+            /* push %rbp      */ .push(Register.RBP)
+            /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+            /* mov arg1, %rax */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
+            /* add $1, %al    */ .add(Register.AL, 1, OptionalInt.empty())
+            /* add $2, %ax    */ .add(Register.AX, 2, OptionalInt.empty())
+            /* add $3, %eax   */ .add(Register.EAX, 3, OptionalInt.empty())
+            /* add $4, %rax   */ .add(Register.RAX, 4, OptionalInt.empty())
+            /* leave          */ .leave()
+            /* ret            */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(0);
       Assertions.assertEquals(10, actual, "Add operations failed.");
@@ -433,17 +433,17 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT  // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-             /* push %rbp      */ .push(Register.RBP)
-             /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov arg1, %rax */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
-             /* sub $1, %al    */ .sub(Register.AL, 1, OptionalInt.empty())
-             /* sub $2, %ax    */ .sub(Register.AX, 2, OptionalInt.empty())
-             /* sub $3, %eax   */ .sub(Register.EAX, 3, OptionalInt.empty())
-             /* sub $4, %rax   */ .sub(Register.RAX, 4, OptionalInt.empty())
-             /* leave          */ .leave()
-             /* ret            */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+            /* push %rbp      */ .push(Register.RBP)
+            /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+            /* mov arg1, %rax */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
+            /* sub $1, %al    */ .sub(Register.AL, 1, OptionalInt.empty())
+            /* sub $2, %ax    */ .sub(Register.AX, 2, OptionalInt.empty())
+            /* sub $3, %eax   */ .sub(Register.EAX, 3, OptionalInt.empty())
+            /* sub $4, %rax   */ .sub(Register.RAX, 4, OptionalInt.empty())
+            /* leave          */ .leave()
+            /* ret            */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(20);
       Assertions.assertEquals(10, actual, "Sub operations failed.");
@@ -464,17 +464,17 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT  // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-             /* push %rbp      */ .push(Register.RBP)
-             /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov arg1, %rax */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
-             /* shl $1, %al    */ .shl(Register.AL, (byte)1, OptionalInt.empty())
-             /* shl $2, %ax    */ .shl(Register.AX, (byte)2, OptionalInt.empty())
-             /* shl $3, %eax   */ .shl(Register.EAX, (byte)3, OptionalInt.empty())
-             /* shl $4, %rax   */ .shl(Register.RAX, (byte)4, OptionalInt.empty())
-             /* leave          */ .leave()
-             /* ret            */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+            /* push %rbp      */ .push(Register.RBP)
+            /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+            /* mov arg1, %rax */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
+            /* shl $1, %al    */ .shl(Register.AL, (byte)1, OptionalInt.empty())
+            /* shl $2, %ax    */ .shl(Register.AX, (byte)2, OptionalInt.empty())
+            /* shl $3, %eax   */ .shl(Register.EAX, (byte)3, OptionalInt.empty())
+            /* shl $4, %rax   */ .shl(Register.RAX, (byte)4, OptionalInt.empty())
+            /* leave          */ .leave()
+            /* ret            */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(1);
       Assertions.assertEquals(1024, actual, "SHL operations failed.");
@@ -496,19 +496,19 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-        /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
-        /*   jae success       */ .jae("success")
-        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-        /* success:            */ .label("success")
-        /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+       /*   push %rbp         */ .push(Register.RBP)
+       /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+       /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
+       /*   jae success       */ .jae("success")
+       /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+       /* success:            */ .label("success")
+       /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(10, 0);
       Assertions.assertEquals(10, actual, "Seems not to jump at JAE.");
@@ -530,19 +530,19 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-        /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   cmp   $10, arg1   */ .cmp(argReg.arg1(), 10, OptionalInt.empty())
-        /*   je success        */ .je("success")
-        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-        /* success:            */ .label("success")
-        /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+       /*   push %rbp         */ .push(Register.RBP)
+       /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+       /*   cmp   $10, arg1   */ .cmp(argReg.arg1(), 10, OptionalInt.empty())
+       /*   je success        */ .je("success")
+       /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+       /* success:            */ .label("success")
+       /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+                                    .build();
 
       int actual = (int)method.invoke(10, 0);
       Assertions.assertEquals(10, actual, "Seems not to jump at JE.");
@@ -565,19 +565,19 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 2nd argument (success)
                    ValueLayout.JAVA_INT  // 3rd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-        /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   and arg1, arg2    */ .andMR(argReg.arg1(), argReg.arg2(), OptionalInt.empty())
-        /*   jz success        */ .jz("success")
-        /*   mov arg3, retReg  */ .movMR(argReg.arg3(), argReg.returnReg(), OptionalInt.empty()) // failure
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-        /* success:            */ .label("success")
-        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // success
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+       /*   push %rbp         */ .push(Register.RBP)
+       /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+       /*   and arg1, arg2    */ .andMR(argReg.arg1(), argReg.arg2(), OptionalInt.empty())
+       /*   jz success        */ .jz("success")
+       /*   mov arg3, retReg  */ .movMR(argReg.arg3(), argReg.returnReg(), OptionalInt.empty()) // failure
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+       /* success:            */ .label("success")
+       /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // success
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(0b1111, 0, 1);
       Assertions.assertEquals(0, actual, "Seems not to jump at JZ.");
@@ -599,19 +599,19 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-        /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
-        /*   jne success       */ .jne("success")
-        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-        /* success:            */ .label("success")
-        /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+       /*   push %rbp         */ .push(Register.RBP)
+       /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+       /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
+       /*   jne success       */ .jne("success")
+       /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+       /* success:            */ .label("success")
+       /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(10, 0);
       Assertions.assertEquals(10, actual, "Seems not to jump at JNE.");
@@ -633,21 +633,21 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-        /*   push %rbp         */ .push(Register.RBP)
-        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-        /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
-        /*   jl fwd            */ .jl("fwd")
-        /* exit:               */ .label("exit")
-        /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-        /* fwd:                */ .label("fwd")
-        /*   jmp exit          */ .jmp("exit")
-        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
-        /*   leave             */ .leave()
-        /*   ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+       /*   push %rbp         */ .push(Register.RBP)
+       /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+       /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
+       /*   jl fwd            */ .jl("fwd")
+       /* exit:               */ .label("exit")
+       /*   mov arg1, retReg  */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty()) // success
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+       /* fwd:                */ .label("fwd")
+       /*   jmp exit          */ .jmp("exit")
+       /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+       /*   leave             */ .leave()
+       /*   ret               */ .ret()
+                                 .build();
 
       int actual = (int)method.invoke(0, 10);
       Assertions.assertEquals(0, actual, "Jump tests failure.");
@@ -669,14 +669,14 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-         /*   push %rbp         */ .push(Register.RBP)
-         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
-         /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
-         /*   jl success        */ .jl("success");
+      var builder = new AsmBuilder.AMD64(seg, desc)
+        /*   push %rbp         */ .push(Register.RBP)
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+        /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
+        /*   jl success        */ .jl("success");
       for(int i = 0; i < 200; i++){
-         /* nop */ builder.nop();
+        /* nop */ builder.nop();
       }
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
@@ -706,14 +706,14 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-         /*   push %rbp         */ .push(Register.RBP)
-         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
-         /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
-         /*   jae success       */ .jae("success");
+      var builder = new AsmBuilder.AMD64(seg, desc)
+        /*   push %rbp         */ .push(Register.RBP)
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+        /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
+        /*   jae success       */ .jae("success");
       for(int i = 0; i < 200; i++){
-         /* nop */ builder.nop();
+        /* nop */ builder.nop();
       }
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
@@ -743,14 +743,14 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-         /*   push %rbp         */ .push(Register.RBP)
-         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
-         /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
-         /*   jne success       */ .jne("success");
+      var builder = new AsmBuilder.AMD64(seg, desc)
+        /*   push %rbp         */ .push(Register.RBP)
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+        /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 1, OptionalInt.empty())
+        /*   jne success       */ .jne("success");
       for(int i = 0; i < 200; i++){
-         /* nop */ builder.nop();
+        /* nop */ builder.nop();
       }
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
@@ -780,14 +780,14 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-         /*   push %rbp         */ .push(Register.RBP)
-         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
-         /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 10, OptionalInt.empty())
-         /*   je success        */ .je("success");
+      var builder = new AsmBuilder.AMD64(seg, desc)
+        /*   push %rbp         */ .push(Register.RBP)
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+        /*   cmp   $1, arg1    */ .cmp(argReg.arg1(), 10, OptionalInt.empty())
+        /*   je success        */ .je("success");
       for(int i = 0; i < 200; i++){
-         /* nop */ builder.nop();
+        /* nop */ builder.nop();
       }
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
@@ -817,13 +817,13 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // 1st argument (success)
                    ValueLayout.JAVA_INT  // 2nd argument (failure)
                  );
-      var builder = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-         /*   push %rbp         */ .push(Register.RBP)
-         /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
-         /*   jmp success       */ .jmp("success");
+      var builder = new AsmBuilder.AMD64(seg, desc)
+        /*   push %rbp         */ .push(Register.RBP)
+        /*   mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+        /*   mov arg2, retReg  */ .movMR(argReg.arg2(), argReg.returnReg(), OptionalInt.empty()) // failure
+        /*   jmp success       */ .jmp("success");
       for(int i = 0; i < 200; i++){
-         /* nop */ builder.nop();
+        /* nop */ builder.nop();
       }
         /*   leave             */ builder.leave()
         /*   ret               */        .ret()
@@ -851,9 +851,9 @@ public class AsmTest extends TestBase{
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid();
       Assertions.assertThrows(IllegalStateException.class, () -> {
-          AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-                         .jl("SilverBullet")
-                         .build();
+          new AsmBuilder.AMD64(seg, desc)
+                        .jl("SilverBullet")
+                        .build();
       });
     }
     catch(Throwable t){
@@ -871,10 +871,10 @@ public class AsmTest extends TestBase{
         var seg = new CodeSegment();){
       var getpid = Linker.nativeLinker().defaultLookup().find("getpid").get();
       var desc = FunctionDescriptor.of(ValueLayout.JAVA_INT);
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-             /* mov %r10, addr */ .movImm(Register.R10, getpid.address())
-             /* jmp %r10       */ .jmp(Register.R10)
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+            /* mov %r10, addr */ .movImm(Register.R10, getpid.address())
+            /* jmp %r10       */ .jmp(Register.R10)
+                                 .build();
 
       //showDebugMessage(seg);
 
@@ -899,9 +899,9 @@ public class AsmTest extends TestBase{
       var ptrGetPID = arena.allocateFrom(ValueLayout.ADDRESS, getpid);
       var desc = FunctionDescriptor.of(ValueLayout.JAVA_INT,
                                        ValueLayout.ADDRESS);
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-                 /* jmp (arg1) */ .jmp(argReg.arg1(), OptionalInt.of(0))
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+                /* jmp (arg1) */ .jmp(argReg.arg1(), OptionalInt.of(0))
+                                 .build();
 
       //showDebugMessage(seg);
 
@@ -924,17 +924,17 @@ public class AsmTest extends TestBase{
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT // return value
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-         /*   push %rbp      */ .push(Register.RBP)
-         /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   rdrand %ax     */ .rdrand(Register.AX)  // encode check
-         /*   rdrand %eax    */ .rdrand(Register.EAX) // encode check
-         /* retry:           */ .label("retry")
-         /*   rdrand %rax    */ .rdrand(Register.RAX)
-         /*   jae retry      */ .jae("retry")
-         /*   leave          */ .leave()
-         /*   ret            */ .ret()
-                                .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+          /*   push %rbp      */ .push(Register.RBP)
+          /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+          /*   rdrand %ax     */ .rdrand(Register.AX)  // encode check
+          /*   rdrand %eax    */ .rdrand(Register.EAX) // encode check
+          /* retry:           */ .label("retry")
+          /*   rdrand %rax    */ .rdrand(Register.RAX)
+          /*   jae retry      */ .jae("retry")
+          /*   leave          */ .leave()
+          /*   ret            */ .ret()
+                                 .build();
 
       //showDebugMessage(seg);
       method.invoke();
@@ -954,17 +954,17 @@ public class AsmTest extends TestBase{
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT // return value
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-         /*   push %rbp      */ .push(Register.RBP)
-         /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   rdseed %ax     */ .rdseed(Register.AX)  // encode check
-         /*   rdseed %eax    */ .rdseed(Register.EAX) // encode check
-         /* retry:           */ .label("retry")
-         /*   rdseed %rax    */ .rdseed(Register.RAX)
-         /*   jae retry      */ .jae("retry")
-         /*   leave          */ .leave()
-         /*   ret            */ .ret()
-                                .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+          /*   push %rbp      */ .push(Register.RBP)
+          /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+          /*   rdseed %ax     */ .rdseed(Register.AX)  // encode check
+          /*   rdseed %eax    */ .rdseed(Register.EAX) // encode check
+          /* retry:           */ .label("retry")
+          /*   rdseed %rax    */ .rdseed(Register.RAX)
+          /*   jae retry      */ .jae("retry")
+          /*   leave          */ .leave()
+          /*   ret            */ .ret()
+                                 .build();
 
       method.invoke();
     }
@@ -983,13 +983,13 @@ public class AsmTest extends TestBase{
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT // return value
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-         /*   push %rbp      */ .push(Register.RBP)
-         /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /*   rdtsc          */ .rdtsc()
-         /*   leave          */ .leave()
-         /*   ret            */ .ret()
-                                .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+          /*   push %rbp      */ .push(Register.RBP)
+          /*   mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+          /*   rdtsc          */ .rdtsc()
+          /*   leave          */ .leave()
+          /*   ret            */ .ret()
+                                 .build();
 
       method.invoke();
     }
@@ -1012,17 +1012,17 @@ public class AsmTest extends TestBase{
                    ValueLayout.ADDRESS,   // address of strlen
                    ValueLayout.ADDRESS    // char *
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-             /* push %rbp      */ .push(Register.RBP)
-             /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-             /* mov arg1, %r10 */ .movMR(argReg.arg1(), Register.R10, OptionalInt.empty())
-             /* mov arg2, arg1 */ .movMR(argReg.arg2(), argReg.arg1(), OptionalInt.empty())
-             /* sub $32, %rsp  */ .sub(Register.RSP, 32, OptionalInt.empty()) // Shadow stack (for Windows: 32 bytes)
-             /* call %r10      */ .call(Register.R10)
-             /* add $32, %rsp  */ .add(Register.RSP, 32, OptionalInt.empty()) // Recover shadow stack
-             /* leave          */ .leave()
-             /* ret            */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+            /* push %rbp      */ .push(Register.RBP)
+            /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+            /* mov arg1, %r10 */ .movMR(argReg.arg1(), Register.R10, OptionalInt.empty())
+            /* mov arg2, arg1 */ .movMR(argReg.arg2(), argReg.arg1(), OptionalInt.empty())
+            /* sub $32, %rsp  */ .sub(Register.RSP, 32, OptionalInt.empty()) // Shadow stack (for Windows: 32 bytes)
+            /* call %r10      */ .call(Register.R10)
+            /* add $32, %rsp  */ .add(Register.RSP, 32, OptionalInt.empty()) // Recover shadow stack
+            /* leave          */ .leave()
+            /* ret            */ .ret()
+                                 .build();
 
       final String test = "test";
       var cTest = arena.allocateFrom(test);
@@ -1045,10 +1045,10 @@ public class AsmTest extends TestBase{
                        .asByteBuffer()
                        .order(ByteOrder.nativeOrder());
       var desc = FunctionDescriptor.ofVoid();
-      AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-                     .nop()
-                     .alignTo16BytesWithNOP()
-                     .build();
+      new AsmBuilder.AMD64(seg, desc)
+                    .nop()
+                    .alignTo16BytesWithNOP()
+                    .build();
 
       Assertions.assertEquals(16, seg.getTail(), "Memory size is not aligned.");
       byte[] array = new byte[16];
@@ -1073,15 +1073,15 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT  // 1st argument
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-         /* push %rbp          */ .push(Register.RBP)
-         /* mov %rsp, %rbp     */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
-         /* push arg1          */ .push(argReg.arg1())
-         /* mov (%rsp), retReg */ .movRM(argReg.returnReg(), Register.RSP, OptionalInt.of(0))
-         /* add $8, %rsp       */ .add(Register.RSP, 8, OptionalInt.empty())
-         /* leave              */ .leave()
-         /* ret                */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+        /* push %rbp          */ .push(Register.RBP)
+        /* mov %rsp, %rbp     */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+        /* push arg1          */ .push(argReg.arg1())
+        /* mov (%rsp), retReg */ .movRM(argReg.returnReg(), Register.RSP, OptionalInt.of(0))
+        /* add $8, %rsp       */ .add(Register.RSP, 8, OptionalInt.empty())
+        /* leave              */ .leave()
+        /* ret                */ .ret()
+                                 .build();
       //showDebugMessage(seg);
 
       int result = (int)method.invoke(100);
@@ -1102,14 +1102,14 @@ public class AsmTest extends TestBase{
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT // return value
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-        /* push %rbp           */ .push(Register.RBP)
-        /* mov %rsp, %rbp      */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
-        /* xor  retReg, retReg */ .xorMR(argReg.returnReg(), argReg.returnReg(), OptionalInt.empty())
-        /* mov  retReg, $100   */ .movImm(argReg.returnReg(), 100)
-        /* leave               */ .leave()
-        /* ret                 */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+       /* push %rbp           */ .push(Register.RBP)
+       /* mov %rsp, %rbp      */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+       /* xor  retReg, retReg */ .xorMR(argReg.returnReg(), argReg.returnReg(), OptionalInt.empty())
+       /* mov  retReg, $100   */ .movImm(argReg.returnReg(), 100)
+       /* leave               */ .leave()
+       /* ret                 */ .ret()
+                                 .build();
       //showDebugMessage(seg);
 
       int result = (int)method.invoke();
@@ -1131,11 +1131,11 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT // return value
                  );
       // getpid in libc does not have prologue/epilogue
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-              /* mov %rax, $39 */ .movImm(Register.RAX, 39) // getpid
-              /* syscall       */ .syscall()
-              /* ret           */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+             /* mov %rax, $39 */ .movImm(Register.RAX, 39) // getpid
+             /* syscall       */ .syscall()
+             /* ret           */ .ret()
+                                 .build();
       //showDebugMessage(seg);
 
       // __PID_T_TYPE is defined as __S32_TYPE in bits/typesizes.h
@@ -1160,14 +1160,14 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_LONG, // return value
                    ValueLayout.JAVA_LONG  // arg1
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-           /* push %rbp        */ .push(Register.RBP)
-           /* mov %rsp, %rbp   */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
-           /* bswap arg1       */ .bswap(argReg.arg1())
-           /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
-           /* leave            */ .leave()
-           /* ret              */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+          /* push %rbp        */ .push(Register.RBP)
+          /* mov %rsp, %rbp   */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+          /* bswap arg1       */ .bswap(argReg.arg1())
+          /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+          /* leave            */ .leave()
+          /* ret              */ .ret()
+                                 .build();
       //showDebugMessage(seg);
 
       long param    = 0x1122334455667788L;
@@ -1185,15 +1185,15 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_LONG, // return value
                    ValueLayout.JAVA_LONG  // arg1
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-            /* push %rbp       */ .push(Register.RBP)
-            /* mov %rsp, %rbp  */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
-            /* mov arg1, %r8   */ .movMR(argReg.arg1(), Register.R8, OptionalInt.empty())
-            /* bswap %r8       */ .bswap(Register.R8)
-            /* mov %r8, retReg */ .movMR(Register.R8, argReg.returnReg(), OptionalInt.empty())
-            /* leave           */ .leave()
-            /* ret             */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+           /* push %rbp       */ .push(Register.RBP)
+           /* mov %rsp, %rbp  */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+           /* mov arg1, %r8   */ .movMR(argReg.arg1(), Register.R8, OptionalInt.empty())
+           /* bswap %r8       */ .bswap(Register.R8)
+           /* mov %r8, retReg */ .movMR(Register.R8, argReg.returnReg(), OptionalInt.empty())
+           /* leave           */ .leave()
+           /* ret             */ .ret()
+                                 .build();
       //showDebugMessage(seg);
 
       long param    = 0x1122334455667788L;
@@ -1211,14 +1211,14 @@ public class AsmTest extends TestBase{
                    ValueLayout.JAVA_INT, // return value
                    ValueLayout.JAVA_INT  // arg1
                  );
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-           /* push %rbp        */ .push(Register.RBP)
-           /* mov %rsp, %rbp   */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
-           /* bswap arg1       */ .bswap(Register.EDI)
-           /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
-           /* leave            */ .leave()
-           /* ret              */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+          /* push %rbp        */ .push(Register.RBP)
+          /* mov %rsp, %rbp   */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+          /* bswap arg1       */ .bswap(Register.EDI)
+          /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+          /* leave            */ .leave()
+          /* ret              */ .ret()
+                                 .build();
       //showDebugMessage(seg);
 
       int param    = 0x11223344;
@@ -1240,13 +1240,13 @@ public class AsmTest extends TestBase{
   public void testSFENCE(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid();
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-             /* push %rbp      */ .push(Register.RBP)
-             /* mov %rsp, %rbp */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
-             /* sfence         */ .sfence()
-             /* leave          */ .leave()
-             /* ret            */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+            /* push %rbp      */ .push(Register.RBP)
+            /* mov %rsp, %rbp */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+            /* sfence         */ .sfence()
+            /* leave          */ .leave()
+            /* ret            */ .ret()
+                                 .build();
       //showDebugMessage(seg);
       method.invokeExact();
     }
@@ -1264,15 +1264,15 @@ public class AsmTest extends TestBase{
     Assumptions.assumeTrue(supportCLFLUSHOPT(), "Test platform does not support CLFLUSHOPT");
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
-      var method = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-          /* push %rbp         */ .push(Register.RBP)
-          /* mov %rsp, %rbp    */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
-          /* mov arg1, %r11    */ .movRM(Register.R11, argReg.arg1(), OptionalInt.empty())
-          /* clflushopt (arg1) */ .clflushopt(argReg.arg1(), 0)
-          /* clflushopt (%r11) */ .clflushopt(Register.R11, 0)
-          /* leave             */ .leave()
-          /* ret               */ .ret()
-                                  .build();
+      var method = new AsmBuilder.AMD64(seg, desc)
+         /* push %rbp         */ .push(Register.RBP)
+         /* mov %rsp, %rbp    */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+         /* mov arg1, %r11    */ .movRM(Register.R11, argReg.arg1(), OptionalInt.empty())
+         /* clflushopt (arg1) */ .clflushopt(argReg.arg1(), 0)
+         /* clflushopt (%r11) */ .clflushopt(Register.R11, 0)
+         /* leave             */ .leave()
+         /* ret               */ .ret()
+                                 .build();
       //showDebugMessage(seg);
       method.invoke(seg.getAddr());
     }

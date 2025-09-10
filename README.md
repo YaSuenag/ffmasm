@@ -50,12 +50,16 @@ try(var seg = new CodeSegment()){
 
 ## 2. Create `MethodHandle`
 
+You can assemble the code via inner classes of `com.yasuenag.ffmasm.AsmBuilder`:
+
+* `AsmBuilder.AMD64`
+* `AsmBuilder.SSE`
+* `AsmBuilder.AVX`
+* `AsmBuilder.AArch64`
+
 ### AMD64
 
-You can assemble the code via `AMD64AsmBuilder`. It would be instanciated via `create()`, and it should be passed both `CodeSegment` and [FunctionDescriptor](https://docs.oracle.com/en/java/javase/22/docs/api/java.base/java/lang/foreign/FunctionDescriptor.html).
-
-In following example, the method is defined as `(I)I` (JNI signature) in `FunctionDescriptor`.  
-`AMD64AsmBuilder` is builder pattern, so you can add instruction in below. Following example shows method argument (`int`) would be returned straightly.
+You need to use `com.yasuenag.ffmasm.amd64.Register` to specify registers in assembly code. Following example shows how you can create method `(I)I` (JNI signature) in ffmasm:
 
 You can get `MethodHandle` in result of `build()`.
 
@@ -65,25 +69,20 @@ var desc = FunctionDescriptor.of(
              ValueLayout.JAVA_INT // 1st argument
            );
 
-var method = AMD64AsmBuilder.create(seg, desc)
-    /* push %rbp         */ .push(Register.RBP)
-    /* mov %rsp, %rbp    */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
-    /* mov %rdi, %rax    */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
-    /* leave             */ .leave()
-    /* ret               */ .ret()
-                            .build(Linker.Option.critical(false));
+var method = new AsmBuilder.AMD64(seg, desc)
+      /* push %rbp      */ .push(Register.RBP)
+      /* mov %rsp, %rbp */ .movRM(Register.RSP, Register.RBP, OptionalInt.empty())
+      /* mov %rdi, %rax */ .movRM(Register.RDI, Register.RAX, OptionalInt.empty())
+      /* leave          */ .leave()
+      /* ret            */ .ret()
+                           .build(Linker.Option.critical(false));
 ```
 
 NOTE: [Linker.Option.critical()](https://docs.oracle.com/en/java/javase/22/docs/api/java.base/java/lang/foreign/Linker.Option.html#critical(boolean)) is recommended to pass `build()` method due to performance, but it might be cause of some issues in JVM (time to synchronize safepoint, memory corruption, etc). See Javadoc of `critical()`.
 
 ### AArch64
 
-You can assemble the code via `AArch64AsmBuilder`. It should be passed both `CodeSegment` and `FunctionDescriptor`.
-
-In following example, the method is defined as `(I)I` (JNI signature) in `FunctionDescriptor`.  
-`AArch64AsmBuilder` is builder pattern like `AMD64AsmBuilder` in same way, so you can add instruction in below. Following example shows method argument (`int`) would be returned straightly.
-
-You can get `MethodHandle` in result of `build()`.
+Most of code is same with AMD64, but it is the only one difference to use `AsmBuilder.AArch64` as builder instance.
 
 ```java
 var desc = FunctionDescriptor.of(
@@ -91,7 +90,7 @@ var desc = FunctionDescriptor.of(
              ValueLayout.JAVA_INT // 1st argument
            );
 
-var method = new AArch64AsmBuilder(codeSegment, desc)
+var method = new AsmBuilder.AArch64(codeSegment, desc)
 /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
 /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
 /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
@@ -166,13 +165,13 @@ try(var seg = new CodeSegment()){
                ValueLayout.JAVA_INT, // 2nd arg (jobject)
                ValueLayout.JAVA_INT  // 3rd arg (arg1 of caller)
              );
-  var stub = AMD64AsmBuilder.create(AMD64AsmBuilder.class, seg, desc)
-    /* push %rbp         */ .push(Register.RBP)
-    /* mov %rsp, %rbp    */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
-    /* mov %arg3, retReg */ .movMR(argReg.arg3(), argReg.returnReg(), OptionalInt.empty()) // arg1 in Java is arg3 in native
-    /* leave             */ .leave()
-    /* ret               */ .ret()
-                            .getMemorySegment();
+  var stub = AsmBuilder.AMD64(seg, desc)
+/* push %rbp         */ .push(Register.RBP)
+/* mov %rsp, %rbp    */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+/* mov %arg3, retReg */ .movMR(argReg.arg3(), argReg.returnReg(), OptionalInt.empty()) // arg1 in Java is arg3 in native
+/* leave             */ .leave()
+/* ret               */ .ret()
+                        .getMemorySegment();
 
   var method = this.getClass()
                    .getMethod("test", int.class);
