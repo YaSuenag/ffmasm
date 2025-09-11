@@ -5,7 +5,7 @@ This is an example of ffmasm to obtain CPU model from `CPUID` instruction in AMD
 
 # Requirements
 
-* Java 24
+* Java 25
 * AMD64 Linux or Windows
 * Maven
 
@@ -112,7 +112,7 @@ Java 24 introduced [JEP 483: Ahead-of-Time Class Loading & Linking](https://open
 $ cd target
 
 
-$ time $JAVA_HOME/bin/java -jar cpumodel-0.1.3.jar
+$ time $JAVA_HOME/bin/java -jar cpumodel-0.1.4.jar
 PID: 3147
 Addr: 0x7f8d1fc37000
 AMD Ryzen 3 3300X 4-Core Processor
@@ -122,7 +122,7 @@ user    0m0.196s
 sys     0m0.049s
 
 
-$ time $JAVA_HOME/bin/java -XX:AOTCache=ffmasm-cpumodel.aot -jar cpumodel-0.1.3.jar
+$ time $JAVA_HOME/bin/java --enable-native-access=ALL-UNNAMED -XX:AOTCache=ffmasm-cpumodel.aot -jar cpumodel-0.1.4.jar
 PID: 3167
 Addr: 0x7f9000001000
 AMD Ryzen 3 3300X 4-Core Processor

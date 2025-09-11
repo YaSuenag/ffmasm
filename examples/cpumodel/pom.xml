@@ -24,7 +24,7 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
 
     <groupId>com.yasuenag</groupId>
     <artifactId>cpumodel</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.4</version>
     <packaging>jar</packaging>
 
     <name>cpumodel</name>
@@ -33,8 +33,8 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <moduleName>com.yasuenag.ffmasm.examples.cpumodel</moduleName>
         <mainClass>com.yasuenag.ffmasm.examples.cpumodel.Main</mainClass>
-        <maven.compiler.source>24</maven.compiler.source>
-        <maven.compiler.target>24</maven.compiler.target>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
     </properties>
     
     <dependencies>
@@ -98,7 +98,7 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
                 <version>3.5.0</version>
                 <executions>
                     <execution>
-                        <id>aot-record</id>
+                        <id>aot</id>
                         <phase>package</phase>
                         <goals>
                             <goal>exec</goal>
@@ -108,27 +108,8 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
                             <executable>${java.home}/bin/java</executable>
                             <arguments>
                                 <argument>--enable-native-access=ALL-UNNAMED</argument>
-                                <argument>-XX:AOTMode=record</argument>
-                                <argument>-XX:AOTConfiguration=ffmasm-cpumodel.aotconf</argument>
+                                <argument>-XX:AOTCacheOutput=ffmasm-cpumodel.aot</argument>
                                 <argument>-jar</argument>
-                                <argument>${project.build.finalName}.jar</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>aot-create</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>${project.build.directory}</workingDirectory>
-                            <executable>${java.home}/bin/java</executable>
-                            <arguments>
-                                <argument>-XX:AOTMode=create</argument>
-                                <argument>-XX:AOTConfiguration=ffmasm-cpumodel.aotconf</argument>
-                                <argument>-XX:AOTCache=ffmasm-cpumodel.aot</argument>
-                                <argument>-cp</argument>
                                 <argument>${project.build.finalName}.jar</argument>
                             </arguments>
                         </configuration>
