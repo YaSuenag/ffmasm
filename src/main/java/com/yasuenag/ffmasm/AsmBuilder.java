@@ -41,6 +41,8 @@ import com.yasuenag.ffmasm.internal.amd64.SSEAsmBuilder;
 /**
  * Base class of assembly builder.
  *
+ * @param <T> Implementation of AsmBuilder
+ *
  * @author Yasumasa Suenaga
  */
 public class AsmBuilder<T extends AsmBuilder>{
@@ -137,7 +139,7 @@ public class AsmBuilder<T extends AsmBuilder>{
   /**
    * Cast "this" to "T" without unchecked warning.
    *
-   * @returns "this" casted to "T"
+   * @return "this" casted to "T"
    */
   @SuppressWarnings("unchecked")
   protected T castToT(){

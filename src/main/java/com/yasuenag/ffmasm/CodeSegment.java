@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2024, Yasumasa Suenaga
+ * Copyright (C) 2022, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -48,6 +48,10 @@ public class CodeSegment implements AutoCloseable{
 
   /**
    * Holder for method information. This is used for perfmap dumping.
+   *
+   * @param name method name
+   * @param address start address of the method
+   * @param size method size
    */
   public static record MethodInfo(String name, long address, int size){
     @Override
