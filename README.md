@@ -39,7 +39,7 @@ See [Javadoc](https://yasuenag.github.io/ffmasm/) and [cpumodel](examples/cpumod
 
 ## 1. Create `CodeSegment`
 
-`CodeSegment` is a storage for assembled code. In Linux, it would be allocated by `mmap(2)` with executable bit.  
+[CodeSegment](https://yasuenag.github.io/ffmasm/com.yasuenag.ffmasm/com/yasuenag/ffmasm/CodeSegment.html) is a storage for assembled code. In Linux, it would be allocated by `mmap(2)` with executable bit.  
 It implements [AutoCloseable](https://docs.oracle.com/en/java/javase/22/docs/api/java.base/java/lang/AutoCloseable.html), so you can use try-with-resources in below:
 
 ```java
@@ -50,16 +50,16 @@ try(var seg = new CodeSegment()){
 
 ## 2. Create `MethodHandle`
 
-You can assemble the code via inner classes of `com.yasuenag.ffmasm.AsmBuilder`:
+You can assemble the code via inner classes of [com.yasuenag.ffmasm.AsmBuilder](https://yasuenag.github.io/ffmasm/com.yasuenag.ffmasm/com/yasuenag/ffmasm/AsmBuilder.html):
 
-* `AsmBuilder.AMD64`
-* `AsmBuilder.SSE`
-* `AsmBuilder.AVX`
-* `AsmBuilder.AArch64`
+* [AsmBuilder.AMD64](https://yasuenag.github.io/ffmasm/com.yasuenag.ffmasm/com/yasuenag/ffmasm/AsmBuilder.AMD64.html)
+* [AsmBuilder.SSE](https://yasuenag.github.io/ffmasm/com.yasuenag.ffmasm/com/yasuenag/ffmasm/AsmBuilder.SSE.html)
+* [AsmBuilder.AVX](https://yasuenag.github.io/ffmasm/com.yasuenag.ffmasm/com/yasuenag/ffmasm/AsmBuilder.AVX.html)
+* [AsmBuilder.AArch64](https://yasuenag.github.io/ffmasm/com.yasuenag.ffmasm/com/yasuenag/ffmasm/AsmBuilder.AArch64.html)
 
 ### AMD64
 
-You need to use `com.yasuenag.ffmasm.amd64.Register` to specify registers in assembly code. Following example shows how you can create method `(I)I` (JNI signature) in ffmasm:
+You need to use [com.yasuenag.ffmasm.amd64.Register](https://yasuenag.github.io/ffmasm/com.yasuenag.ffmasm/com/yasuenag/ffmasm/amd64/Register.html) to specify registers in assembly code. Following example shows how you can create method `(I)I` (JNI signature) in ffmasm:
 
 You can get `MethodHandle` in result of `build()`.
 
