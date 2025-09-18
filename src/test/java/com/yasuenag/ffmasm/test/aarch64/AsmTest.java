@@ -96,7 +96,7 @@ public class AsmTest{
 /* ret                       */ .ret(Optional.empty())
                                 .build();
       expected = 1;
-      actual = (int)method.invoke(4096);
+      actual = (int)method.invoke(4097);
       Assertions.assertEquals(expected, actual);
     }
     catch(Throwable t){

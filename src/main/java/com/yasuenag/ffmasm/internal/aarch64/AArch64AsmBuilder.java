@@ -161,7 +161,6 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
   /**
    * Subtract immediate value
    *
-   * @param rn The general-purpose register holding the address to be branched to. X30 will be set if this argument is empty.
    * @param src Source register.
    * @param dst Destination register.
    * @param imm Immediate value to subtract. In the range 0 to 4095.
