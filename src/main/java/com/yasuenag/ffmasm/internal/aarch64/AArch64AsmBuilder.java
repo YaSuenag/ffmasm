@@ -159,6 +159,29 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
   }
 
   /**
+   * Add immediate value
+   *
+   * @param src Source register.
+   * @param dst Destination register.
+   * @param imm Immediate value to subtract. In the range 0 to 4095.
+   * @param shift true if imm should be LSL #12
+   * @return This instance
+   */
+  public T addImm(Register src, Register dst, int imm, boolean shift){
+    byte sf = src.width() == 64 ? (byte)1 : (byte)0;
+    byte sh = shift ? (byte)1 : (byte)0;
+    int encoded = (sf << 31) |
+                  (0b000100010 << 23) |
+                  (sh << 22) |
+                  ((imm & 0xfff) << 10) | // 12bit
+                  (src.encoding() << 5) |
+                  dst.encoding();
+
+    byteBuf.putInt(encoded);
+    return castToT();
+  }
+
+  /**
    * Subtract immediate value
    *
    * @param src Source register.
