@@ -79,7 +79,7 @@ public class AsmTest{
       var method = new AsmBuilder.AArch64(seg, desc)
  /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
  /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
- /* sub  x0,  x0, #10         */ .subImm(Register.X10, Register.X10, 10, false)
+ /* sub  x0,  x0, #10         */ .subImm(Register.X0, Register.X0, 10, false)
  /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
  /* ret                       */ .ret(Optional.empty())
                                  .build();
@@ -91,7 +91,7 @@ public class AsmTest{
       method = new AsmBuilder.AArch64(seg, desc)
 /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
 /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
-/* sub  x0,  x0, #1, lsl #12 */ .subImm(Register.X10, Register.X10, 1, true)
+/* sub  x0,  x0, #1, lsl #12 */ .subImm(Register.X0, Register.X0, 1, true)
 /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
 /* ret                       */ .ret(Optional.empty())
                                 .build();
