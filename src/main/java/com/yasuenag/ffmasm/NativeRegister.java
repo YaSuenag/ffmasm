@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, 2024, Yasumasa Suenaga
+ * Copyright (C) 2023, 2025, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -31,6 +31,7 @@ import java.util.Map;
 import com.yasuenag.ffmasm.internal.JniEnv;
 import com.yasuenag.ffmasm.internal.JvmtiEnv;
 import com.yasuenag.ffmasm.internal.amd64.AMD64NativeRegister;
+import com.yasuenag.ffmasm.internal.aarch64.AArch64NativeRegister;
 
 
 /**
@@ -250,11 +251,16 @@ public abstract class NativeRegister{
    */
   public static NativeRegister create(Class<?> klass) throws UnsupportedPlatformException{
     var arch = System.getProperty("os.arch");
+    var os = System.getProperty("os.name");
+
     if(arch.equals("amd64")){
       return new AMD64NativeRegister(klass);
     }
+    else if(arch.equals("aarch64") && os.equals("Linux")){
+      return new AArch64NativeRegister(klass);
+    }
     else{
-      throw new UnsupportedPlatformException(arch + " is not supported");
+      throw new UnsupportedPlatformException(os + " " + arch + " is not supported");
     }
   }
 
