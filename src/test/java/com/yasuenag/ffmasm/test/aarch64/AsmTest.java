@@ -32,7 +32,7 @@ import java.util.Optional;
 
 import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
-import com.yasuenag.ffmasm.aarch64.IndexClasses;
+import com.yasuenag.ffmasm.aarch64.IndexClass;
 import com.yasuenag.ffmasm.aarch64.Register;
 
 
@@ -60,9 +60,9 @@ public class AsmTest{
                    ValueLayout.JAVA_INT // 1st argument
                  );
       var method = new AsmBuilder.AArch64(seg, desc)
- /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
+ /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
  /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
- /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PostIndex, 16)
+ /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
  /* ret                       */ .ret(Optional.empty())
                                  .build();
 
@@ -88,12 +88,12 @@ public class AsmTest{
                    ValueLayout.JAVA_INT  // 2nd argument
                  );
       var method = new AsmBuilder.AArch64(seg, desc)
- /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
+ /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
  /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
- /* stp  x0,  x1, [sp, #-16]! */ .stp(Register.X0, Register.X1, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
- /* ldr  x0, [sp, #8]         */ .ldr(Register.X0, Register.SP, IndexClasses.LDR_STR.UnsignedOffset, 8)
+ /* stp  x0,  x1, [sp, #-16]! */ .stp(Register.X0, Register.X1, Register.SP, IndexClass.PreIndex, -16)
+ /* ldr  x0, [sp, #8]         */ .ldr(Register.X0, Register.SP, IndexClass.UnsignedOffset, 8)
  /* mov  sp, x29              */ .mov(Register.SP, Register.X29)
- /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PostIndex, 16)
+ /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
  /* ret                       */ .ret(Optional.empty())
                                  .build();
 
@@ -122,10 +122,10 @@ public class AsmTest{
 
       // 1. No shift
       var method = new AsmBuilder.AArch64(seg, desc)
- /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
+ /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
  /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
  /* add  x0,  x0, #10         */ .addImm(Register.X0, Register.X0, 10, false)
- /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PostIndex, 16)
+ /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
  /* ret                       */ .ret(Optional.empty())
                                  .build();
       int expected = 110;
@@ -134,10 +134,10 @@ public class AsmTest{
 
       // 2. Shift
       method = new AsmBuilder.AArch64(seg, desc)
-/* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
+/* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
 /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
 /* add  x0,  x0, #1, lsl #12 */ .addImm(Register.X0, Register.X0, 1, true)
-/* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PostIndex, 16)
+/* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
 /* ret                       */ .ret(Optional.empty())
                                 .build();
       expected = 4097;
@@ -163,10 +163,10 @@ public class AsmTest{
 
       // 1. No shift
       var method = new AsmBuilder.AArch64(seg, desc)
- /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
+ /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
  /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
  /* sub  x0,  x0, #10         */ .subImm(Register.X0, Register.X0, 10, false)
- /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PostIndex, 16)
+ /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
  /* ret                       */ .ret(Optional.empty())
                                  .build();
       int expected = 90;
@@ -175,10 +175,10 @@ public class AsmTest{
 
       // 2. Shift
       method = new AsmBuilder.AArch64(seg, desc)
-/* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
+/* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
 /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
 /* sub  x0,  x0, #1, lsl #12 */ .subImm(Register.X0, Register.X0, 1, true)
-/* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PostIndex, 16)
+/* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
 /* ret                       */ .ret(Optional.empty())
                                 .build();
       expected = 1;
@@ -205,12 +205,12 @@ public class AsmTest{
                    ValueLayout.ADDRESS    // char *
                  );
       var method = new AsmBuilder.AArch64(seg, desc)
- /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
+ /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
  /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
  /* mov  x9,  x0              */ .mov(Register.X9, Register.X0)
  /* mov  x0,  x1              */ .mov(Register.X0, Register.X1)
  /* blr  x9                   */ .blr(Register.X9)
- /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PostIndex, 16)
+ /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
  /* ret                       */ .ret(Optional.empty())
                                  .build();
 

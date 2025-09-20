@@ -31,7 +31,7 @@ import java.util.Optional;
 import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.NativeRegister;
-import com.yasuenag.ffmasm.aarch64.IndexClasses;
+import com.yasuenag.ffmasm.aarch64.IndexClass;
 import com.yasuenag.ffmasm.aarch64.Register;
 
 
@@ -51,10 +51,10 @@ public class NativeRegisterTest{
                    ValueLayout.JAVA_INT  // 3rd arg (arg1 of caller)
                  );
       var stub = new AsmBuilder.AArch64(seg, desc)
-/* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
+/* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
 /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
 /* mov  x0,  x2              */ .mov(Register.X0, Register.X2)
-/* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PostIndex, 16)
+/* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
 /* ret                       */ .ret(Optional.empty())
                                 .getMemorySegment();
 

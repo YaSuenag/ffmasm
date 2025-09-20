@@ -32,7 +32,7 @@ import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.NativeRegister;
 import com.yasuenag.ffmasm.aarch64.Register;
-import com.yasuenag.ffmasm.aarch64.IndexClasses;
+import com.yasuenag.ffmasm.aarch64.IndexClass;
 import com.yasuenag.ffmasm.internal.JvmtiEnv;
 
 
@@ -77,36 +77,36 @@ public final class AArch64NativeRegister extends NativeRegister{
      */
     registerStub = new AsmBuilder.AArch64(seg, desc)
  // prologue
-   /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
+   /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
    /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
-   /* stp  x1,  x0, [sp, #-16]! */ .stp(Register.X1, Register.X0, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
-   /* stp  x3,  x2, [sp, #-16]! */ .stp(Register.X3, Register.X2, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
-   /* stp  x4,  x4, [sp, #-16]! */ .stp(Register.X4, Register.X4, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
+   /* stp  x1,  x0, [sp, #-16]! */ .stp(Register.X1, Register.X0, Register.SP, IndexClass.PreIndex, -16)
+   /* stp  x3,  x2, [sp, #-16]! */ .stp(Register.X3, Register.X2, Register.SP, IndexClass.PreIndex, -16)
+   /* stp  x4,  x4, [sp, #-16]! */ .stp(Register.X4, Register.X4, Register.SP, IndexClass.PreIndex, -16)
    /* sub  sp,  sp, #16         */ .subImm(Register.SP, Register.SP, 16, false)
 
  // call GetLoadedClasses()
    /* mov  x1, SP               */ .mov(Register.X1, Register.SP) // count (arg2)
    /* add  x2, SP, #8           */ .addImm(Register.SP, Register.X2, 8, false) // classes (arg3)
-   /* ldr  x0, [SP, #48]        */ .ldr(Register.X0, Register.SP, IndexClasses.LDR_STR.UnsignedOffset, 48) // address of jvmtiEnv (arg1)
-   /* ldr  x9, [SP, #32]        */ .ldr(Register.X9, Register.SP, IndexClasses.LDR_STR.UnsignedOffset, 32) // address of GetLoadedClasses() (x9: tmpreg)
+   /* ldr  x0, [SP, #48]        */ .ldr(Register.X0, Register.SP, IndexClass.UnsignedOffset, 48) // address of jvmtiEnv (arg1)
+   /* ldr  x9, [SP, #32]        */ .ldr(Register.X9, Register.SP, IndexClass.UnsignedOffset, 32) // address of GetLoadedClasses() (x9: tmpreg)
    /* blr  x9                   */ .blr(Register.X9)
 
  // call callback(MemorySegment classes, int class_count, int resultGetLoadedClasses, MemorySegment callbackParam)
    /* mov  x2,  x0              */ .mov(Register.X2, Register.X0) // result of GetLoadedClasses() (arg3)
-   /* ldp  x1,  x0, [sp]        */ .ldp(Register.X1, Register.X0, Register.SP, IndexClasses.LDP_STP.SignedOffset, 0) // count (arg2), classes(arg1)
-   /* ldr  x3, [SP, #56]        */ .ldr(Register.X3, Register.SP, IndexClasses.LDR_STR.UnsignedOffset, 56) // callbackParam (arg4)
-   /* ldr  x9, [SP, #40]        */ .ldr(Register.X9, Register.SP, IndexClasses.LDR_STR.UnsignedOffset, 40) // address of callback (x9: tmpreg)
+   /* ldp  x1,  x0, [sp]        */ .ldp(Register.X1, Register.X0, Register.SP, IndexClass.SignedOffset, 0) // count (arg2), classes(arg1)
+   /* ldr  x3, [SP, #56]        */ .ldr(Register.X3, Register.SP, IndexClass.UnsignedOffset, 56) // callbackParam (arg4)
+   /* ldr  x9, [SP, #40]        */ .ldr(Register.X9, Register.SP, IndexClass.UnsignedOffset, 40) // address of callback (x9: tmpreg)
    /* blr  x9                   */ .blr(Register.X9)
 
  // call Deallocate()
-   /* ldr  x0, [SP, #48]        */ .ldr(Register.X0, Register.SP, IndexClasses.LDR_STR.UnsignedOffset, 48) // address of jvmtiEnv (arg1)
-   /* ldr  x1, [SP, #8]         */ .ldr(Register.X1, Register.SP, IndexClasses.LDR_STR.UnsignedOffset, 8) // classes (arg2)
-   /* ldr  x9, [SP, #24]        */ .ldr(Register.X9, Register.SP, IndexClasses.LDR_STR.UnsignedOffset, 24) // address of Deallocate (x9: tmpreg)
+   /* ldr  x0, [SP, #48]        */ .ldr(Register.X0, Register.SP, IndexClass.UnsignedOffset, 48) // address of jvmtiEnv (arg1)
+   /* ldr  x1, [SP, #8]         */ .ldr(Register.X1, Register.SP, IndexClass.UnsignedOffset, 8) // classes (arg2)
+   /* ldr  x9, [SP, #24]        */ .ldr(Register.X9, Register.SP, IndexClass.UnsignedOffset, 24) // address of Deallocate (x9: tmpreg)
    /* blr  x9                   */ .blr(Register.X9)
 
  // epilogue
    /* add  sp,  sp, #64         */ .addImm(Register.SP, Register.SP, 64, false)
-   /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PostIndex, 16)
+   /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
    /* ret                       */ .ret(Optional.empty())
                                    .build();
   }
