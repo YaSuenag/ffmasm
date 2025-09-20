@@ -30,7 +30,7 @@ import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.JitDump;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
-import com.yasuenag.ffmasm.aarch64.IndexClass;
+import com.yasuenag.ffmasm.aarch64.IndexClasses;
 import com.yasuenag.ffmasm.aarch64.Register;
 
 
@@ -61,6 +61,35 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
   }
 
   /**
+   * Load register (immediate)
+   *
+   * @param rt The general-purpose register to be transferred.
+   * @param rn The general-purpose base register or stack pointer.
+   * @param idxCls Addressing mode.
+   * @param imm Memory offset of rn to be loaded.
+   * @return This instance
+   */
+  public T ldr(Register rt, Register rn, IndexClasses.LDR_STR idxCls, int imm){
+    byte size = rt.width() == 64 ? (byte)0b11 : (byte)0b10;
+    int denominator = rt.width() == 64 ? 8 : 4;
+    int opcAndImm = switch(idxCls){
+      case PostIndex -> (0b010 << 21) | ((imm & 0x1ff) << 12) | (0b01 << 10);
+      case PreIndex -> (0b010 << 21) | ((imm & 0x1ff) << 12) | (0b11 << 10);
+      case UnsignedOffset -> (0b01 << 22) | (((imm / denominator) & 0xfff) << 10);
+    };
+
+    int encoded = (size << 30) |
+                  (0b111 << 27) |
+                  (idxCls.vr() << 24) |
+                  opcAndImm |
+                  (rn.encoding() << 5) |
+                  rt.encoding();
+
+    byteBuf.putInt(encoded);
+    return castToT();
+  }
+
+  /**
    * Load pair of registers
    *
    * @param rt The first general-purpose register to be transferred.
@@ -70,7 +99,7 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
    * @param imm7 Memory offset of rn to be loaded.
    * @return This instance
    */
-  public T ldp(Register rt, Register rt2, Register rn, IndexClass idxCls, int imm7){
+  public T ldp(Register rt, Register rt2, Register rn, IndexClasses.LDP_STP idxCls, int imm7){
     byte opc = rt.width() == 64 ? (byte)0b10 : (byte)0b00;
     byte imm = rn.width() == 64 ? (byte)(imm7 / 8) : (byte)(imm7 / 4);
 
@@ -97,7 +126,7 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
    * @param imm7 Memory offset of rn to be stored.
    * @return This instance
    */
-  public T stp(Register rt, Register rt2, Register rn, IndexClass idxCls, int imm7){
+  public T stp(Register rt, Register rt2, Register rn, IndexClasses.LDP_STP idxCls, int imm7){
     byte opc = rt.width() == 64 ? (byte)0b10 : (byte)0b00;
     byte imm = rn.width() == 64 ? (byte)(imm7 / 8) : (byte)(imm7 / 4);
 
