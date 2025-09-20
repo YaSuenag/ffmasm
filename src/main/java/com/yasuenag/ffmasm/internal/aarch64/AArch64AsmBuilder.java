@@ -146,11 +146,11 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
   /**
    * Move register value (includes SP)
    *
-   * @param src Source register.
    * @param dst Destination register.
+   * @param src Source register.
    * @return This instance
    */
-  public T mov(Register src, Register dst){
+  public T mov(Register dst, Register src){
     boolean is_SP = src == Register.SP || dst == Register.SP;
     byte sf = src.width() == 64 ? (byte)1 : (byte)0;
 
@@ -158,15 +158,15 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
     if(is_SP){
       encoded = (sf << 31) |
                 (0b001000100000000000000 << 10) |
-                (dst.encoding() << 5) |
-                src.encoding();
+                (src.encoding() << 5) |
+                dst.encoding();
     }
     else{
       encoded = (sf << 31) |
                 (0b0101010000 << 21) |
-                (dst.encoding() << 16) |
+                (src.encoding() << 16) |
                 (0b00000011111 << 5) |
-                src.encoding();
+                dst.encoding();
     }
 
 
