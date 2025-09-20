@@ -145,9 +145,6 @@ Disassembler.dumpToStdout(rdtsc); // Dump assembly code of `rdtsc` to stdout
 
 # Play with JNI
 
-> [!IMPORTANT]
-> JNI binding is for AMD64 only.
-
 You can bind native method to `MemorySegment` of ffmasm code dynamically.
 
 You have to construct `MemorySegment` of the machine code with `AMD64AsmBuilder`, and you have to get it from `getMemorySegment()`. Then you can bind it via `NativeRegister`.

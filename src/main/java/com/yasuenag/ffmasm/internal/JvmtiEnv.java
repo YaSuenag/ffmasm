@@ -79,6 +79,10 @@ public class JvmtiEnv{
     return jvmtiEnv.address();
   }
 
+  public MemorySegment getMemorySegment(){
+    return jvmtiEnv;
+  }
+
   public MemorySegment getLoadedClassesAddr(){
     if(GetLoadedClassesAddr == null){
       GetLoadedClassesAddr = functionTable.getAtIndex(ValueLayout.ADDRESS, JVMTI_GetLoadedClasses_POSITION - 1);
