@@ -30,7 +30,7 @@ import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.JitDump;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
-import com.yasuenag.ffmasm.aarch64.IndexClasses;
+import com.yasuenag.ffmasm.aarch64.IndexClass;
 import com.yasuenag.ffmasm.aarch64.Register;
 
 
@@ -69,19 +69,48 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
    * @param imm Memory offset of rn to be loaded.
    * @return This instance
    */
-  public T ldr(Register rt, Register rn, IndexClasses.LDR_STR idxCls, int imm){
+  public T ldr(Register rt, Register rn, IndexClass idxCls, int imm){
     byte size = rt.width() == 64 ? (byte)0b11 : (byte)0b10;
     int denominator = rt.width() == 64 ? 8 : 4;
     int opcAndImm = switch(idxCls){
       case PostIndex -> (0b010 << 21) | ((imm & 0x1ff) << 12) | (0b01 << 10);
       case PreIndex -> (0b010 << 21) | ((imm & 0x1ff) << 12) | (0b11 << 10);
       case UnsignedOffset -> (0b01 << 22) | (((imm / denominator) & 0xfff) << 10);
+      default -> throw new IllegalArgumentException("Unsupported index class");
+    };
+    byte vr = switch(idxCls){
+      case PostIndex, PreIndex -> (byte)0b000;
+      case UnsignedOffset -> (byte)0b001;
+      default -> throw new IllegalArgumentException("Unsupported index class");
     };
 
     int encoded = (size << 30) |
                   (0b111 << 27) |
-                  (idxCls.vr() << 24) |
+                  (vr << 24) |
                   opcAndImm |
+                  (rn.encoding() << 5) |
+                  rt.encoding();
+
+    byteBuf.putInt(encoded);
+    return castToT();
+  }
+
+  private T ldpstpInternal(Register rt, Register rt2, Register rn, IndexClass idxCls, int imm7, boolean isLoad){
+    byte opc = rt.width() == 64 ? (byte)0b10 : (byte)0b00;
+    byte imm = rn.width() == 64 ? (byte)(imm7 / 8) : (byte)(imm7 / 4);
+    byte vr = switch(idxCls){
+      case PostIndex -> (byte)0b0001;
+      case PreIndex -> (byte)0b0011;
+      case SignedOffset -> (byte)0b0010;
+      default -> throw new IllegalArgumentException("Unsupported index class");
+    };
+
+    int encoded = ((opc & 0b11) << 30) |
+                  (0b101 << 27) |
+                  (vr << 23) |
+                  ((isLoad ? 1 : 0) << 22) |
+                  ((imm & 0b1111111) << 15) |
+                  (rt2.encoding() << 10) |
                   (rn.encoding() << 5) |
                   rt.encoding();
 
@@ -99,21 +128,8 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
    * @param imm7 Memory offset of rn to be loaded.
    * @return This instance
    */
-  public T ldp(Register rt, Register rt2, Register rn, IndexClasses.LDP_STP idxCls, int imm7){
-    byte opc = rt.width() == 64 ? (byte)0b10 : (byte)0b00;
-    byte imm = rn.width() == 64 ? (byte)(imm7 / 8) : (byte)(imm7 / 4);
-
-    int encoded = ((opc & 0b11) << 30) |
-                  (0b101 << 27) |
-                  (idxCls.vr() << 23) |
-                  (1 << 22) |
-                  ((imm & 0b1111111) << 15) |
-                  (rt2.encoding() << 10) |
-                  (rn.encoding() << 5) |
-                  rt.encoding();
-
-    byteBuf.putInt(encoded);
-    return castToT();
+  public T ldp(Register rt, Register rt2, Register rn, IndexClass idxCls, int imm7){
+    return ldpstpInternal(rt, rt2, rn, idxCls, imm7, true);
   }
 
   /**
@@ -126,21 +142,8 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
    * @param imm7 Memory offset of rn to be stored.
    * @return This instance
    */
-  public T stp(Register rt, Register rt2, Register rn, IndexClasses.LDP_STP idxCls, int imm7){
-    byte opc = rt.width() == 64 ? (byte)0b10 : (byte)0b00;
-    byte imm = rn.width() == 64 ? (byte)(imm7 / 8) : (byte)(imm7 / 4);
-
-    int encoded = ((opc & 0b11) << 30) |
-                  (0b101 << 27) |
-                  (idxCls.vr() << 23) |
-                  (0 << 22) |
-                  ((imm & 0b1111111) << 15) |
-                  (rt2.encoding() << 10) |
-                  (rn.encoding() << 5) |
-                  rt.encoding();
-
-    byteBuf.putInt(encoded);
-    return castToT();
+  public T stp(Register rt, Register rt2, Register rn, IndexClass idxCls, int imm7){
+    return ldpstpInternal(rt, rt2, rn, idxCls, imm7, false);
   }
 
   /**
