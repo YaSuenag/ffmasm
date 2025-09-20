@@ -90,7 +90,7 @@ public class AsmTest{
  /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
  /* stp  x0,  x1, [sp, #-16]! */ .stp(Register.X0, Register.X1, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
  /* ldr  x0, [sp, #8]         */ .ldr(Register.X0, Register.SP, IndexClasses.LDR_STR.UnsignedOffset, 8)
- /* add  sp, sp, #16          */ .addImm(Register.SP, Register.SP, 16, false)
+ /* mov  sp, x29              */ .mov(Register.SP, Register.X29)
  /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PostIndex, 16)
  /* ret                       */ .ret(Optional.empty())
                                  .build();
