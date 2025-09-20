@@ -24,7 +24,9 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import java.io.IOException;
+import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
 import java.lang.foreign.ValueLayout;
 import java.util.Optional;
 
@@ -182,6 +184,42 @@ public class AsmTest{
       expected = 1;
       actual = (int)method.invoke(4097);
       Assertions.assertEquals(expected, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests BLR
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX})
+  public void testBlr(){
+    try(var arena = Arena.ofConfined();
+        var seg = new CodeSegment();){
+      var strlenAddr = Linker.nativeLinker().defaultLookup().find("strlen").get();
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_LONG, // return value
+                   ValueLayout.ADDRESS,   // address of strlen
+                   ValueLayout.ADDRESS    // char *
+                 );
+      var method = new AsmBuilder.AArch64(seg, desc)
+ /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
+ /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
+ /* mov  x9,  x0              */ .mov(Register.X9, Register.X0)
+ /* mov  x0,  x1              */ .mov(Register.X0, Register.X1)
+ /* blr  x9                   */ .blr(Register.X9)
+ /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PostIndex, 16)
+ /* ret                       */ .ret(Optional.empty())
+                                 .build();
+
+      //showDebugMessage(seg);
+
+      final String test = "test";
+      var cTest = arena.allocateFrom(test);
+      long len = (long)method.invoke(strlenAddr, cTest);
+      Assertions.assertEquals(test.length(), (int)len, "Invalid strlen() call");
     }
     catch(Throwable t){
       Assertions.fail(t);
