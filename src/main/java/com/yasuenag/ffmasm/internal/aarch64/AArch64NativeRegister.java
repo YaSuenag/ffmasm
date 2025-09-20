@@ -82,7 +82,7 @@ public final class AArch64NativeRegister extends NativeRegister{
    /* stp  x1,  x0, [sp, #-16]! */ .stp(Register.X1, Register.X0, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
    /* stp  x3,  x2, [sp, #-16]! */ .stp(Register.X3, Register.X2, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
    /* stp  x4,  x4, [sp, #-16]! */ .stp(Register.X4, Register.X4, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
-   /* sub  sp,  sp, #24         */ .subImm(Register.SP, Register.SP, 24, false)
+   /* sub  sp,  sp, #16         */ .subImm(Register.SP, Register.SP, 16, false)
 
  // call GetLoadedClasses()
    /* mov  x1, SP               */ .mov(Register.X1, Register.SP) // count (arg2)
