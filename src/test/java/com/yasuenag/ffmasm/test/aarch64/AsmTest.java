@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
+import java.io.IOException;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.ValueLayout;
 import java.util.Optional;
@@ -35,6 +36,15 @@ import com.yasuenag.ffmasm.aarch64.Register;
 
 @EnabledOnOs(architectures = {"aarch64"})
 public class AsmTest{
+
+  /**
+   * Show PID, address of CodeSegment, then waits stdin input.
+   */
+  public void showDebugMessage(CodeSegment seg) throws IOException{
+    System.out.println("PID: " + ProcessHandle.current().pid());
+    System.out.println("Addr: 0x" + Long.toHexString(seg.getAddr().address()));
+    System.in.read();
+  }
 
   /**
    * Tests prologue (stp, mov), epilogue (ldp, ret)
@@ -80,9 +90,12 @@ public class AsmTest{
  /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
  /* stp  x0,  x1, [sp, #-16]! */ .stp(Register.X0, Register.X1, Register.SP, IndexClasses.LDP_STP.PreIndex, -16)
  /* ldr  x0, [sp, #8]         */ .ldr(Register.X0, Register.SP, IndexClasses.LDR_STR.UnsignedOffset, 8)
+ /* add  sp, sp, #16          */ .addImm(Register.SP, Register.SP, 16, false)
  /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClasses.LDP_STP.PostIndex, 16)
  /* ret                       */ .ret(Optional.empty())
                                  .build();
+
+      //showDebugMessage(seg);
 
       final int expected = 200;
       int actual = (int)method.invoke(100, expected);
