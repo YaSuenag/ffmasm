@@ -24,22 +24,48 @@ package com.yasuenag.ffmasm.aarch64;
  *
  * @author Yasumasa Suenaga
  */
-public enum IndexClass{
-  PostIndex((byte)0b0001),
-  PreIndex((byte)0b0011),
-  SignedOffset((byte)0b0010);
+public class IndexClasses{
 
-  private final byte vr;
+  public static enum LDP_STP{
+    PostIndex((byte)0b0001),
+    PreIndex((byte)0b0011),
+    SignedOffset((byte)0b0010);
 
-  private IndexClass(byte vr){
-    this.vr = vr;
+    private final byte vr;
+
+    private LDP_STP(byte vr){
+      this.vr = vr;
+    }
+
+    /**
+     * Index class
+     * @return value of this class
+     */
+    public byte vr(){
+      return vr;
+    }
+
   }
 
-  /**
-   * Index class
-   * @return value of this class
-   */
-  public byte vr(){
-    return vr;
+  public static enum LDR_STR{
+    PostIndex((byte)0b000),
+    PreIndex((byte)0b000),
+    UnsignedOffset((byte)0b001);
+
+    private final byte vr;
+
+    private LDR_STR(byte vr){
+      this.vr = vr;
+    }
+
+    /**
+     * Index class
+     * @return value of this class
+     */
+    public byte vr(){
+      return vr;
+    }
+
   }
+
 }
