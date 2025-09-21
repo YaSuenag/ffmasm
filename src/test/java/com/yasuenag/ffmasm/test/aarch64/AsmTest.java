@@ -32,6 +32,7 @@ import java.util.Optional;
 
 import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
+import com.yasuenag.ffmasm.aarch64.HWShift;
 import com.yasuenag.ffmasm.aarch64.IndexClass;
 import com.yasuenag.ffmasm.aarch64.Register;
 
@@ -135,6 +136,38 @@ public class AsmTest{
 
       final int expected = 200;
       int actual = (int)method.invoke(100, expected);
+      Assertions.assertEquals(expected, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests to set 64bit immediate value through MOVZ and MOVK
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX})
+  public void testMOVZandMOVK(){
+    final long expected = 0x123456789abcdef0L;
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_LONG // return value
+                 );
+      var method = new AsmBuilder.AArch64(seg, desc)
+/* stp  x29, x30, [sp, #-16]!          */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
+/* mov  x29, sp                        */ .mov(Register.X29, Register.SP)
+/* movz  x0, #expected[0:15]           */ .movz(Register.X0, (int)(expected & 0xffff), HWShift.None)
+/* movk  x0, #expected[16:31], lsl #16 */ .movk(Register.X0, (int)((expected >> 16) & 0xffff), HWShift.HW_16)
+/* movk  x0, #expected[32:47], lsl #32 */ .movk(Register.X0, (int)((expected >> 32) & 0xffff), HWShift.HW_32)
+/* movk  x0, #expected[48:63], lsl #48 */ .movk(Register.X0, (int)((expected >> 48) & 0xffff), HWShift.HW_48)
+/* ldp  x29, x30, [sp], #16            */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
+/* ret                                 */ .ret(Optional.empty())
+                                          .build();
+
+      //showDebugMessage(seg);
+
+      long actual = (long)method.invoke();
       Assertions.assertEquals(expected, actual);
     }
     catch(Throwable t){
