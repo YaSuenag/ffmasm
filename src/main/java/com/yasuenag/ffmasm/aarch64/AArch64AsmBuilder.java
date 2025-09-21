@@ -60,24 +60,8 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
     }
   }
 
-  /**
-   * Load register (immediate)
-   *
-   * @param rt The general-purpose register to be transferred.
-   * @param rn The general-purpose base register or stack pointer.
-   * @param idxCls Addressing mode.
-   * @param imm Memory offset of rn to be loaded.
-   * @return This instance
-   */
-  public T ldr(Register rt, Register rn, IndexClass idxCls, int imm){
+  private T ldrstrInternal(Register rt, Register rn, IndexClass idxCls, int opcAndImm){
     byte size = rt.width() == 64 ? (byte)0b11 : (byte)0b10;
-    int denominator = rt.width() == 64 ? 8 : 4;
-    int opcAndImm = switch(idxCls){
-      case PostIndex -> (0b010 << 21) | ((imm & 0x1ff) << 12) | (0b01 << 10);
-      case PreIndex -> (0b010 << 21) | ((imm & 0x1ff) << 12) | (0b11 << 10);
-      case UnsignedOffset -> (0b01 << 22) | (((imm / denominator) & 0xfff) << 10);
-      default -> throw new IllegalArgumentException("Unsupported index class");
-    };
     byte vr = switch(idxCls){
       case PostIndex, PreIndex -> (byte)0b000;
       case UnsignedOffset -> (byte)0b001;
@@ -93,6 +77,48 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
 
     byteBuf.putInt(encoded);
     return castToT();
+  }
+
+  /**
+   * Load register (immediate)
+   *
+   * @param rt The general-purpose register to be transferred.
+   * @param rn The general-purpose base register or stack pointer.
+   * @param idxCls Addressing mode.
+   * @param imm Memory offset of rn to be loaded.
+   * @return This instance
+   */
+  public T ldr(Register rt, Register rn, IndexClass idxCls, int imm){
+    int denominator = rt.width() == 64 ? 8 : 4;
+    int opcAndImm = switch(idxCls){
+      case PostIndex -> (0b010 << 21) | ((imm & 0x1ff) << 12) | (0b01 << 10);
+      case PreIndex -> (0b010 << 21) | ((imm & 0x1ff) << 12) | (0b11 << 10);
+      case UnsignedOffset -> (0b01 << 22) | (((imm / denominator) & 0xfff) << 10);
+      default -> throw new IllegalArgumentException("Unsupported index class");
+    };
+
+    return ldrstrInternal(rt, rn, idxCls, opcAndImm);
+  }
+
+  /**
+   * Store register (immediate)
+   *
+   * @param rt The general-purpose register to be transferred.
+   * @param rn The general-purpose base register or stack pointer.
+   * @param idxCls Addressing mode.
+   * @param imm Memory offset of rn to be loaded.
+   * @return This instance
+   */
+  public T str(Register rt, Register rn, IndexClass idxCls, int imm){
+    int denominator = rt.width() == 64 ? 8 : 4;
+    int opcAndImm = switch(idxCls){
+      case PostIndex -> ((imm & 0x1ff) << 12) | (0b01 << 10);
+      case PreIndex -> ((imm & 0x1ff) << 12) | (0b11 << 10);
+      case UnsignedOffset -> (((imm / denominator) & 0xfff) << 10);
+      default -> throw new IllegalArgumentException("Unsupported index class");
+    };
+
+    return ldrstrInternal(rt, rn, idxCls, opcAndImm);
   }
 
   private T ldpstpInternal(Register rt, Register rt2, Register rn, IndexClass idxCls, int imm7, boolean isLoad){
