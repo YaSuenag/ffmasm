@@ -269,7 +269,7 @@ public class AsmTest{
                    ValueLayout.ADDRESS     // address of subroutine
                  );
       var method = new AsmBuilder.AArch64(seg, desc)
-                     /* br x0 */ .mov(Register.X29, Register.SP)
+                     /* br x0 */ .br(Register.X0)
                                  .build();
 
       final short expected = 100;
