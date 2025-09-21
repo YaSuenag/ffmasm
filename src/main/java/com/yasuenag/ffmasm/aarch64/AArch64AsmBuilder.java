@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.yasuenag.ffmasm.internal.aarch64;
+package com.yasuenag.ffmasm.aarch64;
 
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;

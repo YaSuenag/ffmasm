@@ -27,10 +27,10 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
-import com.yasuenag.ffmasm.internal.amd64.AMD64AsmBuilder;
-import com.yasuenag.ffmasm.internal.amd64.SSEAsmBuilder;
-import com.yasuenag.ffmasm.internal.amd64.AVXAsmBuilder;
-import com.yasuenag.ffmasm.internal.aarch64.AArch64AsmBuilder;
+import com.yasuenag.ffmasm.amd64.AMD64AsmBuilder;
+import com.yasuenag.ffmasm.amd64.SSEAsmBuilder;
+import com.yasuenag.ffmasm.amd64.AVXAsmBuilder;
+import com.yasuenag.ffmasm.aarch64.AArch64AsmBuilder;
 
 
 public class AsmBuilderTest{
