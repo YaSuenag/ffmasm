@@ -204,6 +204,44 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
   }
 
   /**
+   * Move wide with zero
+   *
+   * @param dst Destination register.
+   * @param imm The 16-bit unsigned immediate, in the range 0 to 65535
+   * @param shift The amount by which to shift the immediate left
+   * @return This instance
+   */
+  public T movz(Register dst, int imm, HWShift shift){
+    byte sf = dst.width() == 64 ? (byte)1 : (byte)0;
+    int encoded = (sf << 31) |
+                  (0b10100101 << 23) |
+                  (shift.ordinal() << 21) |
+                  ((imm & 0xffff) << 5) |
+                  dst.encoding();
+    byteBuf.putInt(encoded);
+    return castToT();
+  }
+
+  /**
+   * Move wide with keep
+   *
+   * @param dst Destination register.
+   * @param imm The 16-bit unsigned immediate, in the range 0 to 65535
+   * @param shift The amount by which to shift the immediate left
+   * @return This instance
+   */
+  public T movk(Register dst, int imm, HWShift shift){
+    byte sf = dst.width() == 64 ? (byte)1 : (byte)0;
+    int encoded = (sf << 31) |
+                  (0b11100101 << 23) |
+                  (shift.ordinal() << 21) |
+                  ((imm & 0xffff) << 5) |
+                  dst.encoding();
+    byteBuf.putInt(encoded);
+    return castToT();
+  }
+
+  /**
    * Return from subroutine
    *
    * @param rn The general-purpose register holding the address to be branched to. X30 will be set if this argument is empty.
