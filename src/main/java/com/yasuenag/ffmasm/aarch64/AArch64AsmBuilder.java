@@ -301,6 +301,19 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
   }
 
   /**
+   * Branch to register
+   *
+   * @param rn The general-purpose register holding the address to be branched to.
+   * @return This instance
+   */
+  public T br(Register rn){
+    int encoded = (0b1101011000011111000000 << 10) | (rn.encoding() << 5);
+
+    byteBuf.putInt(encoded);
+    return castToT();
+  }
+
+  /**
    * Branch with link to register
    *
    * @param rn The general-purpose register holding the address to be branched to.
