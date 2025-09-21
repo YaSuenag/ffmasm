@@ -258,6 +258,40 @@ public class AsmTest{
   }
 
   /**
+   * Tests BR
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX})
+  public void testBr(){
+    try(var seg = new CodeSegment();){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_SHORT, // return value
+                   ValueLayout.ADDRESS     // address of subroutine
+                 );
+      var method = new AsmBuilder.AArch64(seg, desc)
+                     /* br x0 */ .mov(Register.X29, Register.SP)
+                                 .build();
+
+      final short expected = 100;
+      var memSub = new AsmBuilder.AArch64(seg, desc)
+/* stp  x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
+/* mov  x29,  sp              */ .mov(Register.X29, Register.SP)
+/* movz  x0, #expected        */ .movz(Register.X0, expected & 0xffff, HWShift.None)
+ /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
+ /* ret                       */ .ret(Optional.empty())
+                                 .getMemorySegment();
+
+      //showDebugMessage(seg);
+
+      short actual = (short)method.invoke(memSub);
+      Assertions.assertEquals(actual, expected);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Tests BLR
    */
   @Test
