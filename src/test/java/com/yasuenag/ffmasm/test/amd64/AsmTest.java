@@ -1281,4 +1281,34 @@ public class AsmTest extends TestBase{
     }
   }
 
+  /**
+   * Test CMPXCHG
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testCMPXCHG(){
+    try(var seg = new CodeSegment();
+        var arena = Arena.ofConfined();){
+      var desc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
+      var method = new AsmBuilder.AMD64(seg, desc)
+      /* push %rbp            */ .push(Register.RBP)
+      /* mov %rsp, %rbp       */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+      /* xor %rax, %rax       */ .xorMR(argReg.returnReg(), argReg.returnReg(), OptionalInt.empty())
+      /* mov %r11, $1         */ .movImm(Register.R11, 1)
+      /* cmpxchg %r11, (arg1) */ .cmpxchg(Register.R11, argReg.arg1(), OptionalInt.of(0))
+      /* leave                */ .leave()
+      /* ret                  */ .ret()
+                                 .build();
+      //showDebugMessage(seg);
+
+      var mem = arena.allocate(ValueLayout.JAVA_LONG);
+      mem.set(ValueLayout.JAVA_LONG, 0, 0L);
+      method.invoke(mem);
+      Assertions.assertEquals(1L, mem.get(ValueLayout.JAVA_INT, 0));
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }

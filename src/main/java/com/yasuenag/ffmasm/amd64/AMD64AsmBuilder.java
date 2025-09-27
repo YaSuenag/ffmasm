@@ -977,4 +977,37 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
     return castToT();
   }
 
+  /**
+   * Compare A register with r/m.
+   * If equal, ZF is set and r is loaded into r/m. Else, clear ZF and load r/m into A register.<br>
+   *   Opcode: REX.W + 0F B1/r (64 bit)<br>
+   *                   0F B1/r (32 bit)<br>
+   *                   0F B1/r (16 bit)<br>
+   *                   0F B0/r ( 8 bit)<br>
+   *   Instruction: CMPXCHG r/m, r<br>
+   *   Op/En: MR
+   *
+   * @param r register to be set if r/m equals A register
+   * @param m register or memory address to be compared with A register
+   * @param disp Displacement
+   * @return This instance
+   */
+  public T cmpxchg(Register r, Register m, OptionalInt disp){
+    emitREXOp(r, m);
+
+    // opcode
+    if(r.width() == 8){
+      byteBuf.put((byte)0x0f);
+      byteBuf.put((byte)0xb0);
+    }
+    else{
+      byteBuf.put((byte)0x0f);
+      byteBuf.put((byte)0xb1);
+    }
+
+    byte mode = emitModRM(r, m, disp);
+    emitDisp(mode, disp, m);
+    return castToT();
+  }
+
 }
