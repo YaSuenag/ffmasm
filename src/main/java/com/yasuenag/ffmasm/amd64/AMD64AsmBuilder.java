@@ -978,6 +978,16 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
   }
 
   /**
+   * Set LOCK prefix
+   *
+   * @return This instance
+   */
+  public T lock(){
+    byteBuf.put((byte)0xf0);
+    return castToT();
+  }
+
+  /**
    * Compare A register with r/m.
    * If equal, ZF is set and r is loaded into r/m. Else, clear ZF and load r/m into A register.<br>
    *   Opcode: REX.W + 0F B1/r (64 bit)<br>
