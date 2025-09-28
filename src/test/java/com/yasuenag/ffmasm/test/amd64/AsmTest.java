@@ -1341,4 +1341,37 @@ public class AsmTest extends TestBase{
     }
   }
 
+  /**
+   * Test XCHG
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testXCHG(){
+    try(var seg = new CodeSegment();
+        var arena = Arena.ofConfined();){
+      var desc = FunctionDescriptor.of(ValueLayout.JAVA_LONG,
+                                       ValueLayout.JAVA_LONG,
+                                       ValueLayout.ADDRESS);
+      var method = new AsmBuilder.AMD64(seg, desc)
+         /* push %rbp         */ .push(Register.RBP)
+         /* mov %rsp, %rbp    */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+         /* xchg arg1, (arg2) */ .xchg(argReg.arg1(), argReg.arg2(), OptionalInt.of(0))
+         /* mov %arg1, %rax   */ .movRM(argReg.returnReg(), argReg.arg1(), OptionalInt.empty())
+         /* leave             */ .leave()
+         /* ret               */ .ret()
+                                 .build();
+      //showDebugMessage(seg);
+
+      var mem = arena.allocate(ValueLayout.JAVA_LONG);
+      mem.set(ValueLayout.JAVA_LONG, 0, 200L);
+      long result = (long)method.invoke(100L, mem);
+
+      Assertions.assertEquals(100L, mem.get(ValueLayout.JAVA_LONG, 0));
+      Assertions.assertEquals(200L, result);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }
