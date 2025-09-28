@@ -1020,4 +1020,26 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
     return castToT();
   }
 
+  /**
+   * Exchange r with r/m.
+   *   Opcode: REX.W + 87/r (64 bit)<br>
+   *                   87/r (32 bit)<br>
+   *                   87/r (16 bit)<br>
+   *                   86/r ( 8 bit)<br>
+   *   Instruction: XCHG r, r/m
+   *
+   * @param r register to be swapped
+   * @param m register or memory address to be swapped
+   * @param disp Displacement
+   * @return This instance
+   */
+  public T xchg(Register r, Register m, OptionalInt disp){
+    emitREXOp(r, m);
+    byte opcode = (r.width() == 8) ? (byte)0x86 : (byte)0x87;
+    byteBuf.put(opcode); // XCHG
+    byte mode = emitModRM(r, m, disp);
+    emitDisp(mode, disp, m);
+    return castToT();
+  }
+
 }
