@@ -696,6 +696,18 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
   }
 
   /**
+   * Jump short if not zero (ZF=0).
+   *
+   * This instruction is an alias of JNE.
+   *
+   * @param label the label to jump.
+   * @return This instance
+   */
+  public T jnz(String label){
+    return jne(label);
+  }
+
+  /**
    * Jump.
    *   Opcode: EB cb (rel8)
    *           E9 cd (rel32)
