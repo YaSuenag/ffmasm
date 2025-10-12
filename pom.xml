@@ -30,9 +30,7 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
     <name>ffmasm</name>
 
     <scm>
-        <connection>scm:git:git://github.com/YaSuenag/ffmasm.git</connection>
-        <developerConnection>scm:git:ssh://github.com:YaSuenag/ffmasm.git</developerConnection>
-        <url>https://github.com/YaSuenag/ffmasm</url>
+        <url>https://github.com/yasuenag/ffmasm</url>
     </scm>
 
     <properties>
@@ -85,7 +83,7 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
         <repository>
             <id>github</id>
             <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/YaSuenag/ffmasm</url>
+            <url>https://maven.pkg.github.com/yasuenag/ffmasm</url>
         </repository>
     </distributionManagement>
 </project>
