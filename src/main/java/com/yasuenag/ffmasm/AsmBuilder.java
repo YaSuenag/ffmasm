@@ -146,6 +146,15 @@ public class AsmBuilder<T extends AsmBuilder>{
     return (T)this;
   }
 
+  /**
+   * Get current position of code buffer.
+   *
+   * @return position of code buffer
+   */
+  public int getCodePosition(){
+    return byteBuf.position();
+  }
+
   private void updateTail(){
     if(!pendingLabelMap.isEmpty()){
       throw new IllegalStateException("Label is not defined: " + pendingLabelMap.keySet().toString());
