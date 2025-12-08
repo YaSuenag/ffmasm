@@ -28,12 +28,12 @@ If not, see <http://www.gnu.org/licenses/>.
     <groupId>com.yasuenag</groupId>
     <artifactId>ffmasm-benchmark-funccall</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.3</version>
+    <version>1.1.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>22</maven.compiler.source>
-        <maven.compiler.target>22</maven.compiler.target>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <jmh.version>1.37</jmh.version>
     </properties>
 

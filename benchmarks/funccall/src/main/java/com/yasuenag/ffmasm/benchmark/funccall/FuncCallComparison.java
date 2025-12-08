@@ -30,7 +30,7 @@ import org.openjdk.jmh.annotations.*;
         "--add-exports=jdk.internal.vm.ci/jdk.vm.ci.hotspot=ALL-UNNAMED",
         "--add-exports=jdk.internal.vm.ci/jdk.vm.ci.meta=ALL-UNNAMED",
         "--add-exports=jdk.internal.vm.ci/jdk.vm.ci.runtime=ALL-UNNAMED",
-        /* "-XX:+UseEpsilonGC", */
+        "-XX:+UseEpsilonGC",
         "-XX:+AlwaysPreTouch",
         "-XX:+PreserveFramePointer",
         "-Xlog:jit+compilation=debug,jit+inlining=debug:file=jit%p.log::filesize=0"

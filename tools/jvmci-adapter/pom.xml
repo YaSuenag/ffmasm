@@ -33,6 +33,13 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
         <url>https://github.com/yasuenag/ffmasm</url>
     </scm>
 
+    <repositories>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/yasuenag/ffmasm</url>
+        </repository>
+    </repositories>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>25</maven.compiler.source>
