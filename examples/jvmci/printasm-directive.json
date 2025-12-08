@@ -1,0 +1,6 @@
+[
+  {
+    "match": "com/yasuenag/ffmasm/examples/jvmci/Main.getPid",
+    "PrintAssembly": true
+  }
+]

@@ -10,12 +10,31 @@ import java.util.concurrent.atomic.*;
 import com.yasuenag.ffmasm.*;
 import com.yasuenag.ffmasm.amd64.*;
 
+import com.yasuenag.ffmasmtools.jvmci.amd64.*;
+
 import org.openjdk.jmh.annotations.*;
 
 
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
-@Fork(value = 1, jvmArgsAppend = {"--enable-native-access=ALL-UNNAMED", "-Djava.library.path=.", "-Xms4g", "-Xmx4g", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseEpsilonGC", "-XX:+AlwaysPreTouch", "-XX:+PreserveFramePointer", "-Xlog:jit+compilation=debug,jit+inlining=debug:file=jit%p.log::filesize=0"})
+@Fork(value = 1,
+      jvmArgsAppend = {
+        "--enable-native-access=ALL-UNNAMED",
+        "-Djava.library.path=.",
+        "-Xms4g",
+        "-Xmx4g",
+        "-XX:+UnlockExperimentalVMOptions",
+        "-XX:+EnableJVMCI",
+        "--add-exports=jdk.internal.vm.ci/jdk.vm.ci.code=ALL-UNNAMED",
+        "--add-exports=jdk.internal.vm.ci/jdk.vm.ci.code.site=ALL-UNNAMED",
+        "--add-exports=jdk.internal.vm.ci/jdk.vm.ci.hotspot=ALL-UNNAMED",
+        "--add-exports=jdk.internal.vm.ci/jdk.vm.ci.meta=ALL-UNNAMED",
+        "--add-exports=jdk.internal.vm.ci/jdk.vm.ci.runtime=ALL-UNNAMED",
+        /* "-XX:+UseEpsilonGC", */
+        "-XX:+AlwaysPreTouch",
+        "-XX:+PreserveFramePointer",
+        "-Xlog:jit+compilation=debug,jit+inlining=debug:file=jit%p.log::filesize=0"
+      })
 @Warmup(iterations = 1, time = 10, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 public class FuncCallComparison{
@@ -24,6 +43,12 @@ public class FuncCallComparison{
 
   private static final MethodHandle ffmRDTSC;
   private static final MethodHandle ffmRDTSCCritical;
+
+  private static <T extends AMD64AsmBuilder<T>> void createFFMFuncBody(T builder){
+    builder.rdtsc()                                                /* rdtsc         */
+           .shl(Register.RDX, (byte)32, OptionalInt.empty())       /* shl $32, %rdx */
+           .orMR(Register.RDX, Register.RAX, OptionalInt.empty()); /* or %rdx, %rax */
+  }
 
   static{
     System.loadLibrary("rdtsc");
@@ -35,21 +60,26 @@ public class FuncCallComparison{
              .register(FuncCallComparison.class, action);
 
       var desc = FunctionDescriptor.of(ValueLayout.JAVA_LONG);
-      var mem = new AsmBuilder.AMD64(seg, desc)
-         /* push %rbp      */ .push(Register.RBP)
-         /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
-         /* rdtsc          */ .rdtsc()
-         /* shl $32, %rdx  */ .shl(Register.RDX, (byte)32, OptionalInt.empty())
-         /* or %rdx, %rax  */ .orMR(Register.RDX, Register.RAX, OptionalInt.empty())
-         /* leave          */ .leave()
-         /* ret            */ .ret()
-                              .getMemorySegment();
+      var builder = new AsmBuilder.AMD64(seg, desc);
+/* push %rbp      */ builder.push(Register.RBP)
+/* mov %rsp, %rbp */        .movMR(Register.RSP, Register.RBP, OptionalInt.empty());
+      createFFMFuncBody(builder);
+/* leave          */ builder.leave()
+/* ret            */        .ret();
 
+      var mem = builder.getMemorySegment();
       ffmRDTSC = Linker.nativeLinker().downcallHandle(mem, desc);
       ffmRDTSCCritical = Linker.nativeLinker().downcallHandle(mem, desc, Linker.Option.critical(false));
 
       var register = NativeRegister.create(FuncCallComparison.class);
       register.registerNatives(Map.of(FuncCallComparison.class.getMethod("invokeFFMRDTSCRegisterNatives"), mem));
+
+      var targetMethod = FuncCallComparison.class.getMethod("invokeViaJVMCI");
+      var jvmciBuilder = new JVMCIAMD64AsmBuilder();
+      jvmciBuilder.emitPrologue();
+      createFFMFuncBody(jvmciBuilder);
+      jvmciBuilder.emitEpilogue()
+                  .install(targetMethod, 16);
     }
     catch(Throwable t){
       throw new RuntimeException(t);
@@ -82,16 +112,24 @@ public class FuncCallComparison{
   @Benchmark
   public native long invokeFFMRDTSCRegisterNatives();
 
+  @Benchmark
+  public long invokeViaJVMCI(){
+    // This method should be overwritten by JVMCI
+    throw new RuntimeException("Not implemented");
+  }
+
   public void singleRun(){
     long nativeVal = invokeJNI();
     long ffmVal = invokeFFMRDTSC();
     long ffmCriticalVal = invokeFFMRDTSCCritical();
     long ffmRegisterNativesVal = invokeFFMRDTSCRegisterNatives();
+    long jvmciVal = invokeViaJVMCI();
 
     System.out.println("                  JNI: " + nativeVal);
     System.out.println("                  FFM: " + ffmVal);
     System.out.println("       FFM (Critical): " + ffmCriticalVal);
     System.out.println("FFM (RegisterNatives): " + ffmRegisterNativesVal);
+    System.out.println("                JVMCI: " + jvmciVal);
   }
 
   public void iterate(String benchmark){
@@ -100,6 +138,7 @@ public class FuncCallComparison{
                         case "FFM" -> this::invokeFFMRDTSC;
                         case "FFMCritical" -> this::invokeFFMRDTSCCritical;
                         case "RegisterNatives" -> this::invokeFFMRDTSCRegisterNatives;
+                        case "JVMCI" -> this::invokeViaJVMCI;
                         default -> throw new IllegalArgumentException("Unknown benchmark");
                       };
 
