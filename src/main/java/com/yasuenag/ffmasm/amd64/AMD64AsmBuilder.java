@@ -906,6 +906,19 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
   }
 
   /**
+   * Align the position to 4 bytes with NOP.
+   *
+   * @return This instance
+   */
+  public T alignTo4BytesWithNOP(){
+    int position = byteBuf.position();
+    while((byteBuf.position() & 0x3) > 0){
+      nop();
+    }
+    return castToT();
+  }
+
+  /**
    * Align the position to 16 bytes with NOP.
    *
    * @return This instance
