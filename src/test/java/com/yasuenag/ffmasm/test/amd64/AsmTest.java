@@ -1035,11 +1035,39 @@ public class AsmTest extends TestBase{
   }
 
   /**
-   * Test address alignment
+   * Test address alignment with 4 bytes
    */
   @Test
   @EnabledOnOs({OS.LINUX, OS.WINDOWS})
-  public void testAlignment(){
+  public void test4BytesAlignment(){
+    try(var seg = new CodeSegment()){
+      var byteBuf = seg.getTailOfMemorySegment()
+                       .asByteBuffer()
+                       .order(ByteOrder.nativeOrder());
+      var desc = FunctionDescriptor.ofVoid();
+      new AsmBuilder.AMD64(seg, desc)
+                    .nop()
+                    .alignTo4BytesWithNOP()
+                    .build();
+
+      Assertions.assertEquals(4, seg.getTail(), "Memory size is not aligned.");
+      byte[] array = new byte[4];
+      byteBuf.get(array, 0, 4);
+      for(byte b : array){
+        Assertions.assertEquals((byte)0x90, b, "Not NOP");
+      }
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Test address alignment with 16 bytes
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void test16BytesAlignment(){
     try(var seg = new CodeSegment()){
       var byteBuf = seg.getTailOfMemorySegment()
                        .asByteBuffer()
