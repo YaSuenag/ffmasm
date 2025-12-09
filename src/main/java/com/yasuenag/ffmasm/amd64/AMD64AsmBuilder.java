@@ -911,7 +911,6 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
    * @return This instance
    */
   public T alignTo4BytesWithNOP(){
-    int position = byteBuf.position();
     while((byteBuf.position() & 0x3) > 0){
       nop();
     }
