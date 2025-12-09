@@ -1,13 +1,13 @@
 Benchmark for vector operation
 ===================
 
-[JMH](https://github.com/openjdk/jmh) benchmark to comparison Pure Java code, [Vector API](https://openjdk.org/jeps/426), and ffmasm.
+[JMH](https://github.com/openjdk/jmh) benchmark to comparison Pure Java code, [Vector API](https://openjdk.org/jeps/508), ffmasm, and JVMCI.
 
 This benchmark adds with 256bit packed int. Pure Java and Vector API are expected to get benefit from C2.
 
 # Requirements
 
-* Java 22
+* Java 25
 * Maven
 
 # How to build
@@ -22,5 +22,5 @@ $ mvn package
 # Run benchmark
 
 ```sh
-$ $JAVA_HOME/bin/java -jar target/ffmasm-benchmark-vectorapi-1.0.4.jar
+$JAVA_HOME/bin/java -jar target/ffmasm-benchmark-vectorapi-1.1.0.jar
 ```
