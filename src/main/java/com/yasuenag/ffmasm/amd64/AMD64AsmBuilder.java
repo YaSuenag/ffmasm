@@ -553,34 +553,6 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
   }
 
   /**
-   * Set label at current position.
-   *
-   * @param name label name
-   * @return This instance
-   * @throws IllegalArgumentException thrown when the label already exists.
-   */
-  public T label(String name){
-    if(labelMap.containsKey(name)){
-      throw new IllegalArgumentException("Label \"" + name + "\" already exists.");
-    }
-
-    int labelPosition = byteBuf.position();
-    labelMap.put(name, labelPosition);
-
-    if(pendingLabelMap.containsKey(name)){
-      Set<AsmBuilder.PendingJump> jumps = pendingLabelMap.remove(name);
-      for(var jumpData : jumps){
-        byteBuf.position(jumpData.position());
-        int offset = labelPosition - jumpData.position();
-        jumpData.emitOp().accept(offset);
-      }
-    }
-
-    byteBuf.position(labelPosition);
-    return castToT();
-  }
-
-  /**
    * One byte no-operation instruction
    *
    * @return This instance
