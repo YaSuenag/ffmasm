@@ -368,4 +368,22 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
     return castToT();
   }
 
+  /**
+   * Data memory barrier
+   *
+   * @return This instance
+   */
+  public T dmb(DMBOptions option){
+    byte opc = 0b01;
+    byte rt = 0b11111;
+    int encoded = (0b11010101000000110011 << 12) |
+                  (option.crm() << 8) |
+                  (1 << 7) |
+                  (opc << 5) |
+                  rt;
+
+    byteBuf.putInt(encoded);
+    return castToT();
+  }
+
 }
