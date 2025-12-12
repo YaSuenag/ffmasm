@@ -57,7 +57,8 @@ public enum Register{
   X28(28, 64),
   X29(29, 64),
   X30(30, 64),
-  SP(-1, 64);
+  SP(-1, 64),
+  XZR(-1, 64);
 
   private final int encoding;
 
