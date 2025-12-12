@@ -480,4 +480,33 @@ public class AsmTest{
     }
   }
 
+  /**
+   * Tests SVC
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX})
+  public void testSVC(){
+    try(var arena = Arena.ofConfined();
+        var seg = new CodeSegment();){
+      var desc = FunctionDescriptor.of(ValueLayout.JAVA_INT);
+      var method = new AsmBuilder.AArch64(seg, desc)
+ /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
+ /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
+ /* movz x8, $172             */ .movz(Register.X8, 172, HWShift.None) // getpid
+ /* svc #0                    */ .svc(0)
+ /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
+ /* ret                       */ .ret(Optional.empty())
+                                 .build();
+
+      //showDebugMessage(seg);
+
+      int result = (int)method.invoke();
+      int pidFromJava = (int)ProcessHandle.current().pid();
+      Assertions.assertEquals(pidFromJava, result);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }
