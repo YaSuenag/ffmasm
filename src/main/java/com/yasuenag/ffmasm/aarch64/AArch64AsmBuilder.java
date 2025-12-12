@@ -326,4 +326,14 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
     return castToT();
   }
 
+  /**
+   * No operation (NOP)
+   *
+   * @return This instance
+   */
+  public T nop(){
+    byteBuf.putInt(0b11010101000000110010000000011111);
+    return castToT();
+  }
+
 }
