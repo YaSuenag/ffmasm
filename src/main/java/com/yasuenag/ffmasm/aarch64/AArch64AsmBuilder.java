@@ -24,14 +24,15 @@ import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import com.yasuenag.ffmasm.AsmBuilder;
 import com.yasuenag.ffmasm.CodeSegment;
 import com.yasuenag.ffmasm.JitDump;
 import com.yasuenag.ffmasm.UnsupportedPlatformException;
-import com.yasuenag.ffmasm.aarch64.IndexClass;
-import com.yasuenag.ffmasm.aarch64.Register;
 
 
 /**
@@ -297,6 +298,62 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
                   dst.encoding();
 
     byteBuf.putInt(encoded);
+    return castToT();
+  }
+
+  /**
+   * Compare (CMP: shifted register)
+   *
+   * @param src First source register.
+   * @param src2 Second source register.
+   * @param shift Shift type to be applied to the second source operand.
+   * @param amount The shift amount.
+   * @return This instance
+   */
+  public T cmp(Register src, Register src2, ShiftType shift, byte amount){
+    byte sf = src.width() == 64 ? (byte)1 : (byte)0;
+    int encoded = (sf << 31) |
+                  (0b1101011 << 24) |
+                  (shift.value() << 22) |
+                  (src2.encoding() << 16) |
+                  ((amount & 0x3f) << 10) |
+                  (src.encoding() << 5) |
+                  0b11111;
+
+    byteBuf.putInt(encoded);
+    return castToT();
+  }
+
+  /**
+   * Branch if equal
+   *
+   * @param label the label to jump.
+   * @return This instance
+   */
+  public T beq(String label){
+    Consumer<Integer> emitOp = (o) -> {
+      int imm19 = (o.intValue() / 4) & 0x7ffff;
+
+      // cond of EQ is 0b0000
+      int encoded = (0b01010100 << 24) |
+                    (imm19 << 5);
+      byteBuf.putInt(encoded);
+    };
+
+    int position = byteBuf.position();
+    Integer labelPosition = labelMap.get(label);
+    if(labelPosition == null){
+      /* forward jump - pending until label is set */
+      Set<AsmBuilder.PendingJump> jumps = pendingLabelMap.computeIfAbsent(label, k -> new HashSet<>());
+      jumps.add(new AsmBuilder.PendingJump(emitOp, position));
+
+      // Emit NOP temporally.
+      nop();
+    }
+    else{
+      int offset = labelPosition.intValue() - position;
+      emitOp.accept(offset);
+    }
     return castToT();
   }
 

@@ -37,6 +37,7 @@ import com.yasuenag.ffmasm.aarch64.DMBOptions;
 import com.yasuenag.ffmasm.aarch64.HWShift;
 import com.yasuenag.ffmasm.aarch64.IndexClass;
 import com.yasuenag.ffmasm.aarch64.Register;
+import com.yasuenag.ffmasm.aarch64.ShiftType;
 
 
 @EnabledOnOs(architectures = {"aarch64"})
@@ -353,6 +354,48 @@ public class AsmTest{
       var cTest = arena.allocateFrom(test);
       long len = (long)method.invoke(strlenAddr, cTest);
       Assertions.assertEquals(test.length(), (int)len, "Invalid strlen() call");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests CMP and BEQ
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX})
+  public void testCMPandBEQ(){
+    try(var arena = Arena.ofConfined();
+        var seg = new CodeSegment();){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT, // 1st argument
+                   ValueLayout.JAVA_INT  // 2nd argument
+                 );
+      var method = new AsmBuilder.AArch64(seg, desc)
+ /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
+ /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
+ /* cmp w0, w1                */ .cmp(Register.W0, Register.W1, ShiftType.LSL, (byte)0)
+ /* b.eq EQUALS               */ .beq("EQUALS")
+ /* movz w0, $1               */ .movz(Register.W0, 1, HWShift.None)
+ /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
+ /* ret                       */ .ret(Optional.empty())
+ /* EQUALS:                   */ .label("EQUALS")
+ /* mov w0, wzr               */ .mov(Register.W0, Register.WZR)
+ /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
+ /* ret                       */ .ret(Optional.empty())
+                                 .build();
+
+      //showDebugMessage(seg);
+
+      int expected = 0;
+      int actual = (int)method.invoke(1, 1);
+      Assertions.assertEquals(expected, actual);
+
+      expected = 1;
+      actual = (int)method.invoke(1, 10);
+      Assertions.assertEquals(expected, actual);
     }
     catch(Throwable t){
       Assertions.fail(t);
