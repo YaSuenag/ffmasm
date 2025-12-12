@@ -443,4 +443,19 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
     return castToT();
   }
 
+  /**
+   * Supervisor call
+   *
+   * @param imm Unsigned immediate value
+   * @return This instance
+   */
+  public T svc(int imm){
+    int encoded = (0b11010100000 << 21) |
+                  ((imm & 0xffff) << 5) |
+                  0b00001;
+
+    byteBuf.putInt(encoded);
+    return castToT();
+  }
+
 }
