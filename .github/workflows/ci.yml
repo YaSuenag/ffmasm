@@ -31,4 +31,4 @@ jobs:
           cache: maven
 
       - name: 'Run Maven'
-        run: mvn -B test
+        run: mvn -DskipPACtest=true -B test

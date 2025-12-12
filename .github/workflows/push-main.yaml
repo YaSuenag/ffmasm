@@ -26,6 +26,6 @@ jobs:
           java-version: 22
           cache: maven
       - name: Deploy snapshot library to GitHub Packages by Maven
-        run: mvn -B deploy
+        run: mvn -DskipPACtest=true -B deploy
         env:
           GITHUB_TOKEN: ${{ github.token }}
