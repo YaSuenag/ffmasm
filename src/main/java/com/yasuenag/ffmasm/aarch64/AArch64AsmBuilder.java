@@ -336,7 +336,8 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
     return castToT();
   }
 
-  /**                                                                      +   * Pointer Authentication Code for instruction address, using key A for X30 (LR)
+  /**
+   * Pointer Authentication Code for instruction address, using key A for X30 (LR)
    *
    * @return This instance
    */
@@ -347,6 +348,21 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
                   (crm << 8) |
                   (op2 << 5) |
                   0b11111;
+
+    byteBuf.putInt(encoded);
+    return castToT();
+  }
+
+  /**
+   * Return from subroutine, with pointer authentication
+   *
+   * @return This instance
+   */
+  public T retaa(){
+    byte m = (byte)0;
+    int encoded = (0b110101100101111100001 << 11) |
+                  (m << 10) |
+                  0b1111111111;
 
     byteBuf.putInt(encoded);
     return castToT();

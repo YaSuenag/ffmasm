@@ -20,6 +20,7 @@ package com.yasuenag.ffmasm.test.aarch64;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
@@ -384,11 +385,12 @@ public class AsmTest{
   }
 
   /**
-   * Tests PACIAZ
+   * Tests PACIAZ and RETAA
    */
   @Test
   @EnabledOnOs({OS.LINUX})
-  public void testPACIAZ(){
+  @DisabledIfSystemProperty(named = "skipPACtest", matches = "true")
+  public void testPACIAZAndRETAA(){
     try(var arena = Arena.ofConfined();
         var seg = new CodeSegment();){
       var desc = FunctionDescriptor.ofVoid();
@@ -397,7 +399,7 @@ public class AsmTest{
  /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
  /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
  /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
- /* ret                       */ .ret(Optional.empty())
+ /* ret                       */ .retaa()
                                  .build();
 
       //showDebugMessage(seg);
