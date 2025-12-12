@@ -353,4 +353,29 @@ public class AsmTest{
     }
   }
 
+  /**
+   * Tests PACIAZ
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX})
+  public void testPACIAZ(){
+    try(var arena = Arena.ofConfined();
+        var seg = new CodeSegment();){
+      var desc = FunctionDescriptor.ofVoid();
+      var method = new AsmBuilder.AArch64(seg, desc)
+ /* paciaz                    */ .paciaz()
+ /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
+ /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
+ /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
+ /* ret                       */ .ret(Optional.empty())
+                                 .build();
+
+      //showDebugMessage(seg);
+      method.invoke();
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
 }

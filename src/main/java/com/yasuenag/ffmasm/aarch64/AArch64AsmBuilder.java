@@ -336,4 +336,20 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
     return castToT();
   }
 
+  /**                                                                      +   * Pointer Authentication Code for instruction address, using key A for X30 (LR)
+   *
+   * @return This instance
+   */
+  public T paciaz(){
+    byte crm = (byte)0b0011;
+    byte op2 = (byte)0b000;
+    int encoded = (0b11010101000000110010 << 12) |
+                  (crm << 8) |
+                  (op2 << 5) |
+                  0b11111;
+
+    byteBuf.putInt(encoded);
+    return castToT();
+  }
+
 }
