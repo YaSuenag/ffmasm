@@ -478,11 +478,11 @@ public class AsmTest{
   }
 
   /**
-   * Tests PACIAZ and RETAA
+   * Tests PACIAZ and AUTIAZ
    */
   @Test
   @EnabledOnOs({OS.LINUX})
-  public void testPACIAZAndRETAA(){
+  public void testPACIAZAndAUTIAZ(){
     Assumptions.assumeTrue(pacEnabled(), "PAC is not supported on this platform.");
 
     try(var arena = Arena.ofConfined();
