@@ -33,9 +33,6 @@ $ mvn package
 $ mvn test
 ```
 
-> [!CAUTION]
-> In AArch64, [Pointer Authentication Codes (PAC)](https://developer.arm.com/community/arm-community-blogs/b/architectures-and-processors-blog/posts/enabling-pac-and-bti-on-aarch64) related tests would be crashed if it runs on unsupported platforms like Raspberry Pi 4, then you have to set `-DskipPACtest=true` to skip when you run test.
-
 # How to use
 
 See [Javadoc](https://yasuenag.github.io/ffmasm/) and [cpumodel](examples/cpumodel) examples.
