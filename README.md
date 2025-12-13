@@ -186,7 +186,7 @@ try(var seg = new CodeSegment()){
 
 # Play with JVMCI
 
-JVMCI is not FFM, but ffmasm supports it!
+JVMCI is not FFM, but ffmasm supports it!  
 You can install your machine code into CodeCache on HotSpot as Tier 4 compiled code via JVMCI.
 
 ```java
@@ -214,6 +214,8 @@ You can install your machine code into CodeCache on HotSpot as Tier 4 compiled c
 ```
 
 You need to use `JVMCIAMD64AsmBuilder` or its family (for SSE, AVX like `AMD64AsmBuilder`) for AMD64, `JVMCIAArch64AsmBuilder` for AArch64. Note that you have to call both `emitPrologue()` and `emitEpilogue()` before `install()`.
+
+In above case, `install()` in each builder classes override `getPid()`, so you wouldn't see UnsupportedOperationException and you can get PID from it without any error.
 
 These builder classes are provided by [jvmci-adapter](tools/jvmci-adapter). You can depend it on pom.xml as following:
 
