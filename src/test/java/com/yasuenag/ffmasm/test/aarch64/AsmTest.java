@@ -19,8 +19,8 @@
 package com.yasuenag.ffmasm.test.aarch64;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
@@ -428,13 +428,31 @@ public class AsmTest{
     }
   }
 
+  private boolean pacEnabled(){
+    try{
+      var desc = FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG);
+      var linker = Linker.nativeLinker();
+      var addr = linker.defaultLookup().find("getauxval").get();
+      var getauxval = linker.downcallHandle(addr, desc);
+
+      final long AT_HWCAP = 16;  // from linux/auxvec.h
+      final long HWCAP_PACA = 1 << 30;  // from asm/hwcap.h
+      long result = (long)getauxval.invoke(AT_HWCAP);
+      return (result & HWCAP_PACA) != 0L;
+    }
+    catch(Throwable t){
+      throw new RuntimeException(t);
+    }
+  }
+
   /**
    * Tests PACIAZ and RETAA
    */
   @Test
   @EnabledOnOs({OS.LINUX})
-  @DisabledIfSystemProperty(named = "skipPACtest", matches = "true")
   public void testPACIAZAndRETAA(){
+    Assumptions.assumeTrue(pacEnabled(), "PAC is not supported on this platform.");
+
     try(var arena = Arena.ofConfined();
         var seg = new CodeSegment();){
       var desc = FunctionDescriptor.ofVoid();
@@ -443,7 +461,8 @@ public class AsmTest{
  /* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
  /* mov x29,  sp              */ .mov(Register.X29, Register.SP)
  /* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
- /* ret                       */ .retaa()
+ /* autiaz                    */ .autiaz()
+ /* ret                       */ .ret(Optional.empty())
                                  .build();
 
       //showDebugMessage(seg);
