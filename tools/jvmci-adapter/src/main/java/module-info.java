@@ -20,5 +20,6 @@ module com.yasuenag.ffmasmtools.jvmci {
   requires transitive com.yasuenag.ffmasm;
   requires jdk.internal.vm.ci;
 
+  exports com.yasuenag.ffmasmtools.jvmci.aarch64;
   exports com.yasuenag.ffmasmtools.jvmci.amd64;
 }

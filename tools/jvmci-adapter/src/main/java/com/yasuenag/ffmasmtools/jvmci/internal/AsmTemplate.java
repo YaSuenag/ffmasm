@@ -20,6 +20,8 @@ package com.yasuenag.ffmasmtools.jvmci.internal;
 
 import java.lang.foreign.ValueLayout;
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,13 +57,14 @@ public abstract class AsmTemplate<T extends AsmBuilder>{
   protected static final long nmethodEntryBarrier;
 
   protected static final MetaAccessProvider metaAccess;
+  protected static final HotSpotVMConfigAccess config;
 
   private static final CodeCacheProvider codeCache;
 
   static{
     var runtime = HotSpotJVMCIRuntime.runtime();
     var configStore = runtime.getConfigStore();
-    var config = new HotSpotVMConfigAccess(configStore);
+    config = new HotSpotVMConfigAccess(configStore);
 
     MARKID_FRAME_COMPLETE = config.getConstant("CodeInstaller::FRAME_COMPLETE", Integer.class);
     MARKID_ENTRY_BARRIER_PATCH = config.getConstant("CodeInstaller::ENTRY_BARRIER_PATCH", Integer.class);
@@ -75,6 +78,7 @@ public abstract class AsmTemplate<T extends AsmBuilder>{
 
   protected final List<Site> sites;
   protected final List<HotSpotCompiledCode.Comment> comments;
+  protected final ByteBuffer data;
   protected final T asmBuilder;
 
   protected boolean prologueCalled;
@@ -89,6 +93,10 @@ stance
   public AsmTemplate(T asmBuilder){
     sites = new ArrayList<>();
     comments = new ArrayList<>();
+
+    // Data size comes from TestAssember.java in OpenJDK.
+    data = ByteBuffer.allocate(32).order(ByteOrder.nativeOrder());
+
     this.asmBuilder = asmBuilder;
     prologueCalled = false;
     epilogueCalled = false;
@@ -149,8 +157,8 @@ stance
                         null, // assumptions
                         new ResolvedJavaMethod[]{resolvedMethod}, // methods
                         getComments(),
-                        new byte[0], // data section
-                        16, // data section alignment
+                        data.array(), // data section
+                        8, // data section alignment
                         new DataPatch[0], // data section patches
                         true, // isImmutablePIC
                         totalFrameSize,

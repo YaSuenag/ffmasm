@@ -29,7 +29,9 @@ You can see disassemble code if you installed hsdis in your JDK.
 
 [jvmci-adapter](../../tools/jvmci-adapter) provides `AsmBuilder` to install machine code into CodeCache on HotSpot. You can generate machine code in same way with normal `AsmBuilder`, but note that you have to emit `emitPrologue()` and `emitEpilogue()`.
 
-```
+## AMD64
+
+```java
 var method = Main.class.getMethod("getPid");
 new JVMCIAMD64AsmBuilder()
                     .emitPrologue()
@@ -43,9 +45,22 @@ new JVMCIAMD64AsmBuilder()
 
 For example, if you expand the stack like following, you have to set `32` as frame size.
 
-```
+```java
 new JVMCIAMD64AsmBuilder()
                     .emitPrologue()
 /* sub $16, %rsp */ .sub(Register.RSP, 16, OptionalInt.empty())
                     .emitEpilogue()
+```
+
+## AArch64
+
+You can assemble on AArch64 with `JVMCIAArch64AsmBuilder` like AMD64 as following:
+
+```java
+new JVMCIAArch64AsmBuilder()
+                    .emitPrologue()
+/* movz x8, $172 */ .movz(com.yasuenag.ffmasm.aarch64.Register.X8, 172, HWShift.None) // getpid
+/* svc #0        */ .svc(0)
+                    .emitEpilogue()
+                    .install(method, 16);
 ```

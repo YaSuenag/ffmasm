@@ -18,8 +18,12 @@
  */
 package com.yasuenag.ffmasm.examples.jvmci;
 
+import java.lang.reflect.*;
+
+import com.yasuenag.ffmasm.aarch64.*;
 import com.yasuenag.ffmasm.amd64.*;
 
+import com.yasuenag.ffmasmtools.jvmci.aarch64.*;
 import com.yasuenag.ffmasmtools.jvmci.amd64.*;
 
 
@@ -29,16 +33,34 @@ public class Main{
     throw new UnsupportedOperationException("This method should be overriden by jvmci-adapter in ffmasm");
   }
 
+  private static void installAMD64Code(Method method) throws Exception{
+    new JVMCIAMD64AsmBuilder()
+                    .emitPrologue()
+/* mov %rax, $39 */ .movImm(com.yasuenag.ffmasm.amd64.Register.RAX, 39) // getpid
+/* syscall       */ .syscall()
+                    .emitEpilogue()
+                    .install(method, 16);
+  }
+
+  private static void installAArch64Code(Method method) throws Exception{
+    new JVMCIAArch64AsmBuilder()
+                    .emitPrologue()
+/* movz x8, $172 */ .movz(com.yasuenag.ffmasm.aarch64.Register.X8, 172, HWShift.None) // getpid
+/* svc #0        */ .svc(0)
+                    .emitEpilogue()
+                    .install(method, 16);
+  }
+
   public static void main(String[] args) throws Exception{
     System.out.println("PID: " + ProcessHandle.current().pid());
 
     var method = Main.class.getMethod("getPid");
-    new JVMCIAMD64AsmBuilder()
-                    .emitPrologue()
-/* mov %rax, $39 */ .movImm(Register.RAX, 39) // getpid
-/* syscall       */ .syscall()
-                    .emitEpilogue()
-                    .install(method, 16);
+    if(System.getProperty("os.arch").equals("amd64")){
+      installAMD64Code(method);
+    }
+    else{
+      installAArch64Code(method);
+    }
 
     System.out.println("PID from syscall: " + getPid());
   }
