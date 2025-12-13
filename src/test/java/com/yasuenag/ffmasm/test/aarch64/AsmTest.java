@@ -436,9 +436,9 @@ public class AsmTest{
       var getauxval = linker.downcallHandle(addr, desc);
 
       final long AT_HWCAP = 16;  // from linux/auxvec.h
-      final long HWCAP_PACA = 1 << 30;  // from arch/arm64/include/uapi/asm/hwcap.h
+      final long HWCAP_PACA = 1 << 30;  // from asm/hwcap.h
       long result = (long)getauxval.invoke(AT_HWCAP);
-      return result != 0L;
+      return (result & HWCAP_PACA) != 0L;
     }
     catch(Throwable t){
       throw new RuntimeException(t);
