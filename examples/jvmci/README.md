@@ -1,17 +1,17 @@
 ffmasm examples - jvmci
 ===================
 
-This is an example of ffmasm to `getpid` syscall on AMD64. Machine code would be installed CodeCache on HotSpot via JVMCI.
+This is an example of ffmasm to `getpid` syscall on Linux. Machine code would be installed CodeCache on HotSpot via JVMCI.
 
 # Requirements
 
 * Java 25
-* AMD64 Linux
+* Linux
 * Maven
 
 # How to run
 
-## 1. Build cpumodel
+## 1. Build
 
 ```bash
 mvn clean package
