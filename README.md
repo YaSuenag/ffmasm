@@ -218,7 +218,7 @@ You need to use `JVMCIAMD64AsmBuilder` or its family (for SSE, AVX like `AMD64As
 In above case, `install()` in each builder classes override `getPid()`, so you wouldn't see UnsupportedOperationException and you can get PID from it without any error.
 
 > [!TIP]
-> Register usage in C2 is different from platform ABI (e.g. AMD64 System V ABI). See [CallingSequences on OpenJDK Wiki](https://wiki.openjdk.org/display/HotSpot/CallingSequences) for details.
+> Register usage in C2 compiler is different from platform ABI (e.g. AMD64 System V ABI), and JVMCI code should compliant this rule. See [CallingSequences on OpenJDK Wiki](https://wiki.openjdk.org/display/HotSpot/CallingSequences) for details.
 
 These builder classes are provided by [jvmci-adapter](tools/jvmci-adapter). You can depend it on pom.xml as following:
 
