@@ -110,11 +110,43 @@ public class AsmTest{
   }
 
   /**
-   * Tests LDR
+   * Tests LDR (literal)
    */
   @Test
   @EnabledOnOs({OS.LINUX})
-  public void testLdr(){
+  public void testLdrLiteral(){
+    try(var seg = new CodeSegment()){
+      final long expected = 0b11010101000000110010000000011111; // NOP
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT // return value
+                 );
+      var builder = new AsmBuilder.AArch64(seg, desc);
+      var nopPos = builder.getCodePosition();
+      var method = builder
+/* nop                       */ .nop()
+/* stp x29, x30, [sp, #-16]! */ .stp(Register.X29, Register.X30, Register.SP, IndexClass.PreIndex, -16)
+/* mov x29,  sp              */ .mov(Register.X29, Register.SP)
+/* ldr  w0, label            */ .ldr(Register.W0, nopPos)
+/* ldp x29, x30, [sp], #16   */ .ldp(Register.X29, Register.X30, Register.SP, IndexClass.PostIndex, 16)
+/* ret                       */ .ret(Optional.empty())
+                                .build();
+
+      //showDebugMessage(seg);
+
+      int actual = (int)method.invoke();
+      Assertions.assertEquals(expected, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests LDR (immediate)
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX})
+  public void testLdrImmediate(){
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.of(
                    ValueLayout.JAVA_INT, // return value

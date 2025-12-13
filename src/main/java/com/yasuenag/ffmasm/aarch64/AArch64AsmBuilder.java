@@ -102,6 +102,25 @@ public class AArch64AsmBuilder<T extends AArch64AsmBuilder<T>> extends AsmBuilde
   }
 
   /**
+   * Load register (literal)
+   *
+   * @param rt The general-purpose register to be transferred.
+   * @param labelAddr Address to be loaded
+   * @return This instance
+   */
+  public T ldr(Register rt, long labelAddr){
+    byte opc = rt.width() == 64 ? (byte)0b01 : (byte)0b00;
+    int imm19 = (int)((labelAddr - getCodePosition()) / 4) & 0x7ffff;
+    int encoded = ((opc & 0b11) << 30) |
+                  (0b011000 << 24) |
+                  (imm19 << 5) |
+                  rt.encoding();
+
+    byteBuf.putInt(encoded);
+    return castToT();
+  }
+
+  /**
    * Store register (immediate)
    *
    * @param rt The general-purpose register to be transferred.
