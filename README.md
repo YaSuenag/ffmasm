@@ -184,6 +184,56 @@ try(var seg = new CodeSegment()){
 }
 ```
 
+# Play with JVMCI
+
+JVMCI is not FFM, but ffmasm supports it!  
+You can install your machine code into CodeCache on HotSpot as Tier 4 compiled code via JVMCI.
+
+```java
+  public static int getPid(){
+    throw new UnsupportedOperationException("This method should be overriden by jvmci-adapter in ffmasm");
+  }
+
+  private static void installAMD64Code(Method method) throws Exception{
+    new JVMCIAMD64AsmBuilder()
+                    .emitPrologue()
+/* mov %rax, $39 */ .movImm(com.yasuenag.ffmasm.amd64.Register.RAX, 39) // getpid
+/* syscall       */ .syscall()
+                    .emitEpilogue()
+                    .install(method, 16);
+  }
+
+  private static void installAArch64Code(Method method) throws Exception{
+    new JVMCIAArch64AsmBuilder()
+                    .emitPrologue()
+/* movz x8, $172 */ .movz(com.yasuenag.ffmasm.aarch64.Register.X8, 172, HWShift.None) // getpid
+/* svc #0        */ .svc(0)
+                    .emitEpilogue()
+                    .install(method, 16);
+  }
+```
+
+You need to use `JVMCIAMD64AsmBuilder` or its family (for SSE, AVX like `AMD64AsmBuilder`) for AMD64, `JVMCIAArch64AsmBuilder` for AArch64. Note that you have to call both `emitPrologue()` and `emitEpilogue()` before `install()`.
+
+In above case, `install()` in each builder classes override `getPid()`, so you wouldn't see UnsupportedOperationException and you can get PID from it without any error.
+
+> [!TIP]
+> Register usage in C2 compiler is different from platform ABI (e.g. AMD64 System V ABI), and JVMCI code should compliant this rule. See [CallingSequences on OpenJDK Wiki](https://wiki.openjdk.org/display/HotSpot/CallingSequences) for details.
+
+These builder classes are provided by [jvmci-adapter](tools/jvmci-adapter). You can depend it on pom.xml as following:
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>com.yasuenag</groupId>
+        <artifactId>jvmci-adapter</artifactId>
+        <version>0.1.0</version>
+    </dependency>
+</dependencies>
+```
+
+jvmci-adapter depends on ffmasm, and it is exposed transitively, so you do not need to add dependency to ffmasm.
+
 # Play with perf tool
 
 You can record both function name and entry point address as a perf map file.
