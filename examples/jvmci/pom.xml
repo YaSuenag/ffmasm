@@ -36,6 +36,13 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/yasuenag/ffmasm</url>
+        </repository>
+    </repositories>
     
     <dependencies>
         <dependency>
