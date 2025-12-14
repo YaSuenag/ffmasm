@@ -77,6 +77,15 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.4.1</version>
+                <configuration>
+                    <additionalJOptions>
+                        <additionalJOption>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.code=${moduleName}</additionalJOption>
+                        <additionalJOption>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.code.site=${moduleName}</additionalJOption>
+                        <additionalJOption>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.hotspot=${moduleName}</additionalJOption>
+                        <additionalJOption>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.meta=${moduleName}</additionalJOption>
+                        <additionalJOption>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.runtime=${moduleName}</additionalJOption>
+                    </additionalJOptions>
+                </configuration>
             </plugin>
         </plugins>
     </build>
