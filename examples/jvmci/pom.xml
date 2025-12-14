@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+Copyright (C) 2025, Yasumasa Suenaga
+
+This file is part of ffmasm.
+
+ffmasm is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+ffmasm is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.yasuenag</groupId>
+    <artifactId>jvmci-getpid</artifactId>
+    <version>0.1.0</version>
+    <packaging>jar</packaging>
+
+    <name>jvmci-getpid</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <moduleName>com.yasuenag.ffmasm.examples.jvmci</moduleName>
+        <mainClass>com.yasuenag.ffmasm.examples.jvmci.Main</mainClass>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
+    </properties>
+    
+    <dependencies>
+        <dependency>
+            <groupId>com.yasuenag</groupId>
+            <artifactId>jvmci-adapter</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                    </compilerArgs>
+                    <debug>true</debug>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.9.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-artifact</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>${project.artifactId}</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>run</id>
+                        <phase>exec</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${java.home}/bin/java</executable>
+                            <arguments>
+                                <argument>--module-path=${project.build.directory}/modules</argument>
+                                <argument>--enable-native-access=com.yasuenag.ffmasm</argument>
+                                <argument>-XX:+UnlockExperimentalVMOptions</argument>
+                                <argument>-XX:+EnableJVMCI</argument>
+                                <argument>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.code=com.yasuenag.ffmasmtools.jvmci</argument>
+                                <argument>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.code.site=com.yasuenag.ffmasmtools.jvmci</argument>
+                                <argument>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.hotspot=com.yasuenag.ffmasmtools.jvmci</argument>
+                                <argument>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.meta=com.yasuenag.ffmasmtools.jvmci</argument>
+                                <argument>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.runtime=com.yasuenag.ffmasmtools.jvmci</argument>
+                                <argument>-XX:+UnlockDiagnosticVMOptions</argument>
+                                <argument>-XX:CompilerDirectivesFile=${project.basedir}/printasm-directive.json</argument>
+                                <argument>-m</argument>
+                                <argument>${moduleName}/${mainClass}</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

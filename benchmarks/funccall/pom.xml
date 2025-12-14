@@ -15,7 +15,8 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU Lesser General Public Licensealong with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Lesser General Public Licensealong with ffmasm.
+If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -27,14 +28,21 @@ You should have received a copy of the GNU Lesser General Public Licensealong wi
     <groupId>com.yasuenag</groupId>
     <artifactId>ffmasm-benchmark-funccall</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.3</version>
+    <version>1.1.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>22</maven.compiler.source>
-        <maven.compiler.target>22</maven.compiler.target>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <jmh.version>1.37</jmh.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/yasuenag/ffmasm</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -44,8 +52,8 @@ You should have received a copy of the GNU Lesser General Public Licensealong wi
         </dependency>
         <dependency>
             <groupId>com.yasuenag</groupId>
-            <artifactId>ffmasm</artifactId>
-            <version>0.6.0</version>
+            <artifactId>jvmci-adapter</artifactId>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
 
@@ -98,6 +106,13 @@ You should have received a copy of the GNU Lesser General Public Licensealong wi
                                 <classpath/>
                                 <argument>-Djava.library.path=.</argument>
                                 <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                <argument>-XX:+UnlockExperimentalVMOptions</argument>
+                                <argument>-XX:+EnableJVMCI</argument>
+                                <argument>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.code=ALL-UNNAMED</argument>
+                                <argument>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.code.site=ALL-UNNAMED</argument>
+                                <argument>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.hotspot=ALL-UNNAMED</argument>
+                                <argument>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.meta=ALL-UNNAMED</argument>
+                                <argument>--add-exports=jdk.internal.vm.ci/jdk.vm.ci.runtime=ALL-UNNAMED</argument>
                                 <argument>com.yasuenag.ffmasm.benchmark.funccall.FuncCallComparison</argument>
                                 <argument>single</argument>
                             </arguments>
