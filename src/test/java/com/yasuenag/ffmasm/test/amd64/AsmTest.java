@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2025, Yasumasa Suenaga
+ * Copyright (C) 2022, 2026, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -478,6 +478,37 @@ public class AsmTest extends TestBase{
 
       int actual = (int)method.invoke(1);
       Assertions.assertEquals(1024, actual, "SHL operations failed.");
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests SHRs
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testSHRs(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT  // 1st argument
+                 );
+      var method = new AsmBuilder.AMD64(seg, desc)
+            /* push %rbp      */ .push(Register.RBP)
+            /* mov %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+            /* mov arg1, %rax */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
+            /* shr $4, %rax   */ .shr(Register.RAX, (byte)4, OptionalInt.empty())
+            /* shr $3, %eax   */ .shr(Register.EAX, (byte)3, OptionalInt.empty())
+            /* shr $2, %ax    */ .shr(Register.AX, (byte)2, OptionalInt.empty())
+            /* shr $1, %al    */ .shr(Register.AL, (byte)1, OptionalInt.empty())
+            /* leave          */ .leave()
+            /* ret            */ .ret()
+                                 .build();
+
+      int actual = (int)method.invoke(1024);
+      Assertions.assertEquals(1, actual, "SHR operations failed.");
     }
     catch(Throwable t){
       Assertions.fail(t);
