@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-Copyright (C) 2025, Yasumasa Suenaga
+Copyright (C) 2025, 2026, Yasumasa Suenaga
 
 This file is part of ffmasm.
 
@@ -29,9 +29,18 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
 
     <name>ffmasm-disassembler</name>
 
+    <url>https://github.com/YaSuenag/ffmasm</url>
+
     <scm>
         <url>https://github.com/yasuenag/ffmasm</url>
+        <connection>scm:git:https://github.com/YaSuenag/ffmasm.git</connection>
+        <developerConnection>scm:git:https://github.com/YaSuenag/ffmasm.git</developerConnection>
     </scm>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/YaSuenag/ffmasm/issues</url>
+    </issueManagement>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
