@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2025, Yasumasa Suenaga
+ * Copyright (C) 2022, 2026, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -547,6 +547,36 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
     byte opcode = (m.width() == 8) ? (byte)0xc0 : (byte)0xc1;
     byteBuf.put(opcode); // SAL
     byte mode = emitModRM(m, 4, disp);
+    emitDisp(mode, disp, m);
+    byteBuf.put(imm); // imm8
+    return castToT();
+  }
+
+  /**
+   * Shift right logical r/m by imm8 times.
+   *   Opcode: REX.W + C1 /5 ib (64 bit)
+   *                   C1 /5 ib (32 bit)
+   *             66H + C1 /5 ib (16 bit)
+   *                   C0 /5 ib ( 8 bit)
+   *   Instruction: SHR r/m, imm8
+   *   Op/En: MI
+   *
+   * @param m "r/m" register
+   * @param imm Immediate value to shift
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public T shr(Register m, byte imm, OptionalInt disp){
+    Register dummy = switch(m.width()){
+      case  8 -> Register.AL;
+      case 16 -> Register.AX;
+      case 32 -> Register.EAX;
+      default -> Register.RAX;
+    };
+    emitREXOp(dummy, m);
+    byte opcode = (m.width() == 8) ? (byte)0xc0 : (byte)0xc1;
+    byteBuf.put(opcode); // SHR
+    byte mode = emitModRM(m, 5, disp);
     emitDisp(mode, disp, m);
     byteBuf.put(imm); // imm8
     return castToT();
