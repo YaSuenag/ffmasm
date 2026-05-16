@@ -391,6 +391,73 @@ public class AsmTest extends TestBase{
     }
   }
 
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testTESTregisters(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT, // 1st argument
+                   ValueLayout.JAVA_INT  // 2nd argument
+                 );
+      var method = new AsmBuilder.AMD64(seg, desc)
+         /* push %rbp         */ .push(Register.RBP)
+         /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /* xor ret, ret      */ .xorMR(argReg.returnReg(), argReg.returnReg(), OptionalInt.empty())
+         /* test arg1, arg2   */ .test(argReg.arg2(), argReg.arg1(), OptionalInt.empty())
+         /* je zero           */ .je("zero")
+         /* mov $1, retReg    */ .movImm(argReg.returnReg(), 1)
+         /* leave             */ .leave()
+         /* ret               */ .ret()
+         /* zero:             */ .label("zero")
+         /* leave             */ .leave()
+         /* ret               */ .ret()
+                                 .build();
+
+      int actual = (int)method.invoke(3, 2); // 3 & 2 == 2 != 0 -> expect 1
+      Assertions.assertEquals(1, actual);
+
+      actual = (int)method.invoke(4, 1); // 4 & 1 == 0 -> expect 0
+      Assertions.assertEquals(0, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  public void testTESTImmediate(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT  // 1st argument
+                 );
+      var method = new AsmBuilder.AMD64(seg, desc)
+         /* push %rbp         */ .push(Register.RBP)
+         /* mov %rsp, %rbp    */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /* xor ret, ret      */ .xorMR(argReg.returnReg(), argReg.returnReg(), OptionalInt.empty())
+         /* test arg1, 1      */ .testImm(argReg.arg1(), 1, OptionalInt.empty())
+         /* je zero           */ .je("zero")
+         /* mov $1, retReg    */ .movImm(argReg.returnReg(), 1)
+         /* leave             */ .leave()
+         /* ret               */ .ret()
+         /* zero:             */ .label("zero")
+         /* leave             */ .leave()
+         /* ret               */ .ret()
+                                 .build();
+
+      int actual = (int)method.invoke(5); // 5 & 1 == 1 -> expect 1
+      Assertions.assertEquals(1, actual);
+
+      actual = (int)method.invoke(4); // 4 & 1 == 0 -> expect 0
+      Assertions.assertEquals(0, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
   /**
    * Tests ADDs
    */
