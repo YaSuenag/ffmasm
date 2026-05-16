@@ -971,6 +971,21 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
   }
 
   /**
+   * Serializes load operations.<br>
+   *   Opcode: NP 0F AE E8<br>
+   *   Instruction: LFENCE<br>
+   *   Op/En: ZO
+   *
+   * @return This instance
+   */
+  public T lfence(){
+    byteBuf.put((byte)0x0f);
+    byteBuf.put((byte)0xae);
+    byteBuf.put((byte)0xe8);
+    return castToT();
+  }
+
+  /**
    * Flushes cache line containing m8.<br>
    *   Opcode: NFx 66 0F AE /7<br>
    *   Instruction: CLFLUSHOPT m8<br>
