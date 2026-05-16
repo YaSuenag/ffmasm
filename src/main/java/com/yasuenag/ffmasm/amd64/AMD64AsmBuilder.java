@@ -352,6 +352,65 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
   }
 
   /**
+   * TEST r/m, r.
+   *   Opcode: 84 /r (8 bit)
+   *           85 /r (16/32/64 bit)
+   *   Instruction: TEST r/m, r
+   *   Op/En: MR
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public T test(Register r, Register m, OptionalInt disp){
+    emitREXOp(r, m);
+    byte opcode = (r.width() == 8) ? (byte)0x84 : (byte)0x85;
+    byteBuf.put(opcode); // TEST
+    byte mode = emitModRM(r, m, disp);
+    emitDisp(mode, disp, m);
+    return castToT();
+  }
+
+  /**
+   * TEST r/m, imm.
+   *   Opcode: F6 /0 ib (8 bit)
+   *           F7 /0 iw/id (16/32/64 bit)
+   *   Instruction: TEST r/m, imm
+   *   Op/En: MI
+   *
+   * @param m "r/m" register
+   * @param imm Immediate value to test.
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public T testImm(Register m, int imm, OptionalInt disp){
+    Register dummy = switch(m.width()){
+      case  8 -> Register.AL;
+      case 16 -> Register.AX;
+      case 32 -> Register.EAX;
+      default -> Register.RAX;
+    };
+    emitREXOp(dummy, m);
+    byte opcode = (m.width() == 8) ? (byte)0xf6 : (byte)0xf7;
+    byteBuf.put(opcode); // TEST
+    byte mode = emitModRM(m, 0, disp);
+    emitDisp(mode, disp, m);
+
+    if(m.width() == 8){
+      byteBuf.put((byte)imm); // imm8
+    }
+    else if(m.width() == 16){
+      byteBuf.putShort((short)imm); // imm16
+    }
+    else{
+      byteBuf.putInt(imm); // imm32
+    }
+
+    return castToT();
+  }
+
+  /**
    * Returns processor identification and feature information to
    * the EAX, EBX, ECX, and EDX registers, as determined by
    * input entered in EAX (in some cases, ECX as well).
