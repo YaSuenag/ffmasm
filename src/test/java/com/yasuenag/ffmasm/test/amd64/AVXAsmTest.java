@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2025, Yasumasa Suenaga
+ * Copyright (C) 2022, 2026, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -191,6 +191,40 @@ public class AVXAsmTest extends TestBase{
       Assertions.assertArrayEquals(src1, new int[]{1, 2, 3, 4, 5, 6, 7, 8});
       Assertions.assertArrayEquals(src2, new int[]{8, 7, 6, 5, 4, 3, 2, 1});
       Assertions.assertArrayEquals(expected, result);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testVPSHUFD(){
+    Assumptions.assumeTrue(supportAVX(), "Test platform does not support AVX");
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.ofVoid(
+                   ValueLayout.ADDRESS, // 1st argument (src)
+                   ValueLayout.ADDRESS  // 2nd argument (dst)
+                 );
+      var method = new AsmBuilder.AVX(seg, desc)
+ /* push %rbp                 */ .push(Register.RBP)
+ /* mov %rsp, %rbp            */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+ /* vmovdqu (arg1), %ymm0     */ .vmovdquRM(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+ /* vpshufd %ymm1, %ymm0, imm */ .vpshufd(Register.YMM1, Register.YMM0, OptionalInt.empty(), (byte)0x1b)
+ /* vmovdqa %ymm1, (arg2)     */ .vmovdqaMR(Register.YMM1, argReg.arg2(), OptionalInt.of(0))
+ /* leave                     */ .leave()
+ /* ret                       */ .ret()
+                                 .build(Linker.Option.critical(true));
+
+      int[] src = new int[]{1,2,3,4,5,6,7,8};
+      int[] expected = new int[]{4,3,2,1,8,7,6,5};
+      MemorySegment srcSeg = MemorySegment.ofArray(src);
+      MemorySegment dstSeg = Arena.ofAuto().allocate(32, 32);
+
+      //showDebugMessage(seg);
+      method.invoke(srcSeg, dstSeg);
+
+      Assertions.assertArrayEquals(expected, dstSeg.toArray(ValueLayout.JAVA_INT));
     }
     catch(Throwable t){
       Assertions.fail(t);

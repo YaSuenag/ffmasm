@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2025, Yasumasa Suenaga
+ * Copyright (C) 2022, 2026, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -277,6 +277,47 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
     else if(mode == 0b10){ // reg-mem disp32
       byteBuf.putInt(disp.getAsInt());
     }
+
+    return castToT();
+  }
+
+  /**
+   * Shuffle packed doubleword integers in r/m according to imm8 and store in dest.
+   * NOTES: This method supports YMM register only now. The immediate controls
+   *        selection for each 32-bit lane within 128-bit lanes and is applied
+   *        to both 128-bit lanes when using YMM registers.
+   *   Opcode: VEX.256.66.0F.WIG 70 /r ib (256 bit)
+   *   Instruction: VPSHUFD r, r/m, imm8
+   *   Op/En: A
+   *
+   * @param r "dest" register (destination)
+   * @param m "r/m" register (source)
+   * @param disp Displacement. Set "empty" if this operation is reg-reg
+   *             then "r/m" have to be a SIMD register.
+   *             Otherwise it has to be 64 bit GPR because it have to be
+   *             a memory operand.
+   * @param imm immediate byte controlling the shuffle
+   * @return This instance
+   */
+  public T vpshufd(Register r, Register m, OptionalInt disp, byte imm){
+    if(m.encoding() > 7){
+      emit3ByteVEXPrefix(Register.YMM0 /* unused */, m, PP.H66, LeadingBytes.H0F);
+    }
+    else{
+      emit2ByteVEXPrefix(Register.YMM0 /* unused */, PP.H66);
+    }
+
+    byteBuf.put((byte)0x70); // VPSHUFD
+
+    byte mode = emitModRM(r, m, disp);
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    byteBuf.put(imm);
 
     return castToT();
   }
