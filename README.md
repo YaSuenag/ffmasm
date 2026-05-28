@@ -186,6 +186,9 @@ try(var seg = new CodeSegment()){
 
 # Play with JVMCI
 
+> [!WARNING]
+> JVMCI has been removed in [JDK-8382582](https://bugs.openjdk.org/browse/JDK-8382582) since JDK 27. Use JDK 26 or earlier release for JVMCI.
+
 JVMCI is not FFM, but ffmasm supports it!  
 You can install your machine code into CodeCache on HotSpot as Tier 4 compiled code via JVMCI.
 
