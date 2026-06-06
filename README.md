@@ -230,7 +230,7 @@ These builder classes are provided by [jvmci-adapter](tools/jvmci-adapter). You 
     <dependency>
         <groupId>com.yasuenag</groupId>
         <artifactId>jvmci-adapter</artifactId>
-        <version>0.1.0</version>
+        <version>0.1.1</version>
     </dependency>
 </dependencies>
 ```
