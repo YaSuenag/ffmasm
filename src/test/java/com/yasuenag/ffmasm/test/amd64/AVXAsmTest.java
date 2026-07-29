@@ -237,7 +237,7 @@ public class AVXAsmTest extends TestBase{
   @Test
   @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testVEXTRACTI128(){
-    Assumptions.assumeTrue(supportAVX(), "Test platform does not support AVX");
+    Assumptions.assumeTrue(supportAVX2(), "Test platform does not support AVX2");
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
                    ValueLayout.ADDRESS, // 1st argument (src 256-bit)
