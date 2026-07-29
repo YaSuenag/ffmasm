@@ -225,6 +225,37 @@ public class AsmTest extends TestBase{
   }
 
   /**
+   * Tests CMP RM (register, r/m)
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testCMPRM(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT, // 1st argument
+                   ValueLayout.JAVA_INT  // 2nd argument
+                 );
+      var method = new AsmBuilder.AMD64(seg, desc)
+         /* push %rbp        */ .push(Register.RBP)
+         /* mov %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+         /* xor retReg, retReg */ .xorMR(argReg.returnReg(), argReg.returnReg(), OptionalInt.empty())
+         /* cmp arg1, arg2    */ .cmpRM(argReg.arg1(), argReg.arg2(), OptionalInt.empty())
+         /* jne skip          */ .jne("skip_cmp_rm")
+         /* mov $1, retReg    */ .movImm(argReg.returnReg(), 1)
+         /* skip: */ .label("skip_cmp_rm")
+         /* leave             */ .leave()
+         /* ret               */ .ret()
+                                 .build();
+      int actual = (int)method.invoke(3, 3);
+      Assertions.assertEquals(1, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Tests CPUID and 32 bit movMR
    */
   @Test
