@@ -232,6 +232,44 @@ public class AVXAsmTest extends TestBase{
   }
 
   /**
+   * Tests VEXTRACTI128
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testVEXTRACTI128(){
+    Assumptions.assumeTrue(supportAVX(), "Test platform does not support AVX");
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.ofVoid(
+                   ValueLayout.ADDRESS, // 1st argument (src 256-bit)
+                   ValueLayout.ADDRESS  // 2nd argument (dst 128-bit)
+                 );
+      var method = new AsmBuilder.AVX(seg, desc)
+/* push %rbp                      */ .push(Register.RBP)
+/* mov  %rsp, %rbp                */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+/* vmovdqa (arg1), %ymm0          */ .vmovdqaRM(Register.YMM0, argReg.arg1(), OptionalInt.of(0))
+/* vextracti128 $1, %ymm0, (%rax) */ .vextracti128(Register.YMM0, argReg.arg2(), OptionalInt.of(0), (byte)0x1)
+/* leave                          */ .leave()
+/* ret                            */ .ret()
+                                     .build();
+
+      long[] src = new long[]{1L, 2L, 3L, 4L}; // 4 * 64 = 256 bit
+      long[] expected = new long[]{3L, 4L};   // upper 128-bit extracted
+      var arena = Arena.ofAuto();
+      MemorySegment srcSeg = arena.allocate(32, 32);  // 256 bit
+      MemorySegment dstSeg = arena.allocate(16, 16); // 128 bit
+      MemorySegment.copy(src, 0, srcSeg, ValueLayout.JAVA_LONG, 0, src.length);
+
+      //showDebugMessage(seg);
+      method.invoke(srcSeg, dstSeg);
+
+      Assertions.assertArrayEquals(expected, dstSeg.toArray(ValueLayout.JAVA_LONG));
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Tests PTEST
    */
   @Test

@@ -365,4 +365,35 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
     return castToT();
   }
 
+  /**
+   * Extract 128-bit integer vector from a 256-bit source and store to xmm/m128.
+   *   Opcode: VEX.256.66.0F3A.W0 39 /r ib (256 bit)
+   *   Instruction: VEXTRACTI128 xmm1/m128, ymm2, imm8
+   *   Op/En: A
+   *
+   * @param r destination xmm register or memory (low 128-bit)
+   * @param m source ymm register
+   * @param disp Displacement. Set empty if this operation is reg-reg. If memory operand is used,
+   *             the r/m operand must be a GPR addressing the memory.
+   * @param imm immediate byte selecting 128-bit lane (imm8[0])
+   * @return This instance
+   */
+  public T vextracti128(Register r, Register m, OptionalInt disp, byte imm){
+    emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F3A);
+
+    byteBuf.put((byte)0x39); // VEXTRACTI128 opcode
+
+    byte mode = emitModRM(r, m, disp);
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    byteBuf.put(imm);
+
+    return castToT();
+  }
+
 }
