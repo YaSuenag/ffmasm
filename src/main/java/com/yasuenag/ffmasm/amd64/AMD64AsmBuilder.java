@@ -243,6 +243,27 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
   }
 
   /**
+   * Compare r with r/m.
+   *   Opcode: 3A /r (8 bit)
+   *           3B /r (16/32/64 bit)
+   *   Instruction: CMP r, r/m
+   *   Op/En: RM
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public T cmpRM(Register r, Register m, OptionalInt disp){
+    emitREXOp(r, m);
+    byte opcode = (r.width() == 8) ? (byte)0x3a : (byte)0x3b;
+    byteBuf.put(opcode); // CMP
+    byte mode = emitModRM(r, m, disp);
+    emitDisp(mode, disp, m);
+    return castToT();
+  }
+
+  /**
    * Move 64bit immediate value to 64bit register.
    *   Opcode: REX.W + B8 + rd io
    *   Instruction: MOV reg,imm64
