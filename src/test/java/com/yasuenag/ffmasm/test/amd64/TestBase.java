@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023, 2025, Yasumasa Suenaga
+ * Copyright (C) 2023, 2026, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -46,6 +46,7 @@ public class TestBase{
   protected static ArgRegister argReg;
 
   private static boolean isAVX;
+  private static boolean isAVX2;
 
   private static boolean isCLFLUSHOPT;
 
@@ -97,6 +98,7 @@ public class TestBase{
       // check CLFLUSHOPT
       cpuid.invokeExact(7, 0, cpuidVals);
       isCLFLUSHOPT = ((cpuidVals.getAtIndex(ValueLayout.JAVA_INT, 1) >>> 23) & 0x1) == 1; // ebx
+      isAVX2 = ((cpuidVals.getAtIndex(ValueLayout.JAVA_INT, 1) >>> 5) & 0x1) == 1; // ebx
     }
     catch(Throwable t){
       throw new RuntimeException(t);
@@ -105,6 +107,10 @@ public class TestBase{
 
   public static boolean supportAVX(){
     return isAVX;
+  }
+
+  public static boolean supportAVX2(){
+    return isAVX2;
   }
 
   public static boolean supportCLFLUSHOPT(){
