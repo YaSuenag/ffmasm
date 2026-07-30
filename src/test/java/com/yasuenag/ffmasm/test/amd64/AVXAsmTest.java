@@ -234,7 +234,7 @@ public class AVXAsmTest extends TestBase{
   @Test
   @EnabledOnOs({OS.LINUX, OS.WINDOWS})
   public void testVPDPBUSD(){
-    Assumptions.assumeTrue(supportAVX(), "Test platform does not support AVX");
+    Assumptions.assumeTrue(supportAVXVNNI(), "Test platform does not support AVX_VNNI");
     try(var seg = new CodeSegment()){
       var desc = FunctionDescriptor.ofVoid(
                    ValueLayout.ADDRESS, // 1st argument (src1)
