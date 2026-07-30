@@ -231,6 +231,74 @@ public class AVXAsmTest extends TestBase{
     }
   }
 
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testVPDPBUSD(){
+    Assumptions.assumeTrue(supportAVXVNNI(), "Test platform does not support AVX_VNNI");
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.ofVoid(
+                   ValueLayout.ADDRESS, // 1st argument (src1)
+                   ValueLayout.ADDRESS, // 2nd argument (src2)
+                   ValueLayout.ADDRESS  // 3rd argument (dst)
+                 );
+      var method = new AsmBuilder.AVX(seg, desc)
+/* push %rbp                     */ .push(Register.RBP)
+/* mov  %rsp, %rbp               */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+/* vpxor %ymm0, %ymm0, %ymm0     */ .vpxor(Register.YMM0, Register.YMM0, Register.YMM0, OptionalInt.empty())
+/* vmovdqa (arg1), %ymm1         */ .vmovdqaRM(Register.YMM1, argReg.arg1(), OptionalInt.of(0))
+/* vpdpbusd (arg2), %ymm1, %ymm0 */ .vpdpbusd(Register.YMM1, argReg.arg2(), Register.YMM0, OptionalInt.of(0))
+/* vmovdqa %ymm0, (arg3)         */ .vmovdqaMR(Register.YMM0, argReg.arg3(), OptionalInt.of(0))
+/* leave                         */ .leave()
+/* ret                           */ .ret()
+                                    .build();
+
+      byte[] src1 = new byte[]{
+        (byte) 1, (byte) 2, (byte) 3, (byte) 4,
+        (byte) 5, (byte) 6, (byte) 7, (byte) 8,
+        (byte) 9, (byte)10, (byte)11, (byte)12,
+        (byte)13, (byte)14, (byte)15, (byte)16,
+        (byte)17, (byte)18, (byte)19, (byte)20,
+        (byte)21, (byte)22, (byte)23, (byte)24,
+        (byte)25, (byte)26, (byte)27, (byte)28,
+        (byte)29, (byte)30, (byte)31, (byte)32
+      };
+      byte[] src2 = new byte[]{
+        (byte) 1, (byte) 2, (byte) 3, (byte) 4,
+        (byte) 5, (byte) 6, (byte) 7, (byte) 8,
+        (byte) 9, (byte)10, (byte)11, (byte)12,
+        (byte)13, (byte)14, (byte)15, (byte)16,
+        (byte)17, (byte)18, (byte)19, (byte)20,
+        (byte)21, (byte)22, (byte)23, (byte)24,
+        (byte)25, (byte)26, (byte)27, (byte)28,
+        (byte)29, (byte)30, (byte)31, (byte)32
+      };
+      int[] expected = new int[]{
+        src1[0]*src2[0]   + src1[1]*src2[1]   + src1[2]*src2[2]   + src1[3]*src2[3],
+        src1[4]*src2[4]   + src1[5]*src2[5]   + src1[6]*src2[6]   + src1[7]*src2[7],
+        src1[8]*src2[8]   + src1[9]*src2[9]   + src1[10]*src2[10] + src1[11]*src2[11],
+        src1[12]*src2[12] + src1[13]*src2[13] + src1[14]*src2[14] + src1[15]*src2[15],
+        src1[16]*src2[16] + src1[17]*src2[17] + src1[18]*src2[18] + src1[19]*src2[19],
+        src1[20]*src2[20] + src1[21]*src2[21] + src1[22]*src2[22] + src1[23]*src2[23],
+        src1[24]*src2[24] + src1[25]*src2[25] + src1[26]*src2[26] + src1[27]*src2[27],
+        src1[28]*src2[28] + src1[29]*src2[29] + src1[30]*src2[30] + src1[31]*src2[31]
+      };
+      var arena = Arena.ofAuto();
+      MemorySegment src1Seg = arena.allocate(32, 32);
+      MemorySegment src2Seg = arena.allocate(32, 32);
+      MemorySegment dstSeg = arena.allocate(32, 32);
+      MemorySegment.copy(src1, 0, src1Seg, ValueLayout.JAVA_BYTE, 0, src1.length);
+      MemorySegment.copy(src2, 0, src2Seg, ValueLayout.JAVA_BYTE, 0, src2.length);
+
+      //showDebugMessage(seg);
+      method.invoke(src1Seg, src2Seg, dstSeg);
+
+      Assertions.assertArrayEquals(expected, dstSeg.toArray(ValueLayout.JAVA_INT));
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
   /**
    * Tests VEXTRACTI128
    */
