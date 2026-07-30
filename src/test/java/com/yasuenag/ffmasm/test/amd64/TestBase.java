@@ -50,6 +50,8 @@ public class TestBase{
 
   private static boolean isCLFLUSHOPT;
 
+  private static boolean isAVXVNNI;
+
   private static MethodHandle generateCPUID(CodeSegment seg) throws UnsupportedPlatformException{
     var desc = FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, /* eax    */
                                          ValueLayout.JAVA_INT, /* ecx    */
@@ -95,10 +97,15 @@ public class TestBase{
       cpuid.invokeExact(1, 0, cpuidVals);
       isAVX = ((cpuidVals.getAtIndex(ValueLayout.JAVA_INT, 2) >>> 28) & 0x1) == 1; // ecx
 
-      // check CLFLUSHOPT
+      // check AVX2 and CLFLUSHOPT
       cpuid.invokeExact(7, 0, cpuidVals);
       isCLFLUSHOPT = ((cpuidVals.getAtIndex(ValueLayout.JAVA_INT, 1) >>> 23) & 0x1) == 1; // ebx
       isAVX2 = ((cpuidVals.getAtIndex(ValueLayout.JAVA_INT, 1) >>> 5) & 0x1) == 1; // ebx
+
+      // check AVX_VNNI
+      cpuid.invokeExact(7, 1, cpuidVals);
+      isAVXVNNI = ((cpuidVals.getAtIndex(ValueLayout.JAVA_INT, 0) >>> 4) & 0x1) == 1; // eax
+
     }
     catch(Throwable t){
       throw new RuntimeException(t);
@@ -115,6 +122,10 @@ public class TestBase{
 
   public static boolean supportCLFLUSHOPT(){
     return isCLFLUSHOPT;
+  }
+
+  public static boolean supportAVXVNNI(){
+    return isAVXVNNI;
   }
 
   /**

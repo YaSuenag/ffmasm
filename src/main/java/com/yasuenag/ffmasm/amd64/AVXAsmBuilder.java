@@ -282,6 +282,37 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
   }
 
   /**
+   * Multiply and add packed unsigned bytes from r and r/m producing packed unsigned doublewords.
+   *   Opcode: VEX.256.66.0F38.W0 50 /r (256 bit)
+   *   Instruction: VPDPBUSD dest, r, r/m
+   *   Op/En: A
+   *
+   * @param r "r" register (source)
+   * @param m "r/m" register (source)
+   * @param dest "dest" register (destination)
+   * @param disp Displacement. Set "empty" if this operation is reg-reg
+   *             then "r/m" have to be a SIMD register.
+   *             Otherwise it has to be 64 bit GPR because it have to be
+   *             a memory operand.
+   * @return This instance
+   */
+  public T vpdpbusd(Register r, Register m, Register dest, OptionalInt disp){
+    emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F38);
+
+    byteBuf.put((byte)0x50); // VPDPBUSD
+
+    byte mode = emitModRM(dest, m, disp);
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    return castToT();
+  }
+
+  /**
    * Shuffle packed doubleword integers in r/m according to imm8 and store in dest.
    * NOTES: This method supports YMM register only now. The immediate controls
    *        selection for each 32-bit lane within 128-bit lanes and is applied
