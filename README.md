@@ -223,14 +223,19 @@ In above case, `install()` in each builder classes override `getPid()`, so you w
 > [!TIP]
 > Register usage in C2 compiler is different from platform ABI (e.g. AMD64 System V ABI), and JVMCI code should compliant this rule. See [CallingSequences on OpenJDK Wiki](https://wiki.openjdk.org/display/HotSpot/CallingSequences) for details.
 
-These builder classes are provided by [jvmci-adapter](tools/jvmci-adapter). You can depend it on pom.xml as following:
+These builder classes are provided by [jvmci-adapter](tools/jvmci-adapter). You need to add dependencies for both jvmci-adapter and ffmasm into your pom.xml as following:
 
 ```xml
 <dependencies>
     <dependency>
         <groupId>com.yasuenag</groupId>
         <artifactId>jvmci-adapter</artifactId>
-        <version>0.1.1</version>
+        <version>0.1.2</version>
+    </dependency>
+    <dependency>
+        <groupId>com.yasuenag</groupId>
+        <artifactId>ffmasm</artifactId>
+        <version>0.6.4</version>
     </dependency>
 </dependencies>
 ```
