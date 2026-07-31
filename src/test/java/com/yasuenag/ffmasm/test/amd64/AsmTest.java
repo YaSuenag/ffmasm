@@ -521,6 +521,41 @@ public class AsmTest extends TestBase{
   }
 
   /**
+   * Tests ADD RM (register = register + r/m)
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testADDRM(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT,  // return value
+                   ValueLayout.JAVA_LONG  // 1st argument
+                 );
+      var method = new AsmBuilder.AMD64(seg, desc)
+           /* push %rbp       */ .push(Register.RBP)
+           /* mov  %rsp, %rbp */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+           /* xor  %rax, %rax */ .xorMR(Register.RAX, Register.RAX, OptionalInt.empty())
+           /* mov  arg1, %rcx */ .movMR(argReg.arg1(), Register.RCX, OptionalInt.empty())
+           /* add   %cl,  %al */ .addRM(Register.AL, Register.CL, OptionalInt.empty())
+           /* add   %cx,  %ax */ .addRM(Register.AX, Register.CX, OptionalInt.empty())
+           /* add  %ecx, %eax */ .addRM(Register.EAX, Register.ECX, OptionalInt.empty())
+           /* add  %rcx, %rax */ .addRM(Register.RAX, Register.RCX, OptionalInt.empty())
+
+           /* leave           */ .leave()
+           /* ret             */ .ret()
+                                 .build();
+
+      //showDebugMessage(seg);
+
+      long actual = (long)method.invoke(1L);
+      Assertions.assertEquals(4, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Tests SUBs
    */
   @Test
