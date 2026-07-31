@@ -264,6 +264,27 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
   }
 
   /**
+   * Add r/m to r.
+   *   Opcode: 02 /r (8 bit)
+   *           03 /r (16/32/64 bit)
+   *   Instruction: ADD r, r/m
+   *   Op/En: RM
+   *
+   * @param r "r" register
+   * @param m "r/m" register
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public T addRM(Register r, Register m, OptionalInt disp){
+    emitREXOp(r, m);
+    byte opcode = (r.width() == 8) ? (byte)0x02 : (byte)0x03;
+    byteBuf.put(opcode); // ADD
+    byte mode = emitModRM(r, m, disp);
+    emitDisp(mode, disp, m);
+    return castToT();
+  }
+
+  /**
    * Move 64bit immediate value to 64bit register.
    *   Opcode: REX.W + B8 + rd io
    *   Instruction: MOV reg,imm64
