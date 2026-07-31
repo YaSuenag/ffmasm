@@ -208,6 +208,70 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
   }
 
   /**
+   * Move doubleword from r/m32 to xmm using VEX (128-bit).
+   *   Opcode: VEX.128.66.0F.W0 6E /r
+   *   Instruction: VMOVD xmm, r/m32
+   *   Op/En: A
+   *
+   * @param r destination XMM register
+   * @param m source r/m (register or memory)
+   * @param disp Displacement. Set empty if this operation is reg-reg.
+   * @return This instance
+   */
+  public T vmovdA(Register r, Register m, OptionalInt disp){
+    if(m.encoding() > 7){
+      emit3ByteVEXPrefix(Register.XMM0 /* unused */, m, PP.H66, LeadingBytes.H0F);
+    }
+    else{
+      emit2ByteVEXPrefix(Register.XMM0 /* unused */, PP.H66);
+    }
+
+    byteBuf.put((byte)0x6e); // VMOVD (r <- r/m32)
+
+    byte mode = emitModRM(r, m, disp);
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    return castToT();
+  }
+
+  /**
+   * Move doubleword from xmm register to r/m32 using VEX (128-bit).
+   *   Opcode: VEX.128.66.0F.W0 7E /r
+   *   Instruction: VMOVD r/m32, xmm
+   *   Op/En: B
+   *
+   * @param r source XMM register
+   * @param m destination r/m (register or memory)
+   * @param disp Displacement. Set empty if this operation is reg-reg.
+   * @return This instance
+   */
+  public T vmovdB(Register r, Register m, OptionalInt disp){
+    if(m.encoding() > 7){
+      emit3ByteVEXPrefix(Register.XMM0 /* unused */, m, PP.H66, LeadingBytes.H0F);
+    }
+    else{
+      emit2ByteVEXPrefix(Register.XMM0 /* unused */, PP.H66);
+    }
+
+    byteBuf.put((byte)0x7e); // VMOVD (r/m32 <- xmm)
+
+    byte mode = emitModRM(r, m, disp);
+    if(mode == 0b01){ // reg-mem disp8
+      byteBuf.put((byte)disp.getAsInt());
+    }
+    else if(mode == 0b10){ // reg-mem disp32
+      byteBuf.putInt(disp.getAsInt());
+    }
+
+    return castToT();
+  }
+
+  /**
    * Bitwise XOR of r and r/m.
    * NOTES: This method supports YMM register only now.
    *   Opcode: VEX.256.66.0F.WIG EF /r (256 bit)
