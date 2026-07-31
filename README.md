@@ -240,8 +240,6 @@ These builder classes are provided by [jvmci-adapter](tools/jvmci-adapter). You 
 </dependencies>
 ```
 
-jvmci-adapter depends on ffmasm, and it is exposed transitively, so you do not need to add dependency to ffmasm.
-
 # Play with perf tool
 
 You can record both function name and entry point address as a perf map file.
