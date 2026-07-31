@@ -60,7 +60,8 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
         <dependency>
             <groupId>com.yasuenag</groupId>
             <artifactId>ffmasm</artifactId>
-            <version>0.6.3</version>
+            <version>0.6.4</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
