@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-Copyright (C) 2025, Yasumasa Suenaga
+Copyright (C) 2025, 2026, Yasumasa Suenaga
 
 This file is part of ffmasm.
 
@@ -48,7 +48,12 @@ along with ffmasm.  If not, see <http://www.gnu.org/licenses/>.
         <dependency>
             <groupId>com.yasuenag</groupId>
             <artifactId>jvmci-adapter</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yasuenag</groupId>
+            <artifactId>ffmasm</artifactId>
+            <version>0.6.4</version>
         </dependency>
     </dependencies>
 
