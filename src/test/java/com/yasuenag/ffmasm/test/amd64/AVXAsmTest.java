@@ -115,6 +115,41 @@ public class AVXAsmTest extends TestBase{
   }
 
   /**
+   * Tests VMOVD A/B (VEX.128)
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testVMOVD(){
+    Assumptions.assumeTrue(supportAVX(), "Test platform does not support AVX");
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.ofVoid(
+                   ValueLayout.JAVA_INT, // 1st argument (src)
+                   ValueLayout.ADDRESS  // 2nd argument (dst)
+                 );
+      var method = new AsmBuilder.AVX(seg, desc)
+     /* push %rbp             */ .push(Register.RBP)
+     /* mov %rsp, %rbp        */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+     /* vmovd  arg1, %xmm0    */ .vmovdA(Register.XMM0, argReg.arg1(), OptionalInt.empty())
+     /* vmovd %xmm0, (arg2)   */ .vmovdB(Register.XMM0, argReg.arg2(), OptionalInt.of(0))
+     /* leave                 */ .leave()
+     /* ret                   */ .ret()
+                                 .build();
+
+      int expected = 100;
+      var arena = Arena.ofAuto();
+      MemorySegment dest = arena.allocate(16, 16); // 128 bit
+
+      //showDebugMessage(seg);
+      method.invoke(expected, dest);
+
+      Assertions.assertEquals(expected, dest.getAtIndex(ValueLayout.JAVA_INT, 0));
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Tests PXOR
    */
   @Test
