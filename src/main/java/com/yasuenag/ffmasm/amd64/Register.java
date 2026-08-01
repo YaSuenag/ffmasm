@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Yasumasa Suenaga
+ * Copyright (C) 2022, 2026, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -34,6 +34,10 @@ public enum Register{
   CH(5, 8),
   DH(6, 8),
   BH(7, 8),
+  SPL(4, 8),
+  BPL(5, 8),
+  SIL(6, 8),
+  DIL(7, 8),
 
   AX(0, 16),
   CX(1, 16),

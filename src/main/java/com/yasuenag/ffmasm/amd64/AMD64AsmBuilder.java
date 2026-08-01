@@ -173,8 +173,23 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
     emitREXOp(r, m, false);
   }
 
+  private boolean isRegIn(Register r, Register begin, Register end){
+    if(r.width() != 8){
+      return false;
+    }
+    return (r.ordinal() >= begin.ordinal()) && (r.ordinal() <= end.ordinal());
+  }
+
   protected void emitREXOp(Register r, Register m, boolean forceREXW){
-    if(r.width() == 16){
+    if(isRegIn(r, Register.SPL, Register.DIL) || isRegIn(m, Register.SPL, Register.DIL)){
+      if(isRegIn(r, Register.AH, Register.BH) || isRegIn(m, Register.AH, Register.BH)){
+        throw new IllegalArgumentException("AH-BH cannot be encoded in REX mode.");
+      }
+
+      // Set REX prefix only
+      byteBuf.put((byte)0x40);
+    }
+    else if(r.width() == 16){
       // Ops for 16 bits operands (66H)
       byteBuf.put((byte)0x66);
     }

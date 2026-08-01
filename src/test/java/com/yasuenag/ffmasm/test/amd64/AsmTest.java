@@ -1676,4 +1676,58 @@ public class AsmTest extends TestBase{
     }
   }
 
+  /**
+   * Test 8bit MOV with DIL/SIL regs
+   */
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  public void test8bitMOV(){
+    try(var seg = new CodeSegment();
+        var arena = Arena.ofConfined();){
+      var desc = FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                                       ValueLayout.JAVA_BYTE,
+                                       ValueLayout.JAVA_BYTE);
+      var method = new AsmBuilder.AMD64(seg, desc)
+            /* push %rbp      */ .push(Register.RBP)
+            /* mov %rsp, %rbp */ .movRM(Register.RBP, Register.RSP, OptionalInt.empty())
+            /* xor %rax, %rax */ .xorMR(Register.RAX, Register.RAX, OptionalInt.empty())
+            /* mov %dil, %al  */ .movMR(Register.DIL, Register.AL, OptionalInt.empty())
+            /* shl   $8, %rax */ .shl(Register.RAX, (byte)8, OptionalInt.empty())
+            /* or  %sil, %al  */ .orMR(Register.SIL, Register.AL, OptionalInt.empty())
+            /* leave          */ .leave()
+            /* ret            */ .ret()
+                                 .build();
+      //showDebugMessage(seg);
+
+      byte arg1 = (byte)0b0011_1100;
+      byte arg2 = (byte)0b0110_1001;
+      int expected = (arg1 << 8) | arg2;
+      long actual = (int)method.invoke(arg1, arg2);
+      Assertions.assertEquals(expected, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Test throwing IllegalArgumentException when AH-BH registers specified
+   * if REX for 8bit registers is enabled.
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void test8bitRegsForREX(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.ofVoid();
+      Assertions.assertThrows(IllegalArgumentException.class, () -> {
+          new AsmBuilder.AMD64(seg, desc)
+                        .movMR(Register.DIL, Register.AH, OptionalInt.empty());
+      });
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+
 }
