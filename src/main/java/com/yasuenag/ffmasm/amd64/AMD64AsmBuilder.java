@@ -1184,4 +1184,47 @@ public class AMD64AsmBuilder<T extends AMD64AsmBuilder<T>> extends AsmBuilder<T>
     return castToT();
   }
 
+  /**
+   * AND r/m with imm.
+   * imm32 is treated as sign-extended if REX.W operation.
+   *   Opcode: REX.W + 81 /4 id (64 bit)
+   *                   81 /4 id (32 bit)
+   *             66H + 81 /4 iw (16 bit)
+   *                   80 /4 ib ( 8 bit)
+   *   Instruction: AND r/m, imm32 (64 bit, 32bit)
+   *                AND r/m, imm16 (16 bit)
+   *                AND r/m, imm8  ( 8 bit)
+   *   Op/En: MI
+   *
+   * @param m "r/m" register
+   * @param imm Immediate value to AND.
+   * @param disp Displacement. Set "empty" if this operation is reg-reg.
+   * @return This instance
+   */
+  public T andImm(Register m, int imm, OptionalInt disp){
+    Register dummy = switch(m.width()){
+      case  8 -> Register.AL;
+      case 16 -> Register.AX;
+      case 32 -> Register.EAX;
+      default -> Register.RAX;
+    };
+    emitREXOp(dummy, m);
+    byte opcode = (m.width() == 8) ? (byte)0x80 : (byte)0x81;
+    byteBuf.put(opcode); // AND
+    byte mode = emitModRM(m, 4, disp);
+    emitDisp(mode, disp, m);
+
+    if(m.width() == 8){
+      byteBuf.put((byte)imm); // imm8
+    }
+    else if(m.width() == 16){
+      byteBuf.putShort((short)imm); // imm16
+    }
+    else{
+      byteBuf.putInt(imm); // imm32
+    }
+
+    return castToT();
+  }
+
 }
