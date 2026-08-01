@@ -168,6 +168,93 @@ public class AsmTest extends TestBase{
   }
 
   /**
+   * Tests AND with immediate
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void testANDImm(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_INT  // 1st argument
+                 );
+      var method = new AsmBuilder.AMD64(seg, desc)
+          /* push %rbp        */ .push(Register.RBP)
+          /* mov %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* mov arg1, retReg */ .movMR(argReg.arg1(), argReg.returnReg(), OptionalInt.empty())
+          /* and $0x0F, retReg*/ .andImm(argReg.returnReg(), 0x0F, OptionalInt.empty())
+          /* leave            */ .leave()
+          /* ret              */ .ret()
+                                 .build();
+
+      int actual = (int)method.invoke(0b1001_1100);
+      Assertions.assertEquals(0b0000_1100, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests AND with 16 bit immediate
+   */
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  public void test16bitANDImm(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_SHORT  // 1st argument
+                 );
+      var method = new AsmBuilder.AMD64(seg, desc)
+          /* push %rbp        */ .push(Register.RBP)
+          /* mov %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* xor %rax, %rax   */ .xorMR(Register.RAX, Register.RAX, OptionalInt.empty())
+          /* mov %di, %ax     */ .movMR(Register.DI, Register.AX, OptionalInt.empty())
+          /* and $0x00FF, %ax */ .andImm(Register.AX, 0x00FF, OptionalInt.empty())
+          /* leave            */ .leave()
+          /* ret              */ .ret()
+                                 .build();
+
+      int actual = (int)method.invoke((short)0xFF00);
+      Assertions.assertEquals(0, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
+   * Tests AND with 8 bit immediate
+   */
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.WINDOWS})
+  public void test8bitANDImm(){
+    try(var seg = new CodeSegment()){
+      var desc = FunctionDescriptor.of(
+                   ValueLayout.JAVA_INT, // return value
+                   ValueLayout.JAVA_BYTE  // 1st argument
+                 );
+      var method = new AsmBuilder.AMD64(seg, desc)
+          /* push %rbp        */ .push(Register.RBP)
+          /* mov %rsp, %rbp   */ .movMR(Register.RSP, Register.RBP, OptionalInt.empty())
+          /* mov arg1, %rax   */ .movMR(argReg.arg1(), Register.RAX, OptionalInt.empty())
+          /* and $0x0F, %al   */ .andImm(Register.AL, 0x0F, OptionalInt.empty())
+          /* leave            */ .leave()
+          /* ret              */ .ret()
+                                 .build();
+
+      //showDebugMessage(seg);
+      int actual = (int)method.invoke((byte)0xF0);
+      actual &= 0xF; // AND op would not clear upper bits
+      Assertions.assertEquals(0, actual);
+    }
+    catch(Throwable t){
+      Assertions.fail(t);
+    }
+  }
+
+  /**
    * Tests OR
    */
   @Test
