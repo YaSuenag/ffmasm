@@ -76,14 +76,20 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
     }
   }
 
-  private void emit2ByteVEXPrefix(Register src1, PP simdPrefix){
-    byte VEXvvvv = (byte)((~src1.encoding()) & 0b1111);
-    emit2ByteVEXPrefixWithVVVV(VEXvvvv, src1.width() == 256, simdPrefix);
+  private void emit2ByteVEXPrefix(Register r, PP simdPrefix){
+    Register unused = switch(r.width()){
+      case  64 -> Register.RAX;
+      case 128 -> Register.XMM0;
+      case 256 -> Register.YMM0;
+      default -> throw new IllegalArgumentException("Unsupported register");
+    };
+    emit2ByteVEXPrefix(unused, r, simdPrefix);
   }
 
-  private void emit2ByteVEXPrefixWithVVVV(byte VEXvvvv, boolean is256bit, PP simdPrefix){
-    byte rexr = (byte)((VEXvvvv >> 3) & 1);
-    byte vecLength = is256bit ? (byte)1 : (byte)0;
+  private void emit2ByteVEXPrefix(Register src1, Register r, PP simdPrefix){
+    byte VEXvvvv = (byte)((~src1.encoding()) & 0b1111);
+    byte rexr = ((r.encoding() >> 3) & 1) == 0 ? (byte)1 : (byte)0;
+    byte vecLength = ((src1.width() == 256) || (r.width() == 256)) ? (byte)1 : (byte)0;
     byteBuf.put((byte)0xC5); // 2-byte VEX
     byteBuf.put((byte)(       (rexr << 7) | // REX.R
                            (VEXvvvv << 3) | // VEX.vvvv
@@ -93,11 +99,20 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
   }
 
   private void emit3ByteVEXPrefix(Register r, Register m, PP simdPrefix, LeadingBytes bytes){
-    byte VEXvvvv = (byte)((~r.encoding()) & 0b1111);
-    byte invMem = (byte)((~m.encoding()) & 0b1111);
-    byte rexr = (byte)((VEXvvvv >> 3) & 1);
-    byte rexb = (byte)((invMem >> 3) & 1);
-    byte is256Bit = (r.width() == 256) ? (byte)1 : (byte)0;
+    Register unused = switch(r.width()){
+      case  64 -> Register.RAX;
+      case 128 -> Register.XMM0;
+      case 256 -> Register.YMM0;
+      default -> throw new IllegalArgumentException("Unsupported register");
+    };
+    emit3ByteVEXPrefix(unused, r, m, simdPrefix, bytes);
+  }
+
+  private void emit3ByteVEXPrefix(Register src1, Register r, Register m, PP simdPrefix, LeadingBytes bytes){
+    byte VEXvvvv = (byte)((~src1.encoding()) & 0b1111);
+    byte rexr = ((r.encoding() >> 3) & 1) == 0 ? (byte)1 : (byte)0;
+    byte rexb = ((m.encoding() >> 3) & 1) == 0 ? (byte)1 : (byte)0;
+    byte is256Bit = ((src1.width() == 256) || (r.width() == 256) || (m.width() == 256)) ? (byte)1 : (byte)0;
     byteBuf.put((byte)0xC4); // 3-byte VEX
     byteBuf.put((byte)(   (rexr << 7) | // REX.R
                           (   1 << 6) | // inverse of REX.X
@@ -112,10 +127,10 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
 
   private T vmovdq(Register r, Register m, OptionalInt disp, PP pp, byte opcode){
     if(m.encoding() > 7){
-      emit3ByteVEXPrefix(Register.YMM0 /* unused */, m, pp, LeadingBytes.H0F);
+      emit3ByteVEXPrefix(r, m, pp, LeadingBytes.H0F);
     }
     else{
-      emit2ByteVEXPrefix(Register.YMM0 /* unused */, pp);
+      emit2ByteVEXPrefix(r, pp);
     }
 
     byteBuf.put(opcode); // MOVDQA
@@ -220,10 +235,10 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
    */
   public T vmovdA(Register r, Register m, OptionalInt disp){
     if(m.encoding() > 7){
-      emit3ByteVEXPrefix(Register.XMM0 /* unused */, m, PP.H66, LeadingBytes.H0F);
+      emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F);
     }
     else{
-      emit2ByteVEXPrefix(Register.XMM0 /* unused */, PP.H66);
+      emit2ByteVEXPrefix(r, PP.H66);
     }
 
     byteBuf.put((byte)0x6e); // VMOVD (r <- r/m32)
@@ -252,10 +267,10 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
    */
   public T vmovdB(Register r, Register m, OptionalInt disp){
     if(m.encoding() > 7){
-      emit3ByteVEXPrefix(Register.XMM0 /* unused */, m, PP.H66, LeadingBytes.H0F);
+      emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F);
     }
     else{
-      emit2ByteVEXPrefix(Register.XMM0 /* unused */, PP.H66);
+      emit2ByteVEXPrefix(r, PP.H66);
     }
 
     byteBuf.put((byte)0x7e); // VMOVD (r/m32 <- xmm)
@@ -292,7 +307,7 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
       emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F);
     }
     else{
-      emit2ByteVEXPrefix(r, PP.H66);
+      emit2ByteVEXPrefix(r, m, PP.H66);
     }
 
     byteBuf.put((byte)0xef); // VPXOR
@@ -329,7 +344,7 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
       emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F);
     }
     else{
-      emit2ByteVEXPrefix(r, PP.H66);
+      emit2ByteVEXPrefix(r, m, PP.H66);
     }
 
     byteBuf.put((byte)0xfe); // VPADDD
@@ -351,8 +366,8 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
    *   Instruction: VPDPBUSD dest, r, r/m
    *   Op/En: A
    *
-   * @param r "r" register (source)
-   * @param m "r/m" register (source)
+   * @param r "r" register (src1)
+   * @param m "r/m" register (src2)
    * @param dest "dest" register (destination)
    * @param disp Displacement. Set "empty" if this operation is reg-reg
    *             then "r/m" have to be a SIMD register.
@@ -361,7 +376,7 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
    * @return This instance
    */
   public T vpdpbusd(Register r, Register m, Register dest, OptionalInt disp){
-    emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F38);
+    emit3ByteVEXPrefix(r, dest, m, PP.H66, LeadingBytes.H0F38);
 
     byteBuf.put((byte)0x50); // VPDPBUSD
 
@@ -396,10 +411,10 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
    */
   public T vpshufd(Register r, Register m, OptionalInt disp, byte imm){
     if(m.encoding() > 7){
-      emit3ByteVEXPrefix(Register.YMM0 /* unused */, m, PP.H66, LeadingBytes.H0F);
+      emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F);
     }
     else{
-      emit2ByteVEXPrefix(Register.YMM0 /* unused */, PP.H66);
+      emit2ByteVEXPrefix(r, PP.H66);
     }
 
     byteBuf.put((byte)0x70); // VPSHUFD
@@ -433,7 +448,7 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
    * @return This instance
    */
   public T vptest(Register r, Register m, OptionalInt disp){
-    emit3ByteVEXPrefix(Register.YMM0 /* unused */, m, PP.H66, LeadingBytes.H0F38);
+    emit3ByteVEXPrefix(r, m, PP.H66, LeadingBytes.H0F38);
     byteBuf.put((byte)0x17); // PTEST
     byte mode = emitModRM(r, m, disp);
     if(mode == 0b01){ // reg-mem disp8
@@ -455,7 +470,7 @@ public class AVXAsmBuilder<T extends AVXAsmBuilder<T>> extends SSEAsmBuilder<T>{
    * @return This instance
    */
   public T vzeroupper(){
-    emit2ByteVEXPrefixWithVVVV((byte)0b1111, false, PP.None);
+    emit2ByteVEXPrefix(Register.XMM0 /* unused */, PP.None);
     byteBuf.put((byte)0x77); // VZEROUPPER
     return castToT();
   }
