@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2024, Yasumasa Suenaga
+ * Copyright (C) 2022, 2026, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -138,11 +138,11 @@ public class LinuxExecMemory implements ExecMemory{
                    ValueLayout.ADDRESS, // addr
                    canonicalLayouts.get("size_t") // length
                  );
-      hndMunmap = nativeLinker.downcallHandle(func, desc, Linker.Option.critical(false));
+      hndMunmap = nativeLinker.downcallHandle(func, desc, errnoState);
     }
 
     try{
-      int retval = (int)hndMunmap.invoke(addr, length);
+      int retval = (int)hndMunmap.invoke(errnoSeg, addr, length);
       if(retval == -1){
         if(hndErrno == null){
           hndErrno = Linker.Option.captureStateLayout().varHandle(MemoryLayout.PathElement.groupElement("errno"));
