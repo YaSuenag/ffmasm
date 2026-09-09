@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, 2025, Yasumasa Suenaga
+ * Copyright (C) 2022, 2026, Yasumasa Suenaga
  *
  * This file is part of ffmasm.
  *
@@ -49,7 +49,7 @@ public class WindowsExecMemory implements ExecMemory{
 
   private static final Linker.Option getLastErrorState;
 
-  private static final MemorySegment getLastErrorSeg;
+  private static final ThreadLocal<MemorySegment> getLastErrorSeg;
 
   private MethodHandle hndVirtualAlloc = null;
 
@@ -70,7 +70,7 @@ public class WindowsExecMemory implements ExecMemory{
     nativeLinker = Linker.nativeLinker();
     canonicalLayouts = nativeLinker.canonicalLayouts();
     getLastErrorState = Linker.Option.captureCallState("GetLastError");
-    getLastErrorSeg = Arena.global().allocate(Linker.Option.captureStateLayout());
+    getLastErrorSeg = ThreadLocal.withInitial(() -> Arena.global().allocate(Linker.Option.captureStateLayout()));
   }
 
   private MemorySegment virtualAlloc(long lpAddress, long dwSize, int flAllocationType, int flProtect) throws PlatformException{
@@ -87,7 +87,7 @@ public class WindowsExecMemory implements ExecMemory{
     }
 
     try{
-      MemorySegment mem = (MemorySegment)hndVirtualAlloc.invoke(getLastErrorSeg,
+      MemorySegment mem = (MemorySegment)hndVirtualAlloc.invoke(getLastErrorSeg.get(),
                                                                 lpAddress,
                                                                 (int)dwSize, // "long" is 32bit in LLP64
                                                                 flAllocationType,
@@ -96,7 +96,7 @@ public class WindowsExecMemory implements ExecMemory{
         if(hndGetLastError == null){
           hndGetLastError = Linker.Option.captureStateLayout().varHandle(MemoryLayout.PathElement.groupElement("GetLastError"));
         }
-        throw new PlatformException("VirtualAlloc() failed", (int)hndGetLastError.get(getLastErrorSeg, 0L));
+        throw new PlatformException("VirtualAlloc() failed", (int)hndGetLastError.get(getLastErrorSeg.get(), 0L));
       }
       return mem.reinterpret(dwSize);
     }
@@ -122,7 +122,7 @@ public class WindowsExecMemory implements ExecMemory{
     }
 
     try{
-      int result = (int)hndVirtualFree.invoke(getLastErrorSeg,
+      int result = (int)hndVirtualFree.invoke(getLastErrorSeg.get(),
                                               lpAddress,
                                               (int)dwSize, // "long" is 32bit in LLP64
                                               dwFreeType);
@@ -130,7 +130,7 @@ public class WindowsExecMemory implements ExecMemory{
         if(hndGetLastError == null){
           hndGetLastError = Linker.Option.captureStateLayout().varHandle(MemoryLayout.PathElement.groupElement("GetLastError"));
         }
-        throw new PlatformException("VirtualFree() failed", (int)hndGetLastError.get(getLastErrorSeg, 0L));
+        throw new PlatformException("VirtualFree() failed", (int)hndGetLastError.get(getLastErrorSeg.get(), 0L));
       }
       return result; // it should be true
     }

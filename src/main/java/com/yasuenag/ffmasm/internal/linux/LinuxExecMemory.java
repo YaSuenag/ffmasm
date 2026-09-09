@@ -49,7 +49,7 @@ public class LinuxExecMemory implements ExecMemory{
 
   private static final Linker.Option errnoState;
 
-  private static final MemorySegment errnoSeg;
+  private static final ThreadLocal<MemorySegment> errnoSeg;
 
   private static MethodHandle hndMmap = null;
 
@@ -87,7 +87,7 @@ public class LinuxExecMemory implements ExecMemory{
     sym = nativeLinker.defaultLookup();
     canonicalLayouts = nativeLinker.canonicalLayouts();
     errnoState = Linker.Option.captureCallState("errno");
-    errnoSeg = Arena.global().allocate(Linker.Option.captureStateLayout());
+    errnoSeg = ThreadLocal.withInitial(() -> Arena.global().allocate(Linker.Option.captureStateLayout()));
   }
 
   /**
@@ -111,12 +111,12 @@ public class LinuxExecMemory implements ExecMemory{
     }
 
     try{
-      MemorySegment mem = (MemorySegment)hndMmap.invoke(errnoSeg, addr, length, prot, flags, fd, offset);
+      MemorySegment mem = (MemorySegment)hndMmap.invoke(errnoSeg.get(), addr, length, prot, flags, fd, offset);
       if(mem.address() == -1L){ // MAP_FAILED
         if(hndErrno == null){
           hndErrno = Linker.Option.captureStateLayout().varHandle(MemoryLayout.PathElement.groupElement("errno"));
         }
-        throw new PlatformException("mmap() failed", (int)hndErrno.get(errnoSeg, 0L));
+        throw new PlatformException("mmap() failed", (int)hndErrno.get(errnoSeg.get(), 0L));
       }
       return mem.reinterpret(length);
     }
@@ -142,12 +142,12 @@ public class LinuxExecMemory implements ExecMemory{
     }
 
     try{
-      int retval = (int)hndMunmap.invoke(errnoSeg, addr, length);
+      int retval = (int)hndMunmap.invoke(errnoSeg.get(), addr, length);
       if(retval == -1){
         if(hndErrno == null){
           hndErrno = Linker.Option.captureStateLayout().varHandle(MemoryLayout.PathElement.groupElement("errno"));
         }
-        throw new PlatformException("munmap() failed", (int)hndErrno.get(errnoSeg, 0L));
+        throw new PlatformException("munmap() failed", (int)hndErrno.get(errnoSeg.get(), 0L));
       }
       return retval; // it should be 0
     }
