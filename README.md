@@ -240,6 +240,18 @@ These builder classes are provided by [jvmci-adapter](tools/jvmci-adapter). You 
 </dependencies>
 ```
 
+Note that you have to specify following command line options when you want to run with jvmci-adapter. Some JVMCI packages have to be exported to jvmci-adapter.
+
+```
+-XX:+UnlockExperimentalVMOptions
+-XX:+EnableJVMCI
+--add-exports=jdk.internal.vm.ci/jdk.vm.ci.code=com.yasuenag.ffmasmtools.jvmci
+--add-exports=jdk.internal.vm.ci/jdk.vm.ci.code.site=com.yasuenag.ffmasmtools.jvmci
+--add-exports=jdk.internal.vm.ci/jdk.vm.ci.hotspot=com.yasuenag.ffmasmtools.jvmci
+--add-exports=jdk.internal.vm.ci/jdk.vm.ci.meta=com.yasuenag.ffmasmtools.jvmci
+--add-exports=jdk.internal.vm.ci/jdk.vm.ci.runtime=com.yasuenag.ffmasmtools.jvmci
+```
+
 # Play with perf tool
 
 You can record both function name and entry point address as a perf map file.
